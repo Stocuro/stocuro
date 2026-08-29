@@ -1,0 +1,13 @@
+# Deze map bevat database-inloggegevens en mag nooit rechtstreeks via
+# de browser opvraagbaar zijn. Blokkeert alle toegang, ongeacht hoe de
+# hostingomgeving verder is ingericht (defense-in-depth naast een correct
+# ingestelde document root).
+<IfModule mod_authz_core.c>
+    # Apache 2.4+
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    # Apache 2.2 en ouder
+    Order allow,deny
+    Deny from all
+</IfModule>

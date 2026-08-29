@@ -1,0 +1,486 @@
+/* Vrijwel 1-op-1 overgenomen uit de <style> van het oude doGet()-
+   sjabloon in DashboardAll.gs (migratieplan hoofdstuk 5). */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Arial, sans-serif; background: #f5f5f5; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem; text-align: center; }
+.header-bar { display: flex; align-items: center; justify-content: center; gap: 1rem; position: relative; }
+/* Op verzoek van Harm: de titel in de header linkt door naar de publieke
+   marketingsite (stocuro.com) -- puur navigatie, geen functionele wijziging
+   aan de app zelf, dus alleen de standaard link-styling wegnemen zodat het
+   nog steeds gewoon als titel oogt. */
+.header-logo-link { color: inherit; text-decoration: none; }
+.header-logo-link:hover { text-decoration: underline; }
+/* Migratie 054, op verzoek van Harm ("release nummer terug zien in de
+   bovenbalk"): klein, onopvallend badge naast de titel -- geen link, geen
+   actie, puur informatief label dat APP_VERSION toont. */
+.header-version {
+  font-size: 12px;
+  opacity: 0.75;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  align-self: center;
+}
+/* Migratie 044_licentie_registratie, op verzoek van Harm ("profielpagina"):
+   de absolute positionering (voorheen rechtstreeks op .logout-link) zit nu
+   op deze gedeelde wrapper -- .profile-link/.logout-link zijn zelf gewone
+   inline spans binnen die wrapper, zodat naam en "Sign out" naast elkaar
+   rechts uitgelijnd blijven staan, ook al zijn het nu twee losse
+   klikbare elementen (naam -> profielpagina, "Sign out" -> uitloggen). */
+.header-account { position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 13px; }
+.profile-link, .logout-link { color: white; text-decoration: underline; cursor: pointer; }
+/* Taalvoorkeur (migratie 009): accountinstelling, dus een select i.p.v.
+   de vroegere aan/uit-toggleknop -- de waarde weerspiegelt altijd wat er
+   al op het account staat, in plaats van los session-state te zijn. */
+.lang-select { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font-size: 13px; cursor: pointer; }
+.lang-select option { color: #333; }
+/* Gast-modus (op verzoek van Harm): duidelijke, niet-opdringerige balk
+   zodat een bezoeker zonder account nooit in de war is over waarom een
+   opslagactie ineens een foutmelding geeft -- hij weet het al vooraf. */
+.gast-banner { background: #fffbea; border-bottom: 1px solid #f5e6a3; color: #7a6212; padding: 0.6rem 1rem; text-align: center; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 0.8rem; flex-wrap: wrap; }
+.gast-banner a { color: #7a6212; font-weight: bold; text-decoration: underline; }
+.container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+/* App-schil (migratie 030_groep_landingsscherm), op verzoek van Harm: een
+   vaste desktop-zijbalk ("alles gebeurt vanaf een computer", geen
+   mobiel/tablet-scenario) zodat je nooit meer eerst terug naar Home hoeft
+   om naar een ander dashboard te springen. #content/.container hierboven
+   blijven ongewijzigd -- de zijbalk staat er alleen naast. */
+.app-shell { display: flex; align-items: flex-start; }
+.app-sidebar { width: 230px; flex: 0 0 230px; background: white; border-right: 1px solid #e5e5e5; min-height: 100vh; position: sticky; top: 0; align-self: flex-start; overflow-y: auto; padding: 1rem 0.75rem 2rem; }
+.app-main { flex: 1; min-width: 0; }
+.sidebar-search { margin-bottom: 1rem; }
+.sidebar-search input { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.sidebar-group { margin-bottom: 1.1rem; }
+.sidebar-group-label { font-size: 11px; font-weight: bold; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0.4rem 0.35rem; }
+/* Migratie 031: sub-kopjes binnen de Beheer-groep (Toegang/Instellingen/
+   Datakwaliteit) -- visueel lichter dan .sidebar-group-label en met wat
+   ruimte erboven, zodat de 6 knoppen in 3 herkenbare setjes vallen zonder
+   dat het meteen weer aparte, losse zijbalksecties worden. */
+.sidebar-subgroup-label { font-size: 10px; font-weight: bold; color: #bbb; text-transform: uppercase; letter-spacing: 0.4px; margin: 0.6rem 0.4rem 0.25rem; }
+.sidebar-link { display: block; width: 100%; text-align: left; background: none; border: none; padding: 0.5rem 0.6rem; border-radius: 6px; font-size: 14px; color: #333; cursor: pointer; margin-bottom: 2px; }
+.sidebar-link:hover { background: #f0f0f0; }
+.sidebar-link.active { background: #ede9fe; color: #5b3fae; font-weight: bold; }
+#sbHome { font-weight: bold; margin-bottom: 1rem; }
+
+/* Voorraad-megatabel (migratie 031_voorraad_tabel): filterchips (hergebruikt
+   .filter-btn) + kolom-toggles boven de tabel. */
+.vt-filters { margin-bottom: 0.5rem; }
+.vt-cols { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; font-size: 13px; color: #555; }
+.vt-cols label { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+.menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.8rem; margin-bottom: 2rem; }
+.menu-btn { background: white; padding: 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s; }
+.menu-btn:hover { background: #f0f0f0; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+/* Forms: de dagelijkse acties, met opzet visueel zwaarder (gradient,
+   witte tekst) dan de rapportageknoppen eronder -- niet alleen bovenaan,
+   ook meteen herkenbaar als "dit doe je het vaakst". */
+.menu-primary .menu-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.menu-primary .menu-btn:hover { background: linear-gradient(135deg, #5a6fd8 0%, #6a4394 100%); box-shadow: 0 4px 10px rgba(102,126,234,0.35); }
+/* Dashboards-subgroepen: lichte kaart per groep i.p.v. alle knoppen
+   los onder één platte lijn -- scheelt visuele drukte zonder nieuwe
+   interactie, puur groepering. */
+.menu-group { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 1.25rem 1.25rem 0.45rem; margin-bottom: 1.25rem; }
+.menu-group-label { font-size: 12px; font-weight: bold; color: #667eea; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 0.9rem; }
+.menu-group .menu { margin-bottom: 0.8rem; }
+/* Migratie 032_home_widgets, op verzoek van Harm: Home zelf invullen met
+   relevante samengestelde info (Mijn Bestellingen/Nieuws/PICC-rotatie/Top
+   Scanners) i.p.v. alleen een menu -- zelfde lichte-kaart-stijl als
+   .menu-group hierboven, maar in een grid zodat de vier widgets naast
+   elkaar staan op een breed scherm i.p.v. onder elkaar. */
+.home-widgets { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.home-widget-card { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 1.1rem 1.25rem; }
+.home-widget-card .home-widget-title { font-size: 13px; font-weight: bold; color: #667eea; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem; }
+.home-widget-card ul { margin: 0; padding-left: 1.1rem; }
+.home-widget-card li { margin-bottom: 0.4rem; font-size: 14px; }
+.home-widget-card .empty { margin: 0; }
+/* Migratie 039, op verzoek van Harm ("mag wel wat uitgebreider qua data"):
+   het Vervaldatum-risico-widget krijgt de volle breedte van de grid-rij
+   i.p.v. één kolomvak, zodat er ruimte is voor een mini-tabel i.p.v. een
+   korte bullet-lijst zoals de andere widgets. */
+.home-widget-card-wide { grid-column: 1 / -1; }
+.home-widget-table { width: 100%; border-collapse: collapse; margin: 0; box-shadow: none; font-size: 13px; }
+.home-widget-table th { background: none; color: #667eea; padding: 0.3rem 0.5rem; text-align: left; font-weight: 600; border-bottom: 2px solid #eee; }
+.home-widget-table td { padding: 0.3rem 0.5rem; border-bottom: 1px solid #eee; }
+/* Migratie 039_home_nieuwe_producten, op verzoek van Harm ("nieuwe rij
+   Nieuwe producten met afbeelding" op Home): fototegels van recent
+   toegevoegde producten -- zelfde tegel-idee als .people-grid/.person-card
+   (Het Team/Contactpersonen) hieronder, maar rechthoekig i.p.v. rond (foto
+   van een product, geen gezicht) en klikbaar naar de productdetailpagina. */
+.home-product-grid { display: flex; flex-wrap: wrap; gap: 0.9rem; }
+.home-product-tile { width: 100px; text-align: center; cursor: pointer; }
+.home-product-photo { width: 90px; height: 90px; border-radius: 8px; object-fit: cover; display: block; margin: 0 auto 6px; border: 1px solid #eee; }
+.home-product-placeholder { width: 90px; height: 90px; border-radius: 8px; background: #667eea; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 28px; margin: 0 auto 6px; }
+.home-product-naam { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.home-product-tile:hover .home-product-naam { color: #667eea; }
+/* Migratie 044_leaderboard_picc_uitbreiden, op verzoek van Harm ("Leaderboard
+   'wie is aan de beurt' uitbreiden"): markeert de eerstvolgende laborant in
+   de PICC-rotatiewachtrij (zie #lbPiccSection in renderLeaderboard()/
+   renderLeaderboardPiccSection() in app.js), zodat die persoon meteen opvalt
+   tussen de rest van de wachtrij. */
+.lb-picc-eerst { background: #eef0ff; font-weight: 600; }
+/* Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
+   ("Productpagina: grafiek historisch verbruik"): handgerolde SVG-
+   staafdiagram (verbruikChartSvg() in app.js) -- overflow-x zodat de vaste
+   SVG-viewBox-breedte niet de rest van de pagina breder maakt op smalle
+   schermen, max-width houdt 'm compact op brede schermen. */
+.verbruik-chart-wrap { overflow-x: auto; margin: 0.5rem 0 1rem; }
+.verbruik-chart { width: 100%; max-width: 700px; height: auto; display: block; }
+table { width: 100%; border-collapse: collapse; background: white; margin: 1rem 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+th { background: #667eea; color: white; padding: 0.75rem; text-align: left; font-weight: bold; }
+td { padding: 0.75rem; border-bottom: 1px solid #ddd; }
+tr:hover { background: #f9f9f9; }
+a.product-link, a.eb-link { color: #667eea; text-decoration: underline; cursor: pointer; }
+a.product-link:hover, a.eb-link:hover { color: #764ba2; }
+a.producent-link { color: #667eea; text-decoration: underline; cursor: pointer; font-size: 0.9em; }
+a.producent-link:hover { color: #764ba2; }
+.back-btn { background: #667eea; color: white; padding: 0.6rem 1.2rem; border: none; cursor: pointer; border-radius: 4px; margin-bottom: 1rem; font-weight: bold; transition: 0.2s; }
+.back-btn:hover { background: #764ba2; }
+#content { background: white; padding: 2rem; border-radius: 8px; min-height: 400px; }
+.section-title { font-size: 18px; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 0.5rem; }
+.empty { text-align: center; color: #999; padding: 2rem; }
+/* Recente Transacties (includes/transacties.php::getRecenteTransactiesGegroepeerd()): uitklapbare regels per scanactie (batch). */
+.batch-lines-row > td { background: #fafafa; padding: 0.75rem 1.5rem; }
+.batch-lines-row table.batch-regels { margin: 0; box-shadow: none; }
+.batch-lines-row table.batch-regels th { background: #ccd0f5; color: #333; font-size: 0.85em; }
+.batch-lines-row table.batch-regels td { font-size: 0.9em; }
+/* Min/Max Advies (includes/minmax.php): rijen met te weinig historie voor een betrouwbaar advies. */
+.mm-row-muted { color: #999; background: #fafafa; }
+.mm-basis-cell { font-size: 0.85em; color: #555; white-space: nowrap; }
+/* Verbruik per Procedure (includes/dashboards.php::getVerbruiksgebruik()): gemiddelde-stats inline in de .section-title van elke procedure. */
+.us-specialist-stats { font-weight: normal; color: #777; font-size: 13px; }
+/* Profielfoto's (migratie 015, users + producent_contacten): kleine avatar-thumbnail, of een cirkel met de eerste letter zonder foto. */
+.avatar-thumb { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
+.avatar-placeholder { width: 32px; height: 32px; border-radius: 50%; background: #667eea; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+/* Migratie 047_leaderboard_picc_uitbreiden, op verzoek van Harm ("Leaderboard
+   met wie aan de beurt is uitbreiden met foto en minimaal 3 personen op
+   volgorde van wie aan de beurt is") -- zie piccRotatieHtml() in
+   assets/js/app.js. Hergebruikt .avatar-thumb/.avatar-placeholder hierboven
+   voor de foto zelf; deze klassen zijn puur voor de rij-layout eromheen. */
+.picc-procedure-rij { margin-bottom: 0.75rem; }
+.picc-procedure-rij:last-child { margin-bottom: 0; }
+.picc-procedure-naam { font-weight: bold; font-size: 13px; color: #555; margin-bottom: 0.3rem; }
+.picc-volgorde { display: flex; gap: 0.9rem; }
+.picc-persoon { display: flex; flex-direction: column; align-items: center; width: 62px; text-align: center; opacity: 0.75; }
+.picc-persoon-eerst { opacity: 1; }
+.picc-persoon-naam { font-size: 11px; margin-top: 3px; line-height: 1.2; }
+.picc-persoon-badge { font-size: 10px; color: #667eea; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; }
+/* Migratie 040_productfotos_uitbreiden, op verzoek van Harm
+   ("productfoto's uitbreiden waar mogelijk"): kleine, vierkante
+   productfoto-duimnagel voor gebruik in tabelrijen (Product Zoeken,
+   Bijvullen) -- zelfde duimnagel-idee als .avatar-thumb hierboven, maar
+   vierkant met afgeronde hoeken i.p.v. rond (een product is geen gezicht). */
+.list-thumb { width: 28px; height: 28px; border-radius: 5px; object-fit: cover; display: inline-block; vertical-align: middle; margin-right: 6px; border: 1px solid #eee; }
+.list-thumb-placeholder { width: 28px; height: 28px; border-radius: 5px; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; vertical-align: middle; margin-right: 6px; }
+ul { margin-left: 2rem; }
+li { margin: 0.5rem 0; }
+.action-buttons { display: flex; gap: 0.5rem; }
+.action-btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+/* Migratie 026: periode-filterknoppen (Afboekingen). */
+.periode-filter { margin: 0.75rem 0 1rem; }
+.periode-btn { background: #eee; color: #333; }
+.periode-btn.periode-actief { background: #2c3e50; color: #fff; }
+
+/* Migratie 028: kleinere kopregel binnen een .section-title-blok (Nieuws/
+   Het Team/Contactpersonen-dashboard: bijv. "Specialisten" onder "Het
+   Team", of een leveranciersnaam onder "Contactpersonen"). */
+.section-subtitle { font-size: 15px; font-weight: 600; margin: 0.75rem 0 0.5rem; color: #555; }
+/* Migratie 028: grotere "persoonskaart" met foto voor Het Team/
+   Contactpersonen -- groter dan de .avatar-thumb-duimnagel elders, want
+   hier is de foto zelf het onderwerp i.p.v. een klein identificatie-icoon
+   in een tabelrij. */
+.people-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.5rem; }
+.person-card { width: 110px; text-align: center; }
+.person-card-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 6px; }
+.person-card-placeholder { width: 80px; height: 80px; border-radius: 50%; background: #667eea; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 28px; margin: 0 auto 6px; }
+.person-card-naam { font-size: 13px; font-weight: 600; }
+.person-card-sub { font-size: 12px; color: #888; }
+/* Migratie 031_contacten_klikbaar, op verzoek van Harm herzien: het
+   detailblok (telefoon/email/notitie) stond eerst verborgen achter een
+   klik-om-uit-te-klappen kaartje -- staat nu altijd zichtbaar naast de
+   foto (zie contactPersonCardHtml() in app.js), dus geen "clickable"-
+   hover-stijl meer nodig. Kaart + detailblok blijven wel samen in één
+   flex-item, zodat het detailblok niet naast de volgende kaart in de
+   rij terechtkomt maar er nette ruimte voor maakt. */
+.person-card-wrap { width: 110px; }
+.person-card-detail { width: 150px; margin-top: 4px; font-size: 12px; text-align: left; background: #f9fafb; border-radius: 6px; padding: 6px 8px; }
+.person-card-detail a { color: #667eea; }
+.btn-bestellen { background: #3b82f6; color: white; }
+.btn-bestellen:hover { background: #2563eb; }
+.btn-besteld { background: #10b981; color: white; }
+.btn-besteld:hover { background: #059669; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+.modal.show { display: flex; align-items: center; justify-content: center; }
+.modal-content { background-color: white; padding: 2rem; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.modal-close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.modal-close:hover { color: black; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-family: Arial; }
+.form-group textarea { resize: vertical; }
+/* Migratie 051, op verzoek van Harm: dit is de daadwerkelijke oorzaak
+   achter meerdere eerdere "vinkje staat er lelijk bij"-meldingen (Gebruikers
+   -scherm "nieuwe gebruiker"-formulier -- Beheerder-vinkje, en de
+   Groepen-checkboxlijst daaronder). ".form-group input" hierboven raakt
+   ELK <input>-nakomeling binnen een .form-group, dus ook checkboxes -- die
+   kregen daardoor width:100% + padding/border, waardoor zo'n checkbox een
+   volle-breedte blok werd en de bijbehorende labeltekst (bijv. "Beheerder",
+   of een groepsnaam) noodgedwongen naar een eigen regel eronder/ernaast
+   verdrukt werd, met de tekst grotendeels buiten beeld. Eerdere pogingen
+   losten dit steeds op door de HTML-volgorde te wijzigen
+   (checkbox-voor-label), maar dat raakte nooit de echte oorzaak: deze
+   width:100%-regel. Checkboxes/radio's krijgen nu expliciet hun normale,
+   kleine formaat terug. */
+.form-group input[type="checkbox"], .form-group input[type="radio"] { width: auto; padding: 0; border: none; border-radius: 0; }
+/* Klikvriendelijke keuzeknoppen (locatie/specialist/procedure) in de
+ * scanformulieren -- vervangt <select>-dropdowns door één-tik knoppen,
+ * zodat gebruikers zo weinig mogelijk hoeven te klikken. Zie
+ * keuzeknoppenHtml()/bindKeuzeknoppen() in assets/js/app.js. */
+.keuzeknoppen { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.keuzeknop { padding: 0.6rem 1.1rem; border: 1px solid #ddd; border-radius: 999px; background: white; font-family: Arial; font-size: 0.95rem; cursor: pointer; color: #333; }
+.keuzeknop:hover { border-color: #667eea; }
+.keuzeknop.active { background: #667eea; border-color: #667eea; color: white; font-weight: bold; }
+.keuzeknoppen-leeg { color: #888; font-size: 0.9rem; padding: 0.4rem 0; }
+/* Licentiemodel (op verzoek van Harm): specialist/laborant zonder geldige
+ * licentie is niet-selecteerbaar bij Materiaal Verbruik -- zie
+ * keuzeknoppenHtml() in assets/js/app.js voor de disabledMap die dit
+ * aanstuurt, en includes/transacties.php::verwerkScan() voor de
+ * daadwerkelijke server-side afdwinging. Zelfde rood als .badge-leeg
+ * voor consistente "ontbreekt iets"-taal door de hele app heen. */
+.keuzeknop-disabled { background: #fdeaea; border-color: #f3c1c1; color: #b91c1c; cursor: not-allowed; opacity: 0.85; }
+.keuzeknop-disabled:hover { border-color: #f3c1c1; }
+.keuzeknop-badge { font-size: 0.8em; font-weight: normal; }
+.modal-buttons { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; }
+.btn-save { background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; }
+.btn-save:hover { background: #059669; }
+.btn-cancel { background: #ef4444; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; }
+.btn-cancel:hover { background: #dc2626; }
+a.menu-btn { display: block; text-decoration: none; color: #333; text-align: center; }
+.critical { background-color: #fee; }
+.warning { background-color: #ffe; }
+h2 { color: #333; margin-bottom: 1rem; }
+h3 { color: #667eea; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 15px; }
+.search-box { margin-bottom: 1.5rem; }
+.search-box input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+.product-header { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #667eea; display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap; }
+.product-header-text { flex: 1; min-width: 260px; }
+.product-header h1 { color: #333; font-size: 24px; margin-bottom: 0.5rem; }
+.product-photo { width: 140px; height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; background: white; flex-shrink: 0; }
+.product-photo-placeholder { width: 140px; height: 140px; border-radius: 8px; border: 1px dashed #ccc; background: white; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 12px; text-align: center; }
+.product-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+.info-box { background: white; padding: 1rem; border-radius: 4px; border: 1px solid #ddd; }
+.info-label { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 0.5rem; }
+.info-value { font-size: 18px; font-weight: bold; color: #333; }
+.specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+.spec-box { background: #f9f9f9; padding: 0.75rem; border-radius: 4px; border: 1px solid #eee; }
+.spec-label { font-size: 11px; color: #999; text-transform: uppercase; margin-bottom: 0.25rem; }
+.spec-value { font-size: 15px; font-weight: bold; color: #333; }
+.kastlocatie-badge { display: inline-block; background: #eef; color: #333; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 12px; font-family: monospace; }
+.value-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.value-tile { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+.value-tile .value-label { font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 0.5rem; }
+.value-tile .value-amount { font-size: 26px; font-weight: bold; color: #667eea; }
+.value-tile .value-sub { font-size: 12px; color: #999; margin-top: 0.25rem; }
+/* Migratie 030 (op verzoek van Harm): Actiecentrum-tegels linken nu door
+   naar het scherm met de bijbehorende lijst i.p.v. zelf een tabel te
+   tonen -- subtiele hover zodat duidelijk is dat de tegel klikbaar is. */
+.value-tile-clickable { cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+.value-tile-clickable:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.15); transform: translateY(-2px); }
+.filter-btn { padding: 0.4rem 0.9rem; margin-right: 0.5rem; margin-bottom: 1rem; border: 1px solid #667eea; background: white; color: #667eea; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+.filter-btn.active { background: #667eea; color: white; }
+/* Migratie 030 (dashboard-consolidatie): tabbalk bovenaan een samengevoegd
+   dashboard om tussen de voorheen losse deelschermen te wisselen -- zelfde
+   look als .filter-btn, maar een eigen klasse zodat een scherm dat zelf ook
+   .filter-btn gebruikt voor een eigen filter (bijv. Vervaldatum Focus) daar
+   niet mee kan botsen. */
+.hub-tab-btn { padding: 0.4rem 0.9rem; margin-right: 0.5rem; margin-bottom: 1rem; border: 1px solid #667eea; background: white; color: #667eea; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+.hub-tab-btn.active { background: #667eea; color: white; }
+.edit-btn { padding: 0.4rem 1rem; border: 1px solid #667eea; background: white; color: #667eea; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; margin-left: 1rem; }
+.edit-btn:hover { background: #f0f2fc; }
+.edit-actions { margin-top: 1rem; margin-bottom: 1.5rem; }
+.edit-actions button { padding: 0.6rem 1.5rem; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; margin-right: 0.5rem; }
+.edit-save { background: #667eea; color: white; }
+.edit-cancel { background: #eee; color: #333; }
+.edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+/* Op verzoek van Harm: het bewerkscherm (renderProductEdit() in
+   assets/js/app.js) was één lange opsomming van velden -- deze kaart
+   groepeert elke sectie (Identificatie/Besteldata/Voorraad/...) visueel,
+   zelfde lichte kader-stijl als .menu-group elders in de app. */
+.edit-section-box { background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 1.25rem 1.25rem 0.25rem; margin-bottom: 1.25rem; }
+.edit-section-box .section-title { margin-top: 0; }
+.edit-room-group { border: 1px solid #e5e5e5; border-radius: 6px; padding: 0.9rem 1rem 0.1rem; margin-bottom: 1rem; background: white; }
+.edit-room-group .edit-room-title { font-weight: bold; color: #555; margin-bottom: 0.75rem; font-size: 14px; }
+.ean-change-row { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.ean-change-row .form-group { flex: 1; min-width: 200px; margin-bottom: 0; }
+.ean-change-row button { height: 38px; padding: 0 1.2rem; border-radius: 4px; border: 1px solid #f5a623; background: none; color: #92400e; font-weight: bold; cursor: pointer; }
+.ean-change-row button:hover { background: #f5a623; color: white; }
+.ean-current-readonly { padding: 0.5rem; background: #f0f0f0; border-radius: 4px; font-family: monospace; font-size: 14px; color: #444; }
+.edit-photo-preview { max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 0.5rem; display: block; }
+.product-photo { cursor: pointer; transition: 0.15s; }
+.product-photo:hover { opacity: 0.85; }
+.photo-modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); cursor: zoom-out; }
+.photo-modal.show { display: flex; align-items: center; justify-content: center; }
+.photo-modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+.photo-modal-close { position: absolute; top: 1.5rem; right: 2rem; color: white; font-size: 40px; font-weight: bold; cursor: pointer; line-height: 1; }
+/* Status-badges: CSS + tekst, geen emoji-afhankelijkheid. */
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 12px; font-weight: bold; letter-spacing: 0.3px; white-space: nowrap; border: 1px solid transparent; }
+.badge-ok         { background: #e6f6ec; color: #137a3d; border-color: #b7e3c8; }
+.badge-geldig     { background: #e6f6ec; color: #137a3d; border-color: #b7e3c8; }
+.badge-langdurig  { background: #f0f7f2; color: #3d6b4c; border-color: #cfe3d6; }
+.badge-voldoende  { background: #e6f6ec; color: #137a3d; border-color: #b7e3c8; }
+.badge-leeg       { background: #fdeaea; color: #b91c1c; border-color: #f3c1c1; }
+.badge-laag       { background: #fdeaea; color: #b91c1c; border-color: #f3c1c1; }
+.badge-onvoldoende{ background: #fdeaea; color: #b91c1c; border-color: #f3c1c1; }
+.badge-verlopen   { background: #b91c1c; color: #ffffff; border-color: #b91c1c; }
+.badge-kritiek    { background: #b91c1c; color: #ffffff; border-color: #b91c1c; }
+.badge-hoog       { background: #fff6df; color: #a16207; border-color: #f0dfad; }
+.badge-monitoren  { background: #fff6df; color: #a16207; border-color: #f0dfad; }
+.badge-order      { background: #e8f0fe; color: #1d4ed8; border-color: #c4d6f7; }
+.badge-neutraal   { background: #f0f0f0; color: #555555; border-color: #dddddd; }
+
+/* Nieuw voor de zelfgehoste versie: inlogscherm en invoerformulieren
+   (migratieplan hoofdstuk 6/9) -- bestonden niet in de oude Apps
+   Script-versie, die gebruikte hiervoor losse Google Forms. */
+.login-wrap { max-width: 380px; margin: 4rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.login-wrap h1 { font-size: 20px; margin-bottom: 1.5rem; color: #333; }
+.login-error { color: #b91c1c; font-size: 13px; margin-top: -0.5rem; margin-bottom: 1rem; }
+.form-hint { color: #999; font-size: 13px; margin-bottom: 1rem; }
+/* Op verzoek van Harm: live scanregel-compleetheidshint (zie initGs1ScanHint() in
+   assets/js/app.js) -- amberkleurig i.p.v. rood (.login-error), dit is een
+   waarschuwing/aansporing, geen fout. */
+.gs1-hint { background: #fff8e1; border: 1px solid #f5a623; color: #333; border-radius: 4px; padding: 0.5rem 0.75rem; margin-top: 0.5rem; font-size: 13px; }
+.gs1-hint-override { margin-left: 0.5rem; background: none; border: 1px solid #f5a623; color: #92400e; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+.gs1-hint-override:hover { background: #f5a623; color: #fff; }
+.radio-group { display: flex; gap: 1.5rem; margin-bottom: 1rem; }
+
+/* Groep-checkboxes (migratie 024), op verzoek van Harm leesbaarder
+   gemaakt: was een ongestileerde reeks labels die inline tegen elkaar
+   aan wrapte, waardoor niet duidelijk was welk vinkje bij welke
+   groepsnaam hoorde. .gu-groep-optie is gedeeld tussen twee plekken die
+   elk hun eigen opmaak nodig hebben:
+     1. Gebruikersoverzicht (.gu-groepen-panel, zie migratie 050 hieronder)
+        -- hier moet elke groep zijn EIGEN regel krijgen, dus gestapeld in
+        een afgebakend kadertje met scroll als de lijst groeit.
+     2. Groepen-scherm, schermmatrix per sectie (renderGroepEdit()) --
+        die pagina is al breed en per sectie gegroepeerd, dus daar is een
+        los, licht ruimere inline-flex-weergave (met wrap) prettiger dan
+        alles onder elkaar te stapelen. */
+.gu-groep-optie { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0.2rem 1rem 0.2rem 0; font-size: 14px; cursor: pointer; }
+.gu-groep-optie input { margin: 0; flex-shrink: 0; }
+/* Migratie 050_gebruikers_herindeling, op verzoek van Harm ("blijft heel
+   erg lelijk en onoverzichtelijk. Deel de pagina opnieuw in"): de vorige
+   rondes (migratie 478/491 e.a.) bleven de Groepen-kolom breder/hoger
+   maken, maar dat was precies het probleem -- een altijd-uitgeklapt,
+   190px hoog scrollkadertje IN elke tabelrij zorgde ervoor dat de rest
+   van die rij (naam/e-mail/functie/...) er met vertical-align:top
+   bovenaan "aan bleef plakken", en met veel gebruikers oogt de hele
+   tabel daardoor rommelig en oneven hoog per rij. Nu toont de cel
+   zelf alleen compacte "chips" (huidige groepen) op één regel, met een
+   klein "Wijzigen"-knopje dat het checkbox-paneel (.gu-groepen-panel,
+   dezelfde oude doos-stijl) er los ONDER uitklapt -- de rij zelf blijft
+   dus altijd even hoog als de rest van de tabel totdat je bewust op
+   Wijzigen klikt voor die ene gebruiker. */
+.gu-groepen-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.35rem; }
+.gu-groepen-chip { display: inline-block; background: #eef0fd; color: #4c51bf; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 12px; white-space: nowrap; }
+.gu-groepen-leeg { color: #888; font-size: 12px; }
+.gu-groepen-panel {
+  display: block;
+  min-width: 280px;
+  max-width: 420px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 0.35rem;
+  margin-top: 0.35rem;
+  border: 1px solid #e2e2e2;
+  border-radius: 4px;
+  background: #fafafa;
+}
+.gu-groepen-panel .gu-groep-optie {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: 0.3rem 0.4rem;
+  border-radius: 3px;
+}
+.gu-groepen-panel .gu-groep-optie:hover { background: #eef0fd; }
+.gu-groepen-panel .gu-groep-optie + .gu-groep-optie { border-top: 1px solid #eee; }
+/* Migratie 053_gebruikers_kaarten, op verzoek van Harm ("user pagina blijft
+   onoverzichtelijk. Zet de gegevens ... onderelkaar met daarachter de edit
+   knoppen"): de brede 10-koloms-tabel (migratie 050 hierboven) bleef
+   moeilijk leesbaar zodra het venster niet extreem breed was -- elke kolom
+   moest vechten om ruimte, en op een smaller scherm liep alles door elkaar.
+   Vervangen door één kaart per gebruiker: elk gegeven op zijn eigen rij
+   (label links, waarde/besturingselement rechts), en alle bewerk-/
+   actieknoppen samen in een actiebalk ONDER de velden. */
+.gu-cards { display: flex; flex-direction: column; gap: 1rem; }
+.gu-card {
+  border: 1px solid #e2e2e2;
+  border-radius: 6px;
+  background: #fff;
+  padding: 1rem 1.2rem;
+}
+.gu-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid #eee;
+}
+.gu-card-naam { font-size: 16px; font-weight: 600; word-break: break-word; }
+.gu-card-body { display: flex; flex-direction: column; }
+.gu-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #f2f2f2;
+}
+.gu-field:last-child { border-bottom: none; }
+.gu-field-label {
+  flex: 0 0 140px;
+  font-weight: 600;
+  color: #555;
+  font-size: 13px;
+}
+.gu-field > *:not(.gu-field-label) { flex: 1 1 auto; min-width: 0; }
+.gu-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #eee;
+}
+.gu-rechten-cell { display: flex; flex-direction: column; gap: 0.35rem; }
+/* Op verzoek van Harm: checkbox + eigen label, checkbox eerst -- gebruikt
+   voor het Beheerder- en Actief-vinkje in de Gebruikers-tabel (zie
+   renderGebruikers()), zodat je niet naar de kolomkop hoeft te kijken om
+   te weten wat het vinkje betekent. */
+.inline-check { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: normal; white-space: nowrap; cursor: pointer; }
+.inline-check input { margin: 0; }
+/* Migratie 040/052, op verzoek van Harm (eerst "Het wijzigen van gebruikers
+   gegevens moet via een knop i.p.v. een tekstveld die ik direct kan
+   aanpassen", later "de weergave van naam en e-mail is lelijk, een soort
+   box waar de tekst niet leesbaar in is"): sinds migratie 052 is de
+   standaardweergave gewoon platte tekst in een <span>
+   (.gu-naam-tekst/.gu-email-tekst) die normaal afbreekt over meerdere
+   regels -- geen vaste eenregelige invoerbreedte meer die een lange naam/
+   e-mail afkapt. Het <input> ernaast (zie renderGebruikers() in app.js)
+   staat standaard verborgen en wordt pas zichtbaar na een klik op de
+   "Naam/e-mail bewerken"-knop (.gu-naam-email-toggle), die tekst en
+   invoerveld omwisselt. */
+.gu-naam-tekst, .gu-email-tekst {
+  display: inline-block; white-space: normal; word-break: break-word;
+}
+.gu-naam-input, .gu-email-input {
+  width: 100%; padding: 0.3rem 0.4rem; font-family: Arial; font-size: inherit;
+  border: 1px solid #ddd; border-radius: 4px; background: #fff; color: inherit;
+}
+/* Migratie 051, op verzoek van Harm: "de tekst links uitlijnen, doe dit met
+   alle knoppen op deze pagina" (Gebruikers-scherm -- Opslaan/Wachtwoord
+   resetten/Foto/Foto verwijderen e.a.). Browsers centreren knoptekst
+   standaard; .gu-page is een pure scope-klasse om de rest van de app
+   (die dezelfde .action-btn/.edit-save-klassen elders gebruikt) niet mee
+   te laten veranderen. */
+.gu-page button { text-align: left; }
+.radio-group label { font-weight: normal; display: flex; align-items: center; gap: 0.4rem; }

@@ -1,0 +1,20 @@
+# Deze map bevat alleen door gebruikers geüploade profielfoto's
+# (users.foto / producent_contacten.foto, migratie 015, zie
+# includes/upload.php). In tegenstelling tot config/, includes/, sql/ en
+# migratie/ moet deze map WEL vanaf het web bereikbaar blijven (anders kan
+# <img src="uploads/..."> de foto's niet tonen) -- daarom hier geen
+# "Require all denied", maar wel PHP-uitvoering uitschakelen. Dit is een
+# voorzorgsmaatregel: includes/upload.php accepteert toch al alleen
+# jpg/png/webp op basis van de data-URL-header, maar mocht er ooit ergens
+# een lek zitten waardoor een ander bestandstype hier terechtkomt, dan
+# wordt het nooit als PHP uitgevoerd.
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<FilesMatch "\.ph(p[3457]?|t|tml)$">
+  Require all denied
+</FilesMatch>
+Options -Indexes

@@ -1,0 +1,12 @@
+-- =====================================================================
+-- schema.sql — huidige stand van het schema, TER REFERENTIE.
+-- Voer dit bestand niet rechtstreeks uit. De bron van waarheid is de
+-- reeks bestanden in /sql/migrations, in volgorde uitgevoerd door
+-- sql/migrate.php. Dit bestand is een leesbare optelsom van die
+-- migraties, handig om in één oogopslag het hele schema te zien.
+-- =====================================================================
+
+-- Zie: sql/migrations/001_init.sql   (artikelen, transactielog, orders,
+--                                     eenmalige_bestellingen, foutlog,
+--                                     schema_migrations)
+-- Zie: sql/migrations/002_add_users.sql   (users)

@@ -1,0 +1,10 @@
+# Servicelaag -- niet bedoeld om rechtstreeks aangeroepen te worden, alleen
+# via de api/-endpoints en de pagina's (index.php/login.php). Blokkeert
+# rechtstreekse toegang.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

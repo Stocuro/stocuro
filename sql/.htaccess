@@ -1,0 +1,9 @@
+# Migratiebestanden -- bevatten het databaseschema, niet bedoeld om
+# publiek in te zien of te downloaden.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

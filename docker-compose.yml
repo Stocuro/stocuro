@@ -1,0 +1,53 @@
+# Stocuro — Docker Compose setup for running on your own Linux server.
+# See DOCKER.md for the full walkthrough (first run, updating, backups).
+#
+# Two services:
+#   - app: PHP/Apache (built from ./Dockerfile), source code bind-mounted
+#     from this directory -- same "unzip and go" model as the One.com
+#     deployment, just running in a container instead of on shared hosting.
+#   - db:  MariaDB, with its data in a named volume so it survives
+#     `docker compose down` and image updates.
+#
+# Copy .env.example to .env and fill in real values before first run --
+# see .env.example for what each variable is for.
+
+services:
+  app:
+    build: .
+    ports:
+      - "${STOCURO_PORT:-8080}:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: ${STOCURO_DB_NAME:-stocuro}
+      MARIADB_USER: ${STOCURO_DB_USER:-stocuro}
+      MARIADB_PASSWORD: ${STOCURO_DB_PASSWORD:?set STOCURO_DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${STOCURO_DB_ROOT_PASSWORD:?set STOCURO_DB_ROOT_PASSWORD in .env}
+    volumes:
+      - stocuro_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      # First boot has to create the whole data directory (system tables,
+      # the stocuro database/user, ...) before mysqld is even listening --
+      # on slower storage (NAS RAID, spinning disks) that alone can take
+      # longer than interval*retries would otherwise allow, which used to
+      # make Compose declare the container "unhealthy" (and the app
+      # container refuse to start, since it depends on this being healthy)
+      # while MariaDB was still legitimately initializing, not actually
+      # broken. start_period gives it a grace window where failing
+      # healthchecks don't count yet.
+      start_period: 90s
+    restart: unless-stopped
+
+volumes:
+  stocuro_db_data:
