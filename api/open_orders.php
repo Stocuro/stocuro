@@ -2,7 +2,7 @@
 /**
  * GET (geen actie) -> alle openstaande reguliere orders, voor het Open
  *                     Orders-scherm ('open-orders'-schermrecht).
- * GET ?mijn=1       -> migratie 045, op verzoek van Harm: alleen de
+ * GET ?mijn=1       -> alleen de
  *                      openstaande orders waar de ingelogde gebruiker zelf
  *                      besteller van is, voor de Home-widget "Mijn
  *                      Bestellingen" ('mijn-bestellingen'-schermrecht,

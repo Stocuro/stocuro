@@ -12,7 +12,7 @@
  * Twee verschillende, losstaande tellingen (niet samengevoegd), want het
  * zijn twee verschillende concepten:
  * - "Meeste scans": wie heeft (via zijn/haar account) de handeling
- *   verricht -- transactielog.aangemaakt_door (migratie 010). Dekt élke
+ *   Verricht -- transactielog.aangemaakt_door. Dekt élke
  *   scanactie (ontvangst, verbruik, verplaatsing/retour, telling,
  *   vervallen afboeken), ongeacht voor wie/welke procedure het was.
  * - "Meeste procedures per type": voor wie/welke specialist een
@@ -20,7 +20,7 @@
  *   transactielog.specialist + procedure_type, alleen transactietype
  *   'Verbruik' (dat is de enige die een klinische procedure
  *   representeert; ontvangst/verplaatsing/telling hebben geen
- *   specialist/procedure). users.rol (migratie 019: specialist/laborant,
+ *   Specialist/procedure). users.rol (specialist/laborant,
  *   voorheen specialisten.type vóór de samenvoeging van die tabel met
  *   users) wordt erbij gehaald zodat je kunt filteren/zien of het een
  *   specialist of laborant was.
@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/stamgegevens.php';
-// Migratie 039: actueleNaam() -- getMeesteProcedures()/getPiccRotatie()
+// ActueleNaam() -- getMeesteProcedures()/getPiccRotatie()
 // hieronder groeperen op transactielog.specialist, een naam-op-transactie-
 // moment i.p.v. FK. Zie includes/hernoemingen.php voor de achtergrond.
 require_once __DIR__ . '/hernoemingen.php';
@@ -48,8 +48,8 @@ function leaderboardPeriodeDagen(string $periode): ?int {
 
 /**
  * Aantal transactielog-regels per uitvoerende gebruiker (aangemaakt_door),
- * binnen de gekozen periode. Regels zonder aangemaakt_door (van vóór
- * migratie 010, of acties waarvoor destijds geen gebruiker werd
+ * binnen de gekozen periode. Regels zonder aangemaakt_door (van een
+ * oudere datum, of acties waarvoor destijds geen gebruiker werd
  * meegegeven) tellen niet mee -- er is niets zinvols om ze aan toe te
  * wijzen.
  */
@@ -75,9 +75,9 @@ function getMeesteScans(string $periode): array {
  * Aantal 'Verbruik'-registraties per specialist, optioneel gefilterd op
  * één procedure_type (bijv. "PICC lijn"), binnen de gekozen periode.
  * users.rol wordt erbij gehaald op naam (nog steeds geen FK vanuit
- * transactielog, zie migratie 004/019 -- de naam-match is hetzelfde
- * patroon als de rest van deze koppeling, alleen wijst hij sinds migratie
- * 019 naar 'users' i.p.v. de opgeheven 'specialisten'-tabel).
+ * transactielog -- de naam-match is hetzelfde patroon als de rest van
+ * deze koppeling, alleen wijst hij sinds de rollenmodel-herziening naar
+ * 'users' i.p.v. de opgeheven 'specialisten'-tabel).
  */
 function getMeesteProcedures(string $periode, ?string $procedureType = null): array {
     $dagen = leaderboardPeriodeDagen($periode);
@@ -93,7 +93,7 @@ function getMeesteProcedures(string $periode, ?string $procedureType = null): ar
         $sql .= " AND t.procedure_type = :procType";
         $params[':procType'] = $procedureType;
     }
-    // Migratie 039, op verzoek van Harm (voorbereiding gebruikersnaam
+    // (voorbereiding gebruikersnaam
     // bewerkbaar maken): GROUP BY hier bewust alleen op t.specialist, niet
     // meer op s.rol -- de LEFT JOIN op de huidige users-naam viel eerder
     // hier al weg zodra de opgeslagen naam niet meer letterlijk matchte
@@ -108,7 +108,7 @@ function getMeesteProcedures(string $periode, ?string $procedureType = null): ar
     foreach ($params as $key => $value) $stmt->bindValue($key, $value);
     $stmt->execute();
 
-    // Migratie 039: zie includes/hernoemingen.php -- de GROUP BY hierboven
+    // Zie includes/hernoemingen.php -- de GROUP BY hierboven
     // groepeert nog op de RUWE, ten tijde van elke transactie opgeslagen
     // specialistnaam; actueleNaam() lost dat op naar de huidige naam en de
     // aantallen worden hier samengevoegd (zelfde patroon als
@@ -169,7 +169,7 @@ function getLeaderboardData(string $periode, ?string $procedureType): array {
 }
 
 /**
- * Migratie 032_picc_rotatie, op verzoek van Harm: "wie is er aan de beurt
+ * "wie is er aan de beurt
  * voor het prikken van een PICC-lijn, wie het laatst de procedure heeft
  * uitgevoerd is als eerste aan de beurt, vanuit de groep laboranten" --
  * een eerlijke rotatie i.p.v. de bestaande "meeste procedures"-telling
@@ -210,7 +210,7 @@ function getPiccRotatie(): array {
          GROUP BY specialist, procedure_type"
     )->fetchAll();
 
-    // Migratie 039: zie toelichting bij getMeesteProcedures() hierboven --
+    // Zie toelichting bij getMeesteProcedures() hierboven --
     // zelfde actueleNaam()-normalisatie, hier met een MAX i.p.v. een SUM
     // (het laatst uitgevoerde tijdstip, niet een aantal), zodat een
     // omgedoopte laborant zijn "laatst uitgevoerd"-tijdstip niet
@@ -231,7 +231,7 @@ function getPiccRotatie(): array {
         foreach ($laboranten as $lab) {
             $volgorde[] = [
                 'naam' => $lab['naam'],
-                // Migratie 047, op verzoek van Harm ("Leaderboard met wie
+                // ("Leaderboard met wie
                 // aan de beurt is uitbreiden met foto"): meegeven zodat de
                 // Home-widget/Rapportage-weergave een avatar kan tonen i.p.v.
                 // alleen platte tekst (zie avatarHtml() in assets/js/app.js).

@@ -1,6 +1,6 @@
 <?php
 /**
- * Licentie-configuratie (migratie 036). In tegenstelling tot
+ * Licentie-configuratie. In tegenstelling tot
  * config/database.local.php is DIT bestand veilig om mee te leveren en
  * in versiebeheer op te nemen: het bevat uitsluitend de PUBLIEKE Ed25519
  * sleutel waarmee activatiecodes geverifieerd worden, nooit de private
@@ -25,7 +25,7 @@ return [
     // redelijke tijd te laten gelden, hoog genoeg om niet bij elke
     // request de database/crypto te belasten.
     //
-    // Migratie 037, op verzoek van Harm: verlaagd van 6 naar 1 -- een
+    // Verlaagd van 6 naar 1 -- een
     // lokale database, niet zwaar belast, dus de extra herverificaties
     // wegen niet op tegen sneller ontdekken/terugdraaien van handmatige
     // manipulatie (bijv. direct in license_activations of users geknoeid).

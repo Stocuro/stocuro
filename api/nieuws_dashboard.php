@@ -1,7 +1,7 @@
 <?php
 /**
- * Migratie 028, bijgewerkt in migratie 030: nieuwste producten + tijdelijke
- * vervangers. Was samen met Team en Contactpersonen op één endpoint, nu
+ * Toont nieuwste producten + tijdelijke vervangers. Was samen met Team
+ * en Contactpersonen op één endpoint, nu
  * een eigen endpoint met een eigen scherm-recht -- zie
  * includes/nieuws_dashboard.php en api/team_overzicht.php /
  * api/contactpersonen.php voor de andere twee.

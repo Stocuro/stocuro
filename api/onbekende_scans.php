@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin-scherm "Onbekende Producten" (migratie 022): overzicht van
+ * Admin-scherm "Onbekende Producten": overzicht van
  * gescande barcodes die nog niet in artikelen bestaan, met de
  * omschrijving die de scanner ervoor heeft ingevuld.
  *

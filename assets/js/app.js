@@ -21,13 +21,13 @@
 const API_MAP = {
   getOverzichtData:             { method: 'GET',  url: 'api/overzicht.php' },
   getRecenteTransacties:         { method: 'GET',  url: 'api/transactielog.php' },
-  // Migratie 026: 'taken' (één scherm) opgesplitst in Beheerder/Laborant.
+  // 'taken' (één scherm) opgesplitst in Beheerder/Laborant.
   getTakenBeheerder:              { method: 'GET',  url: 'api/taken_beheerder.php' },
   getTakenLaborant:               { method: 'GET',  url: 'api/taken_laborant.php' },
-  // Migratie 026: periodefilter (1m/3m/6m/1j/2j/totaal), zie AFBOEKINGEN_PERIODES.
+  // Periodefilter (1m/3m/6m/1j/2j/totaal), zie AFBOEKINGEN_PERIODES.
   getAfboekingenOverzicht:        { method: 'GET',  url: 'api/afboekingen.php', params: ['periode'] },
   getTellingArtikelen:            { method: 'GET',  url: 'api/telling.php', params: ['locatie'] },
-  // Migratie 043: kastlocatie-keuzelijst voor de "opnieuw telling
+  // Kastlocatie-keuzelijst voor de "opnieuw telling
   // uitvoeren"-actie, zie kastlocatiesVoorLocatie() in includes/locaties.php.
   getKastlocatiesVoorLocatie:      { method: 'GET',  url: 'api/telling.php', params: ['locatie', 'actie'] },
   getProductDetail:             { method: 'GET',  url: 'api/product_detail.php', params: ['ean'] },
@@ -46,60 +46,59 @@ const API_MAP = {
   getVervaldatumFocus:                 { method: 'GET',  url: 'api/vervalfocus.php' },
   getCategorieOverzicht:                { method: 'GET',  url: 'api/categorieen.php' },
   getOpenOrders:                         { method: 'GET',  url: 'api/open_orders.php' },
-  // Migratie 027: order-detail/-bewerking, klikbaar vanuit Actiecentrum,
+  // Order-detail/-bewerking, klikbaar vanuit Actiecentrum,
   // Overzicht en Open Orders zelf.
   getOrderDetail:                        { method: 'GET',  url: 'api/order_detail.php', params: ['id'] },
   getOrderDetailVoorEan:                 { method: 'GET',  url: 'api/order_detail.php', params: ['ean'] },
   updateOrder:                           { method: 'POST', url: 'api/order_detail.php', params: ['actie', 'id', 'besteld', 'ontvangen', 'besteller', 'kanaal', 'opmerking'] },
   getVerbruiksTrends:                     { method: 'GET',  url: 'api/trends.php' },
-  // Migratie 026: product-drilldown achter een cel op het Trends-tabblad.
+  // Product-drilldown achter een cel op het Trends-tabblad.
   getVerbruiksTrendDetail:                { method: 'GET',  url: 'api/verbruikstrend_detail.php', params: ['maand', 'reeks', 'sub'] },
   getFoutlog:                              { method: 'GET',  url: 'api/foutlog.php' },
   getLeaderboardData:                       { method: 'GET',  url: 'api/leaderboard.php', params: ['periode', 'procedure_type'] },
-  // Migratie 032_picc_rotatie: "wie is aan de beurt" -- zelfde endpoint,
+  // "wie is aan de beurt" -- zelfde endpoint,
   // aparte actie (zie api/leaderboard.php).
   getPiccRotatie:                            { method: 'GET',  url: 'api/leaderboard.php', params: ['actie'] },
   getMinMaxAdviesOverzicht:                  { method: 'GET',  url: 'api/minmax_advies.php' },
   getVerplaatsAdviesOverzicht:               { method: 'GET',  url: 'api/verplaatsadvies.php' },
   applyMinMaxAdvies:                          { method: 'POST', url: 'api/minmax_advies.php', params: ['ean', 'locatie', 'min', 'max'] },
-  // Migratie 026: voorstel negeren -- verdwijnt tot MINMAX_NEGEER_MAANDEN later.
+  // Voorstel negeren -- verdwijnt tot MINMAX_NEGEER_MAANDEN later.
   negeerMinMaxAdvies:                          { method: 'POST', url: 'api/minmax_advies.php', params: ['actie', 'ean', 'locatie'] },
   getOpenEenmaligeBestellingen:              { method: 'GET',  url: 'api/eenmalige_bestelling.php', params: ['open'] },
   getEenmaligeBestellingDetail:              { method: 'GET',  url: 'api/eenmalige_bestelling.php', params: ['id'] },
-  // Migratie 017 -- "Mijn Bestellingen": alleen bruikbaar voor een echt
-  // ingelogd 'specialist'-account, zie api/eenmalige_bestelling.php.
+  // Voor de Home-widget "Mijn Bestellingen": alleen bruikbaar voor een
+  // echt ingelogd 'specialist'-account, zie api/eenmalige_bestelling.php.
   getEigenEenmaligeBestellingen:             { method: 'GET',  url: 'api/eenmalige_bestelling.php', params: ['mijn'] },
-  // Migratie 045: reguliere-orders-tegenhanger van getEigenEenmaligeBestellingen()
+  // Reguliere-orders-tegenhanger van getEigenEenmaligeBestellingen()
   // hierboven -- samen voeden ze de Home-widget "Mijn Bestellingen".
   getEigenOpenOrders:                         { method: 'GET',  url: 'api/open_orders.php', params: ['mijn'] },
   getSpecialisten:                          { method: 'GET',  url: 'api/specialisten.php' },
   getProcedureTypen:                         { method: 'GET',  url: 'api/procedure_typen.php' },
-  // Migratie 028: beheerde categorielijst + categorie-specifieke
+  // Beheerde categorielijst + categorie-specifieke
   // eigenschappen (niet te verwarren met api/categorieen.php, het
   // bestaande Categorieën-dashboard).
   getCategorieenMetSpecs:                     { method: 'GET',  url: 'api/categorie_eigenschappen.php' },
-  // Migratie 028, bijgewerkt in migratie 030: was Nieuws/Het Team/
-  // Contactpersonen samen, nu drie losse endpoints.
+  // Was Nieuws/Het Team/Contactpersonen samen, nu drie losse endpoints.
   getNieuwsDashboard:                         { method: 'GET',  url: 'api/nieuws_dashboard.php' },
   getTeamOverzicht:                           { method: 'GET',  url: 'api/team_overzicht.php' },
   getContactpersonenOverzicht:                { method: 'GET',  url: 'api/contactpersonen.php' },
   getProducenten:                            { method: 'GET',  url: 'api/producenten.php' },
-  // Migratie 029: suggestielijst voor het kastlocatie-dropdown-veld.
+  // Suggestielijst voor het kastlocatie-dropdown-veld.
   getKastlocatieSuggesties:                  { method: 'GET',  url: 'api/kastlocaties.php' },
-  // Migratie 030_groep_landingsscherm: samengesteld beschikbaarheids-
+  // Samengesteld beschikbaarheids-
   // overzicht (bedoeld als landingsscherm voor artsen).
   getBeschikbaarheid:                        { method: 'GET',  url: 'api/beschikbaarheid.php' },
   getVoorraadTabel:                          { method: 'GET',  url: 'api/voorraad_tabel.php' },
   getProducentDetail:                        { method: 'GET',  url: 'api/producenten.php', params: ['id'] },
   getLocaties:                                { method: 'GET',  url: 'api/locaties.php' },
   updateLocatie:                               { method: 'POST', url: 'api/locaties.php', params: ['slot', 'naam', 'actief'] },
-  // Migratie 033: 'besteller' niet meer meegestuurd -- de server zet dit
+  // 'besteller' niet meer meegestuurd -- de server zet dit
   // altijd zelf op de ingelogde gebruiker (zie api/bestelling.php).
   submitHandmatigeBestellingen:             { method: 'POST', url: 'api/bestelling.php', params: ['ean', 'aantal', 'kanaal', 'opmerking'] },
-  // Migratie 033: naamkeuzelijst voor "Besteld door"-dropdowns.
+  // Naamkeuzelijst voor "Besteld door"-dropdowns.
   getGebruikersNamen:                       { method: 'GET',  url: 'api/gebruikers_lijst.php' },
   getOnbekendeScans:                        { method: 'GET',  url: 'api/onbekende_scans.php' },
-  // Migratie 024 (groepensysteem)
+  // (groepensysteem)
   getGroepen:                                { method: 'GET',  url: 'api/groepen.php' },
   getGroepDetail:                            { method: 'GET',  url: 'api/groepen.php', params: ['id'] },
   getGroepTemplate:                          { method: 'GET',  url: 'api/groepen.php', params: ['nieuw'] },
@@ -234,7 +233,7 @@ const TRANSLATIONS = {
   en: {
     signOut: 'Sign out',
     dashboards: 'Dashboards',
-    // Migratie 032_home_widgets, op verzoek van Harm: vier samengestelde
+    // Vier samengestelde
     // widgets op de Home-pagina zelf (zie laadHomeWidgets()/
     // renderHomeWidgets() in assets/js/app.js).
     hwMijnBestellingen: '📦 My Orders',
@@ -247,7 +246,7 @@ const TRANSLATIONS = {
     hwNieuwProduct: 'New: {naam}',
     hwVervanger: '{naam} is temporarily replaced by {vervanger}',
     hwNaarNieuws: 'See full news',
-    // Migratie 039_home_nieuwe_producten, op verzoek van Harm: eigen brede
+    // Eigen brede
     // fototegel-rij op Home met de nieuwst aangemaakte producten, los van
     // de bestaande tekst-lijst hierboven.
     hwNieuweProductenTitle: '🆕 New products',
@@ -255,7 +254,7 @@ const TRANSLATIONS = {
     hwPiccTitle: "🩺 Who's up next",
     hwGeenPiccProcedures: 'No lab-technician procedures configured yet.',
     hwAanDeBeurt: '{procedure}: {naam}',
-    // Op verzoek van Harm ("uitbreiden met foto en minimaal 3 personen op
+    // ("uitbreiden met foto en minimaal 3 personen op
     // volgorde van wie aan de beurt is"): badge onder de eerste persoon in
     // de rotatie-rij, zie piccRotatieHtml() in assets/js/app.js.
     hwPiccUpNext: 'up next',
@@ -269,7 +268,7 @@ const TRANSLATIONS = {
     hwTakenOnvolledig: '{n} product(s) with missing info',
     hwTakenBatch: '{n} item(s) missing batch/expiry data',
     hwNaarTaken: 'See all tasks',
-    // Migratie 044_licentie_registratie, op verzoek van Harm ("Home:
+    // ("Home:
     // sectie met gebruikers/licentie-informatie").
     hwGebruikersLicentieTitle: '🔑 Users & License',
     hwGebruikersTotaal: '{n} user account(s) in total',
@@ -289,10 +288,10 @@ const TRANSLATIONS = {
     groupOrdering: 'Ordering',
     groupReporting: 'Reporting',
     actionCenter: '⚡ Action Center',
-    // Migratie 030: gedeelde ingang voor Overview/Refill/Storage
+    // Gedeelde ingang voor Overview/Refill/Storage
     // Restock/Stock Value/Min-Max Advice -- zie VOORRAAD_TABS.
     stockHub: '📦 Stock',
-    // Migratie 031_bijvullen, op verzoek van Harm: apart, actiegericht
+    // Apart, actiegericht
     // dashboard voor laboranten -- zie showBijvullen()/renderBijvullen() in
     // dit bestand voor de reden waarom dit een eigen dashboard is naast de
     // 'refillList'-tab in Stock.
@@ -303,7 +302,7 @@ const TRANSLATIONS = {
     bvAantalProducten: '{n} product(s)',
     bvColHuidig: 'Current',
     bvColBijvullen: 'To add',
-    // Migratie 031_bijvullen_kastlocatie, op verzoek van Harm: een
+    // Een
     // kastlocatie-naam (bv. "Cabinet 1") kan in meerdere locaties
     // voorkomen, dus deze twee kolommen tonen altijd "locatie: kastlocatie"
     // samen -- nooit de kastlocatie los, dat zou dubbelzinnig zijn.
@@ -311,7 +310,7 @@ const TRANSLATIONS = {
     bvColNaar: 'To (cabinet)',
     bvScanTitle: 'Scan to transfer',
     bvScanHint: 'Scan the barcodes for the boxes you are moving from Storage to the location below.',
-    // Bugfix op verzoek van Harm: voorheen verdween een tekort dat Storage
+    // Bugfix: voorheen verdween een tekort dat Storage
     // zelf niet kan vullen (Storage zelf leeg) gewoon uit deze lijst, en het
     // scherm liet dan ten onrechte "all locations have sufficient stock"
     // zien. Nu apart getoond: het tekort blijft zichtbaar, maar met deze
@@ -321,7 +320,7 @@ const TRANSLATIONS = {
     overview: '📦 Overview',
     recentTransactions: '📋 Recent Transactions',
     tasks: '🗒️ Tasks',
-    // Migratie 026: 'tasks' (above) is no longer used directly -- split
+    // 'tasks' (above) is no longer used directly -- split
     // into two dashboards, since Unknown scans/Incomplete product data are
     // admin data-management tasks while Stock counts due/Past expiry are
     // lab technician floor-work tasks.
@@ -329,22 +328,22 @@ const TRANSLATIONS = {
     tasksLab: '🗒️ Tasks (Lab)',
     writeOffs: '📉 Write-offs & Shortages',
     shoppingList: '🛒 Shopping List',
-    // Migratie 026: renamed to "Refill" -- this screen now only shows the
+    // Renamed to "Refill" -- this screen now only shows the
     // simple internal refill-from-storage list (the external manual-order
     // list lives on its own "To Order" screen).
-    // Migratie 031_bijvullen, op verzoek van Harm: renamed again -- "Refill"
+    // Renamed again -- "Refill"
     // is now the name of the new actionable scan-to-transfer dashboard
     // (bvTitle below), so this read-only list tab needed a distinct label
     // to avoid two identically-named destinations in the menu.
     refillList: '📦 Restock List',
     storage: '📦 Storage Restock',
-    // Migratie 030: gedeelde ingang voor Expiry Dates Detail/Lot Tracking/
+    // Gedeelde ingang voor Expiry Dates Detail/Lot Tracking/
     // Expiry Focus -- zie VERVAL_TABS.
     expiryLotsHub: '📅 Expiry & Lots',
-    // Migratie 030: gedeelde ingang voor To Order/Open Orders/My Orders --
+    // Gedeelde ingang voor To Order/Open Orders/My Orders --
     // zie ORDER_TABS_BASIS.
     ordersHub: '🛒 Orders',
-    // Migratie 030: gedeelde ingang voor Usage per Procedure/Usage Trends/
+    // Gedeelde ingang voor Usage per Procedure/Usage Trends/
     // Write-offs -- zie USAGE_TABS.
     usageHub: '📈 Usage & Trends',
     expiryDatesDetail: '📅 Expiry Dates Detail',
@@ -352,16 +351,15 @@ const TRANSLATIONS = {
     usage: '👨‍⚕️ Usage per Procedure',
     toOrder: '📋 To Order',
     stockValue: '💰 Stock Value',
-    // Migratie 030: gedeelde ingang voor Search Products/Categories -- zie
+    // Gedeelde ingang voor Search Products/Categories -- zie
     // PRODUCT_TABS.
     productsHub: '🔎 Products',
     searchProducts: '🔎 Search Products',
     producenten: '🏭 Manufacturers',
-    // Migratie 030: gedeelde ingang voor Leaderboard/Het Team -- zie
+    // Gedeelde ingang voor Leaderboard/Het Team -- zie
     // TEAM_TABS.
     teamPerformanceHub: '🏆 Team & Performance',
-    // Migratie 028, opgesplitst in migratie 030: was Nieuws/Het Team/
-    // Contactpersonen samen, nu drie losse schermen.
+    // Was Nieuws/Het Team/Contactpersonen samen, nu drie losse schermen.
     newsTeam: '📰 News & Team',
     newsTitle: '📰 News',
     newsNewestProducts: 'Newest products',
@@ -375,7 +373,7 @@ const TRANSLATIONS = {
     newsNoTeamMembers: 'No one to show yet.',
     newsContactsTitle: '📇 Contacts',
     newsNoContacts: 'No contacts recorded yet.',
-    // Migratie 030_groep_landingsscherm: samengesteld beschikbaarheids-
+    // Samengesteld beschikbaarheids-
     // overzicht, bedoeld als landingsscherm voor de artsen-groep.
     beschikbaarheidTitle: '🩺 Availability',
     bhHint: 'What is available, how much, where, its status, and recent usage -- all in one place. Click a product for full detail.',
@@ -390,7 +388,7 @@ const TRANSLATIONS = {
     mcSeeFullTrends: 'See full usage & trends',
     mcTeamTitle: 'Top scans this month',
     mcSeeFullTeam: 'See full team & performance',
-    // Migratie 044_rapportage_herzien, op verzoek van Harm ("Rapportage-
+    // ("Rapportage-
     // pagina volledig herzien"): tab labels for the five dimensions +
     // the new Actions tab's tile labels/hint.
     rpDimVoorraad: '📦 Stock',
@@ -420,7 +418,7 @@ const TRANSLATIONS = {
     vtFilterVerplaats: '↔️ Transfer suggested',
     vtAdviesWaarde: 'min {min} / max {max}',
     vtVerplaatsNaar: '↔️ Move to {locatie} ({dagen}d left)',
-    // Bugfix op verzoek van Harm: voorheen kreeg een rij die onder minimum
+    // Bugfix: voorheen kreeg een rij die onder minimum
     // zit maar niet bijgevuld kan worden (Storage zelf leeg) gewoon een
     // lege actiekolom ("-"), wat het tekort onzichtbaar maakte. Nu een
     // duidelijke waarschuwing i.p.v. niets.
@@ -535,7 +533,7 @@ const TRANSLATIONS = {
     colOrderedOn: 'Ordered on',
     colOrdered: 'Ordered',
     colReceived: 'Received',
-    // Migratie 029, op verzoek van Harm: eerste/laatste ontvangstdatum
+    // Eerste/laatste ontvangstdatum
     // zichtbaar op het orderdetailscherm (was al bijgehouden in de
     // database maar nooit getoond), zie includes/orders.php::getOrderDetail().
     odFirstReceivedOn: 'First received on',
@@ -590,7 +588,7 @@ const TRANSLATIONS = {
     tkNothingDue: 'Nothing due right now.',
     colLastCounted: 'Last counted',
     tkStartCount: 'Start count',
-    // Migratie 042, op verzoek van Harm: vrijwillige actie, geen taak --
+    // Vrijwillige actie, geen taak --
     // "opnieuw voorraadtelling uitvoeren" voor ELKE actieve locatie, niet
     // alleen de locaties die hierboven al overdue zijn.
     tkHerTellenTitel: 'Run a stock count anytime',
@@ -676,21 +674,20 @@ const TRANSLATIONS = {
     lotBewerkHintZonderBarcode: 'This corrects this lot everywhere it appears (all locations, regardless of age). No barcode was recorded for it, so there is nothing to remember for future scans.',
     pdTransactionHistory: '📋 Transaction History (Last 20)',
     pdUsageBySpecialist: '👨‍⚕️ Usage by Specialist',
-    // Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
-    // ("Productpagina: grafiek historisch verbruik").
+    // Productpagina: grafiek historisch verbruik.
     pdVerbruiksgrafiekTitle: '📈 Usage History (last 12 months)',
     pdVerbruiksgrafiekEmpty: 'No usage recorded for this product in the last 12 months.',
     pdOrderHistory: '📑 Order History',
     pdNoOrders: 'No orders placed yet for this product',
     pdManufacturerContact: 'View contact details →',
 
-    // Migratie 025, op verzoek van Harm: artikel-status (niet leverbaar /
+    // Artikel-status (niet leverbaar /
     // niet meer in gebruik) + vervangend artikel.
     statusActief: 'Active',
     statusNietLeverbaar: 'Not deliverable',
     statusNietMeerInGebruik: 'No longer in use',
 
-    // Op verzoek van Harm: statusBadgeHtml() gaf voorheen altijd de ruwe
+    // : statusBadgeHtml() gaf voorheen altijd de ruwe
     // backend-statuscode (VERLOPEN/LAAG/MONITOREN/'In bestelling'/enz.)
     // letterlijk weer, ongeacht schermtaal -- deze sleutels vertalen die
     // badge-tekst terwijl de kleurclassificatie (classifyStatus()) op de
@@ -743,7 +740,7 @@ const TRANSLATIONS = {
     pePhotoLink: 'Photo link',
     pePhotoPlaceholder: 'Paste a Google Drive share link (Anyone with the link) or a direct image URL',
     pePhotoHint: 'Set the Drive file to “Anyone with the link”, otherwise the dashboard cannot load the photo.',
-    // Migratie 023, op verzoek van Harm: geüploade foto staat rechtstreeks
+    // Geüploade foto staat rechtstreeks
     // in de database (JPG/PNG/WEBP, max 2MB) en krijgt voorrang op de
     // link hieronder -- die link blijft alleen als terugvaloptie.
     pfPhotoUploadHint: 'JPG, PNG or WEBP, max 2MB. Stored directly in the database and takes priority over the link below.',
@@ -753,7 +750,7 @@ const TRANSLATIONS = {
     peSaving: 'Saving...',
     peErrorSaving: 'Error saving: ',
 
-    // Op verzoek van Harm ("I want to actually be able to
+    // ("I want to actually be able to
     // edit everything"): edit screen reorganized into clear sections
     // instead of one long list, plus dropdowns for manufacturer/order
     // type/category and a dedicated (cascading) EAN-change action.
@@ -762,7 +759,7 @@ const TRANSLATIONS = {
     peSectionStock: 'Stock: Min/Max & shelf location per room',
     peSectionExtraLocations: 'Additional locations',
     peKastlocatie: 'Shelf location',
-    // Migratie 029, op verzoek van Harm: kastlocatie als dropdown-met-
+    // Kastlocatie als dropdown-met-
     // "nieuwe toevoegen" i.p.v. vrij tekstveld, zelfde patroon als Manufacturer.
     peKastlocatieNone: '(none)',
     peKastlocatieNew: '+ New shelf location',
@@ -776,7 +773,7 @@ const TRANSLATIONS = {
     peEanChangeConfirm: 'Change the EAN from {oud} to {nieuw}? This rewrites it in this product\'s stock history, orders and Min/Max advice too. This cannot be undone from here.',
     peEanChangeSuccess: 'EAN changed to {ean}.',
 
-    // Migratie 025: status/vervanger-sectie op het bewerkscherm.
+    // Status/vervanger-sectie op het bewerkscherm.
     peStatusTitel: 'Status',
     peStatusHint: 'Mark this product as temporarily not deliverable (with an optional replacement product) or as permanently no longer in use. Both are excluded from Min/Max Advice, the Shopping List and the Storage Restock List -- existing physical stock and past transactions are unaffected.',
     peStatus: 'Status',
@@ -790,7 +787,7 @@ const TRANSLATIONS = {
     psColStockByLocation: 'Stock by location',
     colExpiry: 'Next expiry',
 
-    // Shopping list (migratie 026: renamed "Refill" -- slHint1/slHint2 no
+    // Shopping list (renamed "Refill" -- slHint1/slHint2 no
     // longer shown, kept for translation-key parity)
     slHint1: 'Refill from Storage',
     slHint2: 'To Order (Manual)',
@@ -804,7 +801,7 @@ const TRANSLATIONS = {
     stTitle: '📦 Storage Restock List',
     stHint: 'Everything below minimum at Storage, computed from scans — hand this list to logistics directly, no physical count or scan needed to know what to order.',
     stAllSufficient: 'Everything sufficiently in stock',
-    // Migratie 021, op verzoek van Harm: was de GS1-EAN (leverancierscode),
+    // Was de GS1-EAN (leverancierscode),
     // nu de interne logistiekcode -- bedoeld voor een eigen schaplabel,
     // niet voor de leverancier. Optioneel veld, dus niet elk product heeft
     // 'm; zie stNoLogistiekCode hieronder voor de lege-staat.
@@ -813,10 +810,10 @@ const TRANSLATIONS = {
     colProducerRef: 'Producer / Ref',
     colNeeded: 'Needed',
 
-    // Migratie 025, op verzoek van Harm: printen/exporteren + markeren
+    // Printen/exporteren + markeren
     // als besteld voor de Berging-bestellijst.
     bpPrintKnop: '🖨️ Print / Export as PDF',
-    // Migratie 026 (op verzoek van Harm): "Print/Export" replaced by a
+    // "Print/Export" replaced by a
     // download-PDF + mailto combo -- a mailto: link can never carry an
     // attachment automatically, so this downloads the PDF first and then
     // opens a blank-recipient email with a reminder to attach it.
@@ -879,7 +876,7 @@ const TRANSLATIONS = {
     acEmpty: 'Empty',
     acLow: 'Low',
     acOpenOrders: 'Open orders',
-    // Migratie 030: tegels zijn nu klikbaar en linken door naar het
+    // Tegels zijn nu klikbaar en linken door naar het
     // scherm met de bijbehorende lijst.
     acCockpitHint: 'Click a tile to see the underlying list.',
     acNothing: 'Nothing needs attention right now',
@@ -915,15 +912,14 @@ const TRANSLATIONS = {
     ooRegularTitle: '📦 Regular Orders',
     ooNone: 'No open orders',
     ooRedHint: 'Red day count = open longer than 14 days.',
-    // Order detail (migratie 027)
+    // Order detail
     odDetailTitle: 'Order details',
     odStatusHint: 'Status: {status} (calculated from ordered/received, not editable directly).',
     odViewProduct: 'View product',
     odTransactionsTitle: 'Transactions around this order',
     odTransactionsHint: 'Stock transactions for this product between when this order was placed and when it was last received (or now, if still open). Note: transactielog has no direct link to a specific order, so if multiple orders for the same product were open at the same time, a transaction may show up under more than one of them.',
     odNoTransactions: 'No stock transactions recorded in this order\'s timeframe yet.',
-    // Migratie 041_order_detail_ontvangst_clusteren, op verzoek van Harm.
-    // Op verzoek van Harm (2e correctie): 'units' was ook fout -- n telt
+    // 2e correctie: 'units' was ook fout -- n telt
     // het aantal transactielog-REGELS in deze batch (item.aantalRegels /
     // item.regels.length), niet het aantal stuks/eenheden. Consistent met
     // rtViewLines ("View lines ({n})") elders in de app.
@@ -965,10 +961,10 @@ const TRANSLATIONS = {
     // Error log
     flNone: 'No errors logged',
     flHint: 'Last {n} errors, newest first.',
-    // Migratie 040: vertaling van de vaste EAN_NOT_IN_ARTIKELEN-foutlogregel,
+    // Vertaling van de vaste EAN_NOT_IN_ARTIKELEN-foutlogregel,
     // zie foutlogBerichtLabel() in app.js.
     flBerichtEanOnbekend: 'Product not found in articles',
-    // Migratie 040, op verzoek van Harm ("Alleen JPG, PNG of WEBP-afbeeldingen
+    // ("Alleen JPG, PNG of WEBP-afbeeldingen
     // zijn toegestaan" bleef Nederlands): vertaling van de vaste
     // upload-validatiemeldingen uit includes/upload.php::decodeFotoDataUrl(),
     // zie apiErrorLabel() in app.js.
@@ -1071,7 +1067,7 @@ const TRANSLATIONS = {
 
     // Add product
     apHint: 'GS1 is parsed on save for the EAN -- no separate edit step needed like in the old sheet version. The article number is never derived from the scan; fill that in yourself below if you track one.',
-    // Migratie 025: getoond als dit formulier geopend is via "Create a new
+    // Getoond als dit formulier geopend is via "Create a new
     // product as replacement..." op het bewerkscherm van een ander product.
     apVervangerHint: 'This product is being created as a replacement for another (currently not deliverable) product -- its own EAN/barcode is required below, since this is a different physical product.',
     apGs1Scan: 'GS1 scan (the EAN below is filled in automatically)',
@@ -1082,7 +1078,7 @@ const TRANSLATIONS = {
     apOrderType: 'Order type',
     apOrderTypeAuto: 'Automatic',
     apOrderTypeManual: 'Manual',
-    // Migratie 041, op verzoek van Harm: derde besteltype voor producten
+    // Derde besteltype voor producten
     // die puur bestaan omdat ze ooit binnen een Eenmalige Bestelling
     // (patiëntgebonden aanvraag) gescand/aangemaakt zijn -- zie
     // verwerkAchterstalligeEenmaligeBestellingOntvangsten() in
@@ -1128,7 +1124,7 @@ const TRANSLATIONS = {
     mdActivate: 'Activate',
     mdDeactivate: 'Deactivate',
     mdRemove: 'Remove',
-    // Migratie 028: beheerde categorielijst + categorie-specifieke
+    // Beheerde categorielijst + categorie-specifieke
     // eigenschappen (bijv. Ballon -> diameter/lengte/compatibel voerdraad).
     mdCategorieen: '📁 Categories & properties',
     mdCategorieenHint: 'Which product properties (diameter, length, French size, ...) apply depends on the category. A deactivated category disappears from the list when adding a new product, but existing products keep working.',
@@ -1158,7 +1154,6 @@ const TRANSLATIONS = {
     guFunctie: 'Function',
     guFunctieHint: 'Specialist and Lab technician can both scan/order (full access); Viewer can only look at the data. A Lab technician may only be picked as the performer of a procedure that has been marked "also allowed for Lab technician" in Master Data (in practice, PICC line placements) -- any other procedure requires a Specialist. The Admin checkbox is an extra flag on top of the function: an Admin can always manage Users/Locations/Manufacturers/Master Data, regardless of function.',
     guBeheerderVlag: 'Admin',
-    // Migratie 036 (license model), on Harm's request.
     guLicentie: 'License',
     guLicentieVrij: 'Free',
     guLicentieGeldigTot: 'Valid until {datum}',
@@ -1167,14 +1162,14 @@ const TRANSLATIONS = {
     guLicentieCodePrompt: 'Paste the activation code for {naam}:',
     guLicentieEmailPrompt: 'Confirm the order/purchase email this code was issued for (see your purchase confirmation email):',
     guLicentieGekoppeld: 'Code linked.',
-    // Migratie 044_licentie_registratie, op verzoek van Harm: nieuw
+    // Nieuw
     // account aanmaken vereist nu meteen een activatiecode, zie het
     // aanmaakformulier in renderGebruikers() en api/gebruikers.php.
     guLicentieRegistratieTitle: 'License activation',
     guLicentieRegistratieHint: 'A new account can only be created together with a valid activation code -- paste the code you received by e-mail after purchase, and confirm the order e-mail address it was issued for.',
     guLicentieCodeLabel: 'Activation code',
     guLicentieEmailLabel: 'Order e-mail (confirmation)',
-    // Migratie 044_licentie_registratie, op verzoek van Harm ("profielpagina"):
+    // ("profielpagina"):
     // eigen accountgegevens + licentiestatus + wachtwoord wijzigen, zie
     // showProfiel()/renderProfiel() in dit bestand + api/mijn_profiel.php.
     profTitle: '👤 My profile',
@@ -1186,15 +1181,15 @@ const TRANSLATIONS = {
     profHuidigWachtwoord: 'Current password',
     profNieuwWachtwoord: 'New password (min. 8 characters)',
     profWachtwoordOpslaan: 'Change password',
-    // Migratie 037, op verzoek van Harm: zichtbare waarschuwing als er
+    // Zichtbare waarschuwing als er
     // meer dan 1 geldig lokaal gratis-token bestaat -- zou nooit moeten
     // gebeuren via de normale schermen, alleen bij directe database-
     // manipulatie met het lokale geheim. Zie includes/license.php::
     // telAantalGeldigeVrijeTokens().
     guLicentieAnomalie: 'Warning: {aantal} valid free-user tokens found on this installation (expected at most 1). Only the account with the lowest ID counts as the legitimate free user; check license_activations if this is unexpected.',
-    // On Harm's request: an admin must be able to reset another user's
-    // password (no "forgot password" e-mail flow exists in this app, by
-    // design -- see README "Licensing & self-hosted distribution").
+    // An admin must be able to reset another user's password (no "forgot
+    // password" e-mail flow exists in this app, by design -- see README
+    // "Licensing & self-hosted distribution").
     guWachtwoordResetten: 'Reset password',
     guWachtwoordResetPrompt: 'New password for {naam} (min. 8 characters):',
     guWachtwoordTeKort: 'Password must be at least 8 characters.',
@@ -1204,14 +1199,14 @@ const TRANSLATIONS = {
     guLegacyCreateAccount: 'Create account',
     guLanguage: 'Language',
     guCreate: 'Create',
-    // Migratie 024: groepen zijn LOS van de functie hierboven -- functie
+    // Groepen zijn LOS van de functie hierboven -- functie
     // blijft klinisch (PICC-regel/leaderboard/Mijn Bestellingen), groepen
     // bepalen alleen scherm-zichtbaarheid en schrijftoegang. Zie
     // includes/groepen.php voor het volledige ontwerp.
     guGroepen: 'Groups',
     guGeenGroepen: 'No groups exist yet -- create one on the Groups screen.',
     guNaarGroepen: 'Manage groups →',
-    // Migratie 050_gebruikers_herindeling, op verzoek van Harm ("blijft heel
+    // ("blijft heel
     // erg lelijk en onoverzichtelijk"): Groepen-cel toont voortaan compacte
     // chips + een wijzigen-knop i.p.v. een altijd-uitgeklapt kadertje, en
     // Beheerder+Actief zijn samengevoegd tot één "Rights"-kolom.
@@ -1220,7 +1215,7 @@ const TRANSLATIONS = {
     guGroepenWijzigen: 'Change groups',
     guGroepenSluiten: 'Close groups',
 
-    // Migratie 040, op verzoek van Harm ("Het wijzigen van gebruikers
+    // ("Het wijzigen van gebruikers
     // gegevens moet via een knop i.p.v. een tekstveld die ik direct kan
     // aanpassen"): naam/e-mail staan standaard read-only (zie renderGebruikers()
     // in app.js) en worden pas bewerkbaar na een expliciete klik op deze
@@ -1229,7 +1224,7 @@ const TRANSLATIONS = {
     guNaamEmailWijzigen: 'Edit name/email',
     guNaamEmailSluiten: 'Done editing',
 
-    // Groups (migratie 024): who can see/access which screens, and who can
+    // Groups: who can see/access which screens, and who can
     // write, is decided per group rather than per fixed function -- see
     // includes/groepen.php for the full two-axis design (function stays
     // clinical, groups are purely about screen access).
@@ -1251,12 +1246,12 @@ const TRANSLATIONS = {
     groepLandingSchermHome: 'Home (main menu)',
     groepVerwijderenConfirm: 'Delete this group? Members lose access to its screens immediately (unless another one of their groups also grants it).',
 
-    // Specialist self-service (migratie 019: rol 'specialist'/'laborant', volledige toegang -- zie includes/auth.php)
+    // Specialist self-service (rol 'specialist'/'laborant', volledige toegang -- zie includes/auth.php)
     mbTitle: 'My Orders',
     mbHint: 'One-off orders placed under your name, most recent first. Read-only -- contact the ordering team to make changes.',
     mbNone: 'No one-off orders found under your name yet.',
 
-    // Profile photos (migratie 015, users + producent_contacten)
+    // Profile photos (users + producent_contacten)
     colPhoto: 'Photo',
     fotoUpload: 'Photo',
     fotoRemove: 'Remove photo',
@@ -1264,7 +1259,7 @@ const TRANSLATIONS = {
     fotoTooBig: 'Image is too large (max 2MB)',
     fotoRemoveConfirm: 'Remove this photo?',
 
-    // Leaderboard (migratie 010)
+    // Leaderboard
     leaderboard: '🏆 Leaderboard',
     lbHint: 'Two separate rankings: who performed the most actions (scans, transfers, stock counts) under their own account, and who performed the most procedures of a given type -- useful for a fair rotation (e.g. "who\'s next for a PICC line").',
     lbPeriod: 'Period',
@@ -1299,7 +1294,7 @@ const TRANSLATIONS = {
     mmCurrentMax: 'Current max',
     mmAdvisedMin: 'Advised min',
     mmAdvisedMax: 'Advised max',
-    // Migratie 031: rooms no longer have a minimum (see mmHint above) --
+    // Rooms no longer have a minimum (see mmHint above) --
     // shown in the Current min/Advised min columns for room rows.
     mmNotApplicable: 'n/a',
     mmBasis: 'Basis',
@@ -1347,7 +1342,7 @@ const TRANSLATIONS = {
     hwNieuweProductenEmpty: 'Geen recent toegevoegde producten.',
     hwPiccTitle: '🩺 Wie is aan de beurt',
     hwGeenPiccProcedures: 'Nog geen laborant-procedures ingesteld.',
-    // Op verzoek van Harm ("uitbreiden met foto en minimaal 3 personen op
+    // ("uitbreiden met foto en minimaal 3 personen op
     // volgorde van wie aan de beurt is"): badge onder de eerste persoon in
     // de rotatie-rij, zie piccRotatieHtml() in assets/js/app.js.
     hwPiccUpNext: 'eerst aan de beurt',
@@ -1362,7 +1357,6 @@ const TRANSLATIONS = {
     hwTakenOnvolledig: '{n} product(en) met ontbrekende gegevens',
     hwTakenBatch: '{n} item(s) zonder batch-/vervaldatumgegevens',
     hwNaarTaken: 'Bekijk alle taken',
-    // Migratie 044_licentie_registratie, op verzoek van Harm.
     hwGebruikersLicentieTitle: '🔑 Gebruikers & licentie',
     hwGebruikersTotaal: '{n} gebruikersaccount(s) in totaal',
     hwGebruikersLicentieGeldig: '{n} met een geldige licentie',
@@ -1696,7 +1690,7 @@ const TRANSLATIONS = {
     pdSpecs: '🔧 Specificaties',
     pdStockByLocation: '📍 Voorraad per Locatie',
     pdLotsInStock: '📦 Loten op Voorraad',
-    // Op verzoek van Harm ("per lot een regel met aantal/vervaldatum/
+    // ("per lot een regel met aantal/vervaldatum/
     // barcode, uitklapbaar om te zien waar hoeveel ligt"): toggle-tekst
     // voor de locatie-uitklapper per lotgroep, zie renderProductDetail().
     ltBekijkLocaties: 'Bekijk {n} locatie(s)',
@@ -1707,7 +1701,6 @@ const TRANSLATIONS = {
     lotBewerkHintZonderBarcode: 'Dit corrigeert dit lot overal waar het voorkomt (alle locaties, ongeacht ouderdom). Hier is geen barcode van vastgelegd, dus is er niets te onthouden voor toekomstige scans.',
     pdTransactionHistory: '📋 Transactiehistorie (Laatste 20)',
     pdUsageBySpecialist: '👨‍⚕️ Verbruik per Specialist',
-    // Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm.
     pdVerbruiksgrafiekTitle: '📈 Verbruikshistorie (laatste 12 maanden)',
     pdVerbruiksgrafiekEmpty: 'Geen verbruik geregistreerd voor dit product in de laatste 12 maanden.',
     pdOrderHistory: '📑 Bestelhistorie',
@@ -1740,7 +1733,7 @@ const TRANSLATIONS = {
     pdNogGeenVervanger: 'Nog geen vervangend artikel ingesteld.',
     pdStatusWijzigen: 'Status wijzigen →',
 
-    // Producenten (migratie 012)
+    // Producenten
     prHint: 'Contactgegevens per producent/leverancier -- website, algemeen e-mailadres/telefoon, en een onbeperkt aantal contactpersonen. Gekoppeld aan producten op naam (case-insensitief); het producentveld op een product zelf blijft gewoon vrije tekst.',
     prEmpty: 'Nog geen producenten toegevoegd',
     colWebsite: 'Website',
@@ -1773,7 +1766,7 @@ const TRANSLATIONS = {
     peSaving: 'Bezig met opslaan...',
     peErrorSaving: 'Fout bij opslaan: ',
 
-    // Op verzoek van Harm ("ik wil daadwerkelijk alles kunnen
+    // ("ik wil daadwerkelijk alles kunnen
     // bewerken"): bewerkscherm opgesplitst in duidelijke secties i.p.v. één
     // lange lijst, plus dropdowns voor producent/besteltype/categorie en
     // een aparte (cascaderende) EAN-wijzig-actie.
@@ -1907,14 +1900,14 @@ const TRANSLATIONS = {
     ooRegularTitle: '📦 Reguliere Orders',
     ooNone: 'Geen open orders',
     ooRedHint: 'Rood dagenaantal = langer dan 14 dagen open.',
-    // Order detail (migratie 027)
+    // Order detail
     odDetailTitle: 'Orderdetails',
     odStatusHint: 'Status: {status} (berekend uit besteld/ontvangen, niet direct wijzigbaar).',
     odViewProduct: 'Bekijk product',
     odTransactionsTitle: 'Transacties rondom deze order',
     odTransactionsHint: 'Voorraadtransacties voor dit product tussen het moment dat deze order geplaatst is en het moment dat er voor het laatst iets op ontvangen is (of nu, als de order nog openstaat). Let op: transactielog heeft geen directe koppeling met een specifieke order -- als er meerdere orders voor hetzelfde product tegelijk openstonden, kan eenzelfde transactie bij meer dan één order getoond worden.',
     odNoTransactions: 'Nog geen voorraadtransacties geregistreerd binnen de periode van deze order.',
-    // Op verzoek van Harm: eerst "lots" -> "stuks" gewijzigd, maar dat bleek
+    // : eerst "lots" -> "stuks" gewijzigd, maar dat bleek
     // ook niet juist -- n is het aantal transactielog-REGELS in deze batch
     // (item.aantalRegels / item.regels.length), niet het aantal stuks.
     // Consistent met rtViewLines ("Bekijk regels ({n})") elders in de app.
@@ -2122,7 +2115,6 @@ const TRANSLATIONS = {
     guFunctie: 'Functie',
     guFunctieHint: 'Specialist en Laborant hebben allebei volledige toegang (scannen/bestellen); Bekijker kan alleen de data inzien. Een Laborant kan alleen als uitvoerder van een procedure gekozen worden als die procedure in Stamgegevens is aangevinkt als "ook toegestaan voor Laborant" (in de praktijk PICC-lijnen) -- elke andere procedure vereist een Specialist. Het Beheerder-vinkje is een extra markering los van de functie: een Beheerder kan altijd Gebruikers/Locaties/Producenten/Stamgegevens beheren, ongeacht functie.',
     guBeheerderVlag: 'Beheerder',
-    // Migratie 036 (licentiemodel), op verzoek van Harm.
     guLicentie: 'Licentie',
     guLicentieVrij: 'Gratis',
     guLicentieGeldigTot: 'Geldig tot {datum}',
@@ -2131,13 +2123,13 @@ const TRANSLATIONS = {
     guLicentieCodePrompt: 'Plak de activatiecode voor {naam}:',
     guLicentieEmailPrompt: 'Bevestig het besteladres waaronder deze code is gekocht (zie je aankoopbevestiging):',
     guLicentieGekoppeld: 'Code gekoppeld.',
-    // Migratie 044_licentie_registratie, op verzoek van Harm: nieuw
+    // Nieuw
     // account aanmaken vereist nu meteen een activatiecode.
     guLicentieRegistratieTitle: 'Licentieactivatie',
     guLicentieRegistratieHint: 'Een nieuw account kan alleen samen met een geldige activatiecode aangemaakt worden -- plak de code die je per e-mail hebt ontvangen na aankoop, en bevestig het besteladres waaronder die is uitgegeven.',
     guLicentieCodeLabel: 'Activatiecode',
     guLicentieEmailLabel: 'Besteladres (bevestiging)',
-    // Migratie 044_licentie_registratie, op verzoek van Harm ("profielpagina").
+    // ("profielpagina").
     profTitle: '👤 Mijn profiel',
     profAccountTitle: 'Account',
     profTaalHint: 'Je taalvoorkeur wijzig je naast Uitloggen, in de header.',
@@ -2147,9 +2139,8 @@ const TRANSLATIONS = {
     profHuidigWachtwoord: 'Huidig wachtwoord',
     profNieuwWachtwoord: 'Nieuw wachtwoord (min. 8 tekens)',
     profWachtwoordOpslaan: 'Wachtwoord wijzigen',
-    // Migratie 037, op verzoek van Harm.
     guLicentieAnomalie: 'Let op: er zijn {aantal} geldige gratis-tokens gevonden op deze installatie (verwacht maximaal 1). Alleen de gebruiker met het laagste account-id telt mee als de rechtmatige gratis gebruiker; controleer license_activations als dit onverwacht is.',
-    // Op verzoek van Harm: een beheerder moet het wachtwoord van een
+    // Een beheerder moet het wachtwoord van een
     // andere gebruiker kunnen resetten (er is geen "wachtwoord vergeten"-
     // mailflow in deze app, bewust, zie README "Licensing & self-hosted
     // distribution").
@@ -2165,7 +2156,7 @@ const TRANSLATIONS = {
     guGroepen: 'Groepen',
     guGeenGroepen: 'Er bestaan nog geen groepen -- maak er één aan op het Groepen-scherm.',
     guNaarGroepen: 'Groepen beheren →',
-    // Migratie 050_gebruikers_herindeling, op verzoek van Harm ("blijft heel
+    // ("blijft heel
     // erg lelijk en onoverzichtelijk"): Groepen-cel toont voortaan compacte
     // chips + een wijzigen-knop i.p.v. een altijd-uitgeklapt kadertje, en
     // Beheerder+Actief zijn samengevoegd tot één "Rechten"-kolom.
@@ -2205,7 +2196,7 @@ const TRANSLATIONS = {
     fotoTooBig: 'Afbeelding is te groot (max 2MB)',
     fotoRemoveConfirm: 'Deze foto verwijderen?',
 
-    // Leaderboard (migratie 010)
+    // Leaderboard
     leaderboard: '🏆 Leaderboard',
     lbHint: 'Twee losse ranglijsten: wie de meeste acties (scans, verplaatsingen, tellingen) onder zijn/haar eigen account heeft uitgevoerd, en wie de meeste procedures van een bepaald type heeft gedaan -- handig voor een eerlijke rotatie (bijv. "wie is aan de beurt voor een PICC-lijn").',
     lbPeriod: 'Periode',
@@ -2240,7 +2231,7 @@ const TRANSLATIONS = {
     mmCurrentMax: 'Huidig max',
     mmAdvisedMin: 'Advies min',
     mmAdvisedMax: 'Advies max',
-    // Migratie 031: kamers hebben geen minimum meer (zie mmHint hierboven)
+    // Kamers hebben geen minimum meer (zie mmHint hierboven)
     // -- getoond in de Huidig min/Advies min-kolommen bij kamer-rijen.
     mmNotApplicable: 'n.v.t.',
     mmBasis: 'Basis',
@@ -2273,7 +2264,7 @@ const TRANSLATIONS = {
   },
 };
 
-// Taal is een accountinstelling (migratie 009), geen browser-lokale
+// Taal is een accountinstelling, geen browser-lokale
 // (localStorage) keuze meer -- window.CURRENT_USER.taal komt van de
 // PHP-sessie (app.php), dus dit staat al goed bij het eerste renderen,
 // zonder flits van de verkeerde taal. login.php (vóór er een account
@@ -2347,7 +2338,7 @@ function setLanguage(lang) {
 // =================================================================
 function classifyStatus(text) {
   var t = String(text || '').toUpperCase();
-  // Migratie 025: artikel-statussen hergebruiken de bestaande badge-
+  // Artikel-statussen hergebruiken de bestaande badge-
   // kleuren i.p.v. een eigen stijl te verzinnen -- 'Niet leverbaar' is
   // tijdelijk/aandacht-nodig (zelfde amber als 'monitoren'/'hoog'), 'Niet
   // meer in gebruik' is blijvend en neutraal (geen speciale kleur nodig).
@@ -2373,7 +2364,7 @@ function classifyStatus(text) {
 // Vertaalt bekende backend-statuscodes (die van oudsher altijd in het
 // Nederlands worden geproduceerd door includes/*.php -- zie classifyStatus()
 // hierboven) naar de actieve schermtaal, voor gebruik in statusBadgeHtml().
-// Op verzoek van Harm: de badge-pil toonde voorheen altijd de ruwe
+// : de badge-pil toonde voorheen altijd de ruwe
 // Nederlandse tekst ("Laag", "Verlopen", "In bestelling", "Monitoren",
 // "Leeg", ...) ook wanneer de schermtaal op EN stond, wat opviel in
 // screenshots van de live demo. De classificatie/kleur van de badge blijft
@@ -2389,7 +2380,7 @@ var STATUS_BADGE_LABEL_KEYS = {
   'LEEG': 'statusBadgeEmpty',
   'LAAG': 'statusBadgeLow',
   'HOOG': 'statusBadgeHigh',
-  // Migratie 040, op verzoek van Harm ("Stock status in orders: Nog te
+  // ("Stock status in orders: Nog te
   // bestellen" bleef Nederlands): deze status komt uit
   // bestellingenNormaliseer() (de "Handmatig, nog geen order"-rijen op het
   // Bestellingen-scherm) en ontbrak hier, dus viel statusBadgeHtml()
@@ -2416,7 +2407,7 @@ function statusBadgeHtml(text) {
   return '<span class="badge badge-' + classifyStatus(raw) + '">' + escapeHtml(label) + '</span>';
 }
 
-// Op verzoek van Harm ("Order details, sommige velden blijven in het
+// ("Order details, sommige velden blijven in het
 // Nederlands"): zelfde vertaal-lookup als statusBadgeHtml() hierboven
 // (STATUS_BADGE_LABEL_KEYS), maar als platte, vertaalde tekst i.p.v. een
 // badge-<span> -- voor plekken waar de status in een zin geïnterpoleerd
@@ -2428,7 +2419,7 @@ function statusDisplayLabel(text) {
   return labelKey ? t(labelKey) : raw;
 }
 
-// Migratie 040, op verzoek van Harm ("Error Log: Product niet gevonden in
+// ("Error Log: Product niet gevonden in
 // artikelen" bleef Nederlands): includes/logging.php::logError() schrijft
 // vaste, technische berichten naar de foutlog-tabel -- de meeste komen uit
 // PHP/PDO-exceptions ($e->getMessage()) en zijn dus niet zomaar vooraf te
@@ -2446,7 +2437,7 @@ function foutlogBerichtLabel(bericht) {
   return key ? t(key) : raw;
 }
 
-// Op verzoek van Harm: dezelfde drie besteltype-waarden (Automatisch/
+// : dezelfde drie besteltype-waarden (Automatisch/
 // Handmatig/Eenmalig, zie bestelMethode() in includes/orders.php en het
 // besteltype-veld op artikelen) worden op meerdere schermen getoond --
 // Artikel Toevoegen (naBesteltype-select) had al de juiste vertaalsleutels
@@ -2477,7 +2468,7 @@ let currentPage = 'home';
 // tussen schermen bewegen -- voorheen bleef de URL altijd op app.php
 // staan (alle navigatie was puur innerHTML-vervanging zonder
 // history.pushState/hash), dus "terug" in de browser sprong de hele app
-// uit i.p.v. één stap terug (op Harms verzoek opgelost).
+// uit i.p.v. één stap terug (inmiddels opgelost).
 //
 // Aanpak: elke showXxx()-functie roept als allereerste statement
 // setRoute('routesleutel'[, param]) aan. setRoute() zet de hash en doet
@@ -2503,7 +2494,7 @@ let currentPage = 'home';
 let navigatingViaHistory = false;
 
 function setRoute(key, param) {
-  // Migratie 030_groep_landingsscherm: de zijbalk-highlight hangt hier
+  // De zijbalk-highlight hangt hier
   // en niet ergens verderop, want setRoute() is de ene plek die elke
   // showXxx() als allereerste statement altijd aanroept (zie toelichting
   // hierboven) -- ook wanneer de hash toevallig al klopt (early return
@@ -2543,7 +2534,7 @@ function loadProducentEdit(id) {
   }).getProducentDetail(id);
 }
 
-// Migratie 031_dashboard_consolidatie: onderstaande sleutels zijn de
+// Onderstaande sleutels zijn de
 // bookmarks/landingsscherm-waarden van vóór deze migratie (oude losse
 // tabblad-pagina's). De onderliggende show*()-functies bestaan allemaal
 // nog gewoon (interne tabbalk-arrays als VOORRAAD_TABS/ORDER_TABS_BASIS
@@ -2608,7 +2599,7 @@ const ROUTE_DISPATCH = {
   'taken': function () { showTaken(); },
   'producent-detail': function (param) { showProducentDetail(param); },
   'producent-edit': function (param) { loadProducentEdit(param); },
-  // Migratie 044_licentie_registratie, op verzoek van Harm ("Licentiemodel:
+  // ("Licentiemodel:
   // registratie blokkeren zonder geldige licentie + profielpagina"): elke
   // ingelogde gebruiker (geen gast) kan hier eigen accountgegevens +
   // licentiestatus bekijken en zijn eigen wachtwoord wijzigen. Zie
@@ -2633,7 +2624,7 @@ window.addEventListener('popstate', function (event) {
   }
 });
 
-// Migratie 036, op verzoek van Harm: alle "Terug"-knoppen in de app gingen
+// Alle "Terug"-knoppen in de app gingen
 // naar een vast, per-scherm hardgecodeerd doel (meestal showHome(), soms
 // iets specifieks) -- dat voelde niet als "terug", eerder als "naar een
 // vaste plek springen". Omdat elke showXxx() al via setRoute() hierboven
@@ -2647,7 +2638,7 @@ function goBack() {
   window.history.back();
 }
 
-// Migratie 024 (groepensysteem, op verzoek van Harm): of een scherm
+// Of een scherm
 // getoond wordt hangt nu af van window.CURRENT_USER.schermen (server-side
 // berekend in app.php uit de groepen van deze gebruiker, zie includes/
 // groepen.php::gebruikerSchermen()) i.p.v. losse rol/is_beheerder-checks
@@ -2666,8 +2657,8 @@ function wire(id, handler) {
 }
 
 // =================================================================
-// APP-SCHIL: vaste zijbalk-navigatie (migratie 030_groep_landingsscherm),
-// op verzoek van Harm: "Mobiel/Tablet is niet van toepassing, alles
+// APP-SCHIL: vaste zijbalk-navigatie,
+// : "Mobiel/Tablet is niet van toepassing, alles
 // gebeurt vanaf een computer" -- dus een permanente desktop-zijbalk i.p.v.
 // bv. een mobiele onderbalk, zodat je nooit meer eerst terug naar Home
 // hoeft om naar een ander dashboard te springen. Zelfde heeftScherm()-
@@ -2715,7 +2706,7 @@ function renderSidebar() {
   if (heeftScherm('verval-afboeken')) forms += sidebarBtnHtml('sbVervalAfboeken', 'verval-afboeken', t('writeOffExpired'));
   html += sidebarSectionHtml('forms', forms);
 
-  // Migratie 031_dashboard_consolidatie, op verzoek van Harm ("diepere
+  // ("diepere
   // oplossing" i.p.v. schermen alleen achter een andere tabblad
   // verplaatsen): de vijf subgroepen hierboven (actie/voorraad/verval/
   // bestellen/rapportage, samen 16 bestemmingen) zijn vervangen door 8
@@ -2733,7 +2724,7 @@ function renderSidebar() {
     dash += sidebarBtnHtml('sbVoorraad', 'voorraad overzicht boodschappenlijst berging voorraadwaarde minmax-advies vervaldatums lot-tracking vervalfocus verplaatsadvies beschikbaarheid actiecentrum', t('stockHub'));
   }
   if (heeftScherm('verplaatsing')) dash += sidebarBtnHtml('sbBijvullen', 'bijvullen', t('bvTitle'));
-  // Migratie 033: was orderTabsVoorGebruiker().some(...) -- die hielp
+  // Was orderTabsVoorGebruiker().some(...) -- die hielp
   // hier alleen om de drie oude, nu vervallen tabbladschermen
   // (bestellers/open-orders/mijn-bestellingen) na te lopen. Rechtstreeks
   // dezelfde drie scherm-keys checken, geen rolgate meer nodig (zie
@@ -2753,7 +2744,7 @@ function renderSidebar() {
 
   const adminSchermen = ['gebruikers', 'groepen', 'stamgegevens', 'locaties', 'foutlog', 'onbekende-producten'];
   if (adminSchermen.some(heeftScherm)) {
-    // Migratie 031, op verzoek van Harm: geen 3 nieuwe samengevoegde
+    // Geen 3 nieuwe samengevoegde
     // beheerpagina's (te veel risico op de onderliggende CRUD-logica in de
     // beschikbare tijd) -- wel visueel opgeknipt in 3 herkenbare groepjes
     // (Toegang/Instellingen/Datakwaliteit) i.p.v. 1 platte rij van 6 knoppen.
@@ -2780,7 +2771,7 @@ function renderSidebar() {
   wire('sbScanVerbruik', showScanVerbruik);
   wire('sbScanOntvangst', showScanOntvangst);
   wire('sbVerplaatsing', showVerplaatsing);
-  // Op verzoek van Harm: linkte per ongeluk nog naar het verweesde,
+  // : linkte per ongeluk nog naar het verweesde,
   // pre-consolidatie showBestellers()-scherm (met eigen terugknop) i.p.v.
   // de huidige "Bestellingen"-hub -- ROUTE_DISPATCH['bestellers'] wijst
   // al langer naar showBestellingen(), deze knop nu ook.
@@ -2833,7 +2824,7 @@ function showHome() {
   setRoute('home');
   currentPage = 'home';
 
-  // Migratie 033, op verzoek van Harm: de "Mijn Bestellingen"-widget was
+  // De "Mijn Bestellingen"-widget was
   // hier hardcoded beperkt tot rol specialist/laborant, BOVENOP de
   // heeftScherm('mijn-bestellingen')-groepscheck. Nu "Mijn Bestellingen"
   // altijd de eigen (besteller = ingelogde gebruiker) orders/aanvragen
@@ -2842,9 +2833,9 @@ function showHome() {
   // gebruiker die zelf iets bestelt, mag dat kunnen terugzien. De
   // groepscheck (heeftScherm) blijft de enige poort.
 
-  // Migratie 038, op verzoek van Harm: Forms en Admin (Toegang/
+  // Forms en Admin (Toegang/
   // Instellingen/Datakwaliteit) zijn hier nu OOK verwijderd, om dezelfde
-  // reden als de Dashboards-sectie destijds in migratie 033 -- elke
+  // reden als eerder al bij de Dashboards-sectie -- elke
   // bestemming staat al, altijd zichtbaar, in de linker zijbalk (zie
   // renderSidebar() hierboven), dus dit was gewoon een tweede, dubbele
   // knoppenlijst op de startpagina. Home bestaat vanaf nu alleen nog uit
@@ -2859,7 +2850,7 @@ function showHome() {
 }
 
 /**
- * Migratie 032_home_widgets, op verzoek van Harm: Home toont voortaan vier
+ * Home toont voortaan vier
  * samengestelde widgets i.p.v. alleen een kaal menu -- status van eigen
  * eenmalige bestellingen, Nieuws-samenvatting, PICC-rotatie ("wie is aan de
  * beurt") en Top 10 Scanners. Zelfde compositie-aanpak als het Management
@@ -2878,10 +2869,10 @@ function showHome() {
 function laadHomeWidgets() {
   const magNieuws = heeftScherm('nieuws');
   const magLeaderboard = heeftScherm('leaderboard');
-  // Migratie 033: niet langer beperkt tot rol specialist/laborant, zie de
+  // Niet langer beperkt tot rol specialist/laborant, zie de
   // toelichting bij showHome() hierboven.
   const magMijnBestellingen = heeftScherm('mijn-bestellingen');
-  // Migratie 038, op verzoek van Harm ("taken widget toevoegen"): vervangt
+  // ("taken widget toevoegen"): vervangt
   // de losse, puur cosmetische takenBadge-telling die hier stond -- dat
   // richtte zich op een 'takenBadge'-element dat allang niet meer bestaat
   // (dode code sinds de zijbalk-migratie), dus de twee getTaken*()-
@@ -2890,7 +2881,7 @@ function laadHomeWidgets() {
   // badge die nergens meer aan hing.
   const magTakenBeheerder = heeftScherm('taken-beheerder');
   const magTakenLaborant = heeftScherm('taken-laborant');
-  // Migratie 039, op verzoek van Harm ("materiaal wat over datum dreigt te
+  // ("materiaal wat over datum dreigt te
   // gaan" + "verplaats advies"): zelfde hergebruik-aanpak als de andere
   // widgets hierboven -- geen nieuwe endpoints, gewoon de bestaande
   // getVervaldatumFocus()/getVerplaatsAdviesOverzicht() (die ook de
@@ -2898,7 +2889,7 @@ function laadHomeWidgets() {
   // hier nogmaals aanroepen voor een compacte Home-samenvatting.
   const magVervalfocus = heeftScherm('vervalfocus');
   const magVerplaatsadvies = heeftScherm('verplaatsadvies');
-  // Migratie 044_licentie_registratie, op verzoek van Harm ("Home: sectie
+  // ("Home: sectie
   // met gebruikers/licentie-informatie"): dit hergebruikt gewoon de
   // bestaande api/gebruikers.php GET (beheerder-only, apiRequireBeheerder())
   // -- geen nieuw endpoint, exact dezelfde "alleen bestaande endpoints
@@ -2915,7 +2906,7 @@ function laadHomeWidgets() {
   let takenBeheerderData = null, takenLaborantData = null;
   let vervalfocusData = null, verplaatsadviesData = null;
   let gebruikersLicentieData = null;
-  // Migratie 045: magMijnBestellingen telt nu voor 2 (twee bronnen -- zie
+  // MagMijnBestellingen telt nu voor 2 (twee bronnen -- zie
   // toelichting bij de twee aanroepen hieronder).
   let nogTeLaden = (magMijnBestellingen ? 2 : 0) + (magNieuws ? 1 : 0) + (magLeaderboard ? 2 : 0)
     + (magTakenBeheerder ? 1 : 0) + (magTakenLaborant ? 1 : 0)
@@ -2930,7 +2921,7 @@ function laadHomeWidgets() {
       magGebruikersLicentie, gebruikersLicentieData);
   }
   if (magMijnBestellingen) {
-    // Migratie 045, op verzoek van Harm ("ik zie niet op het homescherm al
+    // ("ik zie niet op het homescherm al
     // mijn bestellingen terug"): deze widget riep tot nu toe ALLEEN
     // getEigenEenmaligeBestellingen() aan -- reguliere voorraad-orders
     // (waar de ingelogde gebruiker ook gewoon besteller van kan zijn)
@@ -2969,7 +2960,7 @@ function laadHomeWidgets() {
       .withFailureHandler(function () { nogTeLaden--; klaarAlsAlles(); }).getVerplaatsAdviesOverzicht();
   }
   if (magGebruikersLicentie) {
-    // Migratie 044_licentie_registratie: api/gebruikers.php is GEEN
+    // Api/gebruikers.php is GEEN
     // StocuroRun-methode (zie showGebruikers() verderop -- dat scherm haalt
     // 'm ook al rechtstreeks op via fetch()), dus hier hetzelfde patroon
     // i.p.v. via de StocuroRun-proxy.
@@ -2991,7 +2982,7 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
 
   if (magMijnBestellingen) {
     html += '<div class="home-widget-card"><div class="home-widget-title">' + t('hwMijnBestellingen') + '</div>';
-    // Migratie 045, op verzoek van Harm: deze widget combineert nu twee
+    // Deze widget combineert nu twee
     // bronnen -- eigen eenmalige (patiëntgebonden) bestellingen én eigen
     // reguliere voorraad-orders, waar de ingelogde gebruiker besteller of
     // (voor eenmalig) specialist van is. getEigenOpenOrders() geeft altijd
@@ -3058,7 +3049,7 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
     html += '<a class="mc-drill-link" id="hwNaarLeaderboardScanners">' + t('hwNaarLeaderboard') + ' →</a></div>';
   }
 
-  // Migratie 038, op verzoek van Harm ("taken widget toevoegen"): zelfde
+  // ("taken widget toevoegen"): zelfde
   // opzet als de andere widgets -- een paar regels concrete inhoud i.p.v.
   // alleen een kaal getal. Combineert magTakenBeheerder/magTakenLaborant
   // in ÉÉN kaart (zoals showTaken() ze ook als één pagina met rolschakelaar
@@ -3089,7 +3080,7 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
     html += '<a class="mc-drill-link" id="hwNaarTaken">' + t('hwNaarTaken') + ' →</a></div>';
   }
 
-  // Migratie 044_licentie_registratie, op verzoek van Harm ("Home: sectie
+  // ("Home: sectie
   // met gebruikers/licentie-informatie"): beheerder-only overzicht van
   // hoeveel accounts er zijn en hoeveel daarvan een geldige licentie hebben
   // -- hergebruikt gewoon api/gebruikers.php's bestaande, LIVE-geverifieerde
@@ -3122,10 +3113,10 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
     html += '<a class="mc-drill-link" id="hwNaarGebruikers">' + t('hwNaarGebruikers') + ' →</a></div>';
   }
 
-  // Migratie 042, op verzoek van Harm ("Verplaatsadvies moet na Taken
-  // komen zodat Vervaldatum-Risico onderaan staat als groot blok"):
-  // Verplaatsadvies stond hier eerder ALS LAATSTE (na Vervalfocus, zie
-  // migratie 039) -- nu meteen na Taken, zodat de brede Vervalfocus-kaart
+  // Verplaatsadvies moet na Taken komen zodat Vervaldatum-Risico
+  // onderaan staat als groot blok: dit widget stond hier eerder ALS
+  // LAATSTE (na Vervalfocus) -- nu meteen na Taken, zodat de brede
+  // Vervalfocus-kaart
   // hieronder als afsluitend, opvallend blok onderaan de widget-grid
   // staat. Inhoud van dit widget zelf ongewijzigd: hergebruikt
   // getVerplaatsAdviesOverzicht() (dezelfde bron als
@@ -3151,7 +3142,7 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
     html += '<a class="mc-drill-link" id="hwNaarVerplaatsadvies">' + t('hwNaarVerplaatsadvies') + ' →</a></div>';
   }
 
-  // Migratie 046_home_widgets_herindelen, op verzoek van Harm ("Nieuwe
+  // ("Nieuwe
   // producten en vervaldatum-risico moeten als laatste worden weergegeven,
   // de andere zijn namelijk kleinere blokjes waardoor het visueel
   // aantrekkelijker wordt"): deze brede fototegel-kaart stond eerder direct
@@ -3183,14 +3174,14 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
     html += '<a class="mc-drill-link" id="hwNaarNieuweProducten">' + t('hwNaarNieuws') + ' →</a></div>';
   }
 
-  // Migratie 039, op verzoek van Harm ("materiaal wat over datum dreigt te
+  // ("materiaal wat over datum dreigt te
   // gaan ... mag wel wat uitgebreider qua data"): in tegenstelling tot de
   // andere widgets hierboven (korte bullet-lijst) krijgt dit widget een
   // eigen brede kaart (home-widget-card-wide, zie style.css) met een
   // mini-tabel van de eerstvolgende loten -- zelfde kolommen/sortering
   // (kortste daysLeft eerst) als de volledige Vervaldatums&Lotbeheer-
   // pagina (renderVervalFocusTable()), maar zonder filterknoppen en
-  // beperkt tot de top 8. Migratie 042/046: bewust het LAATSTE widget (zie
+  // beperkt tot de top 8. Bewust het LAATSTE widget (zie
   // toelichting bij Verplaatsadvies/Nieuwe Producten hierboven), zodat dit
   // brede blok als afsluiter onderaan staat.
   if (magVervalfocus) {
@@ -3228,7 +3219,7 @@ function renderHomeWidgets(magMijnBestellingen, bestellingen, eigenOrders, magNi
   wire('hwNaarVerplaatsadvies', showVerplaatsAdvies);
 }
 
-// Migratie 038, op verzoek van Harm: Home rendert zelf geen Forms- of
+// Home rendert zelf geen Forms- of
 // Beheer-knoppen meer (zie showHome() hierboven) -- alleen renderSidebar()
 // (altijd zichtbaar in de linker zijbalk) wiert die knoppen nog, dus deze
 // functie heeft nu niets meer te doen. Bewust behouden als lege, no-op
@@ -3238,16 +3229,16 @@ function attachHomeHandlers() {
 }
 
 // -----------------------------------------------------------------
-// "Mijn Bestellingen" (migratie 017, herzien in migratie 033 op verzoek
-// van Harm): stond hier lange tijd als eigen, uitgeklede pagina (met een
-// eigen terugknop) die alleen de eigen eenmalige bestellingen van een
+// "Mijn Bestellingen" stond hier lange tijd als eigen, uitgeklede
+// pagina (met een eigen terugknop) die alleen de eigen eenmalige
+// bestellingen van een
 // specialist/laborant-account toonde. Dat was op twee manieren mis: (1)
 // hij had, net als showOpenOrders()/showBestellers() hieronder, al geen
 // eigen plek meer in ROUTE_DISPATCH (die wijst 'mijn-bestellingen' al
 // naar showBestellingen()) -- dit was dode code die alleen nog bereikbaar
 // was via een paar losse knoppen; (2) "eigen" betekende specialist = mijn
 // naam (voor wie de aanvraag is), niet besteller = mijn naam (wie hem
-// heeft geplaatst) -- dat laatste is wat Harm bedoelt met "altijd
+// heeft geplaatst) -- dat laatste is wat bedoeld wordt met "altijd
 // bestellingen van de ingelogde gebruiker zien". showBestellingen() kent
 // al een 'mijn'-filterchip (zie BESTELLINGEN_FILTERS) die nu op besteller
 // matcht (zie bestellingenNormaliseer()) en voor ELKE ingelogde gebruiker
@@ -3257,7 +3248,7 @@ function showMijnBestellingen() {
   showBestellingen('mijn');
 }
 
-// Migratie 030, op verzoek van Harm (dashboard-consolidatie): de vijf
+// Dashboard-consolidatie: de vijf
 // afzonderlijke voorraadschermen (Overzicht, Bijvullen, Berging,
 // Voorraadwaarde, Min/Max Advies) delen nu één menu-ingang ("Voorraad")
 // met een tabbalk erboven, i.p.v. vijf losse menuknoppen -- minder
@@ -3265,12 +3256,12 @@ function showMijnBestellingen() {
 // (die blijven dus gewoon werken zoals ze deden). Rechten blijven
 // ongewijzigd: heeftScherm() bepaalt per tab of hij getoond wordt, met
 // dezelfde scherm-ids als voorheen (de groepenmatrix hoeft niet aangepast).
-// Migratie 049, op verzoek van Harm ("#boodschappenlijst vanuit Rapportage
-// geeft verkeerde informatie, het is nu leeg terwijl de informatie/inhoud
-// van #bijvullen moet worden getoond"): dit tabblad heette al "Bijvullen"
-// (refillList) sinds migratie 026, en wees toen naar de statische
+// Bugfix: "#boodschappenlijst vanuit Rapportage geeft verkeerde
+// informatie, het is nu leeg terwijl de informatie/inhoud van
+// #bijvullen moet worden getoond". Dit tabblad heette al "Bijvullen"
+// (refillList) en wees toen naar de statische
 // bijvul-lijst hieronder (showBoodschappenlijst()/getBoodschappenData()).
-// Later kreeg migratie 045 een HELEMAAL NIEUW, apart "Bijvullen"-dashboard
+// Later kreeg het een HELEMAAL NIEUW, apart "Bijvullen"-dashboard
 // (showBijvullen(), eigen sidebar-knop, route #bijvullen) met dezelfde
 // naam maar een echte scan-to-transfer-actie erbij en een robuustere
 // tekortenfilter (moetBijgevuld i.p.v. alleen magBijvullen) -- zonder dat
@@ -3290,7 +3281,7 @@ const VOORRAAD_TABS = [
   ['minmax-advies', 'minmaxAdvies', showMinMaxAdvies],
 ];
 
-// Migratie 049: het 'boodschappenlijst'-tabblad wijst nu naar
+// Het 'boodschappenlijst'-tabblad wijst nu naar
 // showBijvullen(), waarvan het scanformulier backend-side ook de
 // 'verplaatsing'-rechten vereist (apiRequireScherm('verplaatsing') in
 // api/verplaatsing.php) -- een groep met alleen 'boodschappenlijst' aan
@@ -3355,7 +3346,7 @@ function renderOverzichtTabellen(data, hideEmpty) {
     rows.forEach(item => {
       const kastlocHtml = item.kastlocatie ? '<span class="kastlocatie-badge">' + escapeHtml(item.kastlocatie) + '</span>' : '-';
       const waardeHtml = '€' + item.waarde.toFixed(2);
-      // Migratie 027 (op verzoek van Harm): orderstatus klikbaar naar de
+      // Orderstatus klikbaar naar de
       // order-detailpagina, als er daadwerkelijk een openstaande order is.
       const orderStatusHtml = item.orderStatus
         ? '<a class="order-status-link" data-ean="' + item.ean + '">' + statusBadgeHtml(item.orderStatus) + '</a>'
@@ -3445,8 +3436,8 @@ function renderRecenteTransactieRegelsTable(regels) {
   return html;
 }
 
-// Eén rij per scanactie (batch_id, of 'row-<id>' voor data van vóór
-// migratie 014) i.p.v. voorheen één rij per losse transactielog-regel --
+// Eén rij per scanactie (batch_id, of 'row-<id>' voor oudere data zonder
+// batch_id) i.p.v. voorheen één rij per losse transactielog-regel --
 // zie getRecenteTransactiesGegroepeerd() in includes/transacties.php.
 // index is de positie in de transacties-array (gebruikt voor DOM-ids i.p.v.
 // de batch_id zelf, want een batch_id is een hex-string die met een cijfer
@@ -3605,14 +3596,14 @@ function openBatchEditRow(index, locaties, specialisten, procedures) {
 // doen (tellen resp. scannen met reden "expired", een artikel aanmaken,
 // een productveld aanvullen).
 //
-// Migratie 026 (op verzoek van Harm): dit was één scherm met vier soorten
-// taken door elkaar. Nu twee losse dashboards: Laborant-taken (fysiek
+// Dit was één scherm met vier soorten taken door elkaar. Nu twee losse
+// dashboards: Laborant-taken (fysiek
 // vloerwerk: kastcontrole + vervallen voorraad) en Beheerder-taken
 // (databeheer: onbekende scans + onvolledige productgegevens).
 // -----------------------------------------------------------------
 // =================================================================
-// TAKEN (migratie 031_voorraad_tabel), op verzoek van Harm: Beheerder-
-// taken en Laborant-taken waren twee losse dashboards achter dezelfde
+// TAKEN: Beheerder-taken en Laborant-taken waren twee losse dashboards
+// achter dezelfde
 // "Taken"-gedachte, alleen voor een andere doelgroep -- nu één pagina met
 // een rolschakelaar i.p.v. twee aparte menu-ingangen. Backend ongewijzigd
 // (getTakenBeheerder()/getTakenLaborant()), alleen de bestaande
@@ -3628,7 +3619,7 @@ function showTaken() {
   takenWeergave = heeftLaborant ? 'laborant' : 'beheerder';
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
 
-  // Migratie 042, op verzoek van Harm: naast de kastcontrole-taken die
+  // Naast de kastcontrole-taken die
   // hieronder al binnenkomen (alleen locaties die AAN DE BEURT zijn),
   // ook meteen de volledige locatielijst ophalen -- nodig voor de
   // vrijwillige "opnieuw voorraadtelling uitvoeren"-keuze in
@@ -3662,7 +3653,7 @@ function takenLaborantHtml(data, locRows) {
     html += '</table>';
   }
 
-  // Migratie 042, op verzoek van Harm: "ik wil ook de optie 'opnieuw
+  // "ik wil ook de optie 'opnieuw
   // voorraadtelling uitvoeren', en dat je aldaar de kast kan selecteren
   // die je wenst te controleren -- dit kunnen alle kasten zijn, en alle
   // locaties. Het is geen taak als het niet nodig is, maar de laborant
@@ -3673,7 +3664,7 @@ function takenLaborantHtml(data, locRows) {
   // sectie laat ELKE actieve locatie kiezen (locRows, zie fetchLocaties()
   // in showTaken()), ongeacht of die al verlopen is.
   //
-  // Migratie 043, op verzoek van Harm: "dat je aldaar de kast kan
+  // "dat je aldaar de kast kan
   // selecteren ... het is niet heel waarschijnlijk dat ik de hele berging
   // in 1 keer ga scannen -- dus per kast per locatie." Naast de
   // locatiekeuze hieronder komt er nu ook een TWEEDE, dynamisch geladen
@@ -3742,7 +3733,7 @@ function takenBeheerderHtml(data) {
     html += '</table>';
   }
 
-  // Migratie 031, op verzoek van Harm: dit stond eerder bij Laborant-taken,
+  // Dit stond eerder bij Laborant-taken,
   // maar is een databeheerkwestie (ooit ontvangen zonder batch-/vervaldatum-
   // code te scannen), geen fysiek vloerwerk -- daarom hier. "Afronden" is
   // geen knop naar een ander scherm (lot/vervaldatum zijn bewust niet los
@@ -3810,8 +3801,8 @@ function renderTaken(laborantData, beheerderData, heeftLaborant, heeftBeheerder,
     el.addEventListener('click', function () { showProductDetail(this.getAttribute('data-ean')); });
   });
 
-  // Migratie 042/043: vrijwillige "opnieuw voorraadtelling uitvoeren"-
-  // actie, zie takenLaborantHtml() hierboven -- alleen aanwezig als er
+  // Vrijwillige "opnieuw voorraadtelling uitvoeren"-actie, zie
+  // takenLaborantHtml() hierboven -- alleen aanwezig als er
   // actieve locaties zijn om uit te kiezen. Kiezen van een locatie ververst
   // meteen de bijbehorende kastenlijst (laadHerTellenKastPaneel()); Start
   // stuurt beide gekozen waarden door aan showTelling().
@@ -3834,7 +3825,7 @@ function renderTaken(laborantData, beheerderData, heeftLaborant, heeftBeheerder,
 }
 
 /**
- * Migratie 043, op verzoek van Harm: ververst #herTellenKastPaneel met de
+ * Ververst #herTellenKastPaneel met de
  * kasten binnen ÉÉN gekozen locatie (getKastlocatiesVoorLocatie(), zie
  * kastlocatiesVoorLocatie() in includes/locaties.php), plus een altijd
  * aanwezige "Hele locatie"-optie (lege waarde -- betekent voor
@@ -3926,7 +3917,7 @@ function renderTakenLaborant(data) {
     html += '<div class="edit-actions"><button class="edit-save" id="takenGaScannenBtn">' + t('tkGoWriteOff') + '</button></div>';
   }
 
-  // Op verzoek van Harm: voorraad die is ontvangen zonder dat
+  // : voorraad die is ontvangen zonder dat
   // ooit een batch-/vervaldatumcode is meegescand (bv. alleen de GTIN van
   // een doos gescand). "Afronden" is hier geen knop naar een ander scherm
   // (lot/vervaldatum zijn bewust niet los te bewerken, zie
@@ -3975,7 +3966,7 @@ function renderTakenBeheerder(data) {
 
   let html = '<button class="back-btn" id="backBtn">' + t('backLabel') + '</button><h2>' + t('tasksAdmin') + '</h2>';
 
-  // Migratie 022, op verzoek van Harm: barcodes die tijdens een scan niet
+  // Barcodes die tijdens een scan niet
   // herkend werden, met de omschrijving van de scanner erbij -- afronden
   // gebeurt op het Admin-scherm "Onbekende Producten".
   html += '<div class="section-title">' + t('tkOnbekend') + '</div>';
@@ -3992,7 +3983,7 @@ function renderTakenBeheerder(data) {
     html += '<div class="edit-actions"><button class="edit-save" id="takenGaOnbekendBtn">' + t('tkGoOnbekend') + '</button></div>';
   }
 
-  // Op verzoek van Harm: welke producten missen essentiële informatie?
+  // : welke producten missen essentiële informatie?
   html += '<div class="section-title" style="margin-top:1.5rem;">' + t('tkOnvolledig') + '</div>';
   html += '<p class="form-hint">' + t('tkOnvolledigHint') + '</p>';
   if (!data.onvolledigeProducten || data.onvolledigeProducten.length === 0) {
@@ -4035,7 +4026,7 @@ function showTelling(locatie, kastlocatie) {
 }
 
 function renderTellingForm(locatie, kastlocatie) {
-  // Migratie 043: titel/subtitel tonen de gekozen kast erbij als deze
+  // Titel/subtitel tonen de gekozen kast erbij als deze
   // telling met opzet tot één kast beperkt is (kastlocatie !== null) --
   // zie verwerkTelling() in includes/telling.php voor de matching-logica.
   const titelSuffix = kastlocatie ? (escapeHtml(locatie) + ' – ' + escapeHtml(kastlocatie)) : escapeHtml(locatie);
@@ -4097,7 +4088,7 @@ function renderTellingResultaat(locatie, kastlocatie, result) {
     html += '<p class="empty">' + t('tlAllMatched') + '</p>';
   }
 
-  // Migratie 043: gescande producten die wél bekend zijn maar bij een
+  // Gescande producten die wél bekend zijn maar bij een
   // ANDERE, expliciet toegewezen kast horen dan de gekozen kast -- deze
   // zijn met opzet niet meegeteld/geboekt (zie $verkeerdeKast in
   // verwerkTelling(), includes/telling.php), en worden hier apart getoond
@@ -4127,7 +4118,7 @@ function renderTellingResultaat(locatie, kastlocatie, result) {
 // open staat, dit toont wat er al is afgeboekt) -- zie
 // includes/dashboards.php::getAfboekingenOverzicht().
 // -----------------------------------------------------------------
-// Migratie 026: onthoud de laatst gekozen periode zodat een terugkeer naar
+// Onthoud de laatst gekozen periode zodat een terugkeer naar
 // dit scherm (of een her-render na filterwissel) niet steeds terugvalt op
 // 'totaal'. Puur in-memory (geen browser-opslag, zie artifact-regels).
 let afboekingenPeriode = 'totaal';
@@ -4164,7 +4155,7 @@ function renderAfboekingen(data) {
   html += usageTabsHtml('afboekingen');
   html += '<p class="form-hint">' + t('woHint') + '</p>';
 
-  // Migratie 026: periode-knoppenrij. De actief-gemarkeerde knop is de
+  // Periode-knoppenrij. De actief-gemarkeerde knop is de
   // periode waar de zojuist ontvangen 'data' ook daadwerkelijk bij hoort
   // (data.periode, komt van getAfboekingenOverzicht()) i.p.v. het lokale
   // afboekingenPeriode-geheugen -- die twee horen altijd gelijk te zijn,
@@ -4199,8 +4190,7 @@ function showProductDetail(ean) {
   StocuroRun.withSuccessHandler(renderProductDetail).getProductDetail(ean);
 }
 
-// Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
-// ("Productpagina: grafiek historisch verbruik"): handgerolde SVG-
+// Productpagina: grafiek historisch verbruik. Handgerolde SVG-
 // staafdiagram, geen externe chart-library -- deze app laadt bewust geen
 // CDN-scripts (zelfde reden als code128Svg() verderop in dit bestand voor
 // de barcode-generator: self-hosted zonder gegarandeerde internettoegang
@@ -4269,7 +4259,7 @@ function renderProductDetail(data) {
     : escapeHtml(data.producent || '-');
   html += '<div class="info-box"><div class="info-label">' + t('colManufacturerLabel') + '</div><div class="info-value">' + producentWaarde + '</div></div>';
   html += '<div class="info-box"><div class="info-label">' + t('colArticleNumber') + '</div><div class="info-value">' + escapeHtml(data.artikelRef || '-') + '</div></div>';
-  // Op verzoek van Harm: GS1-code en de "Print label"-knop horen niet meer
+  // : GS1-code en de "Print label"-knop horen niet meer
   // bij productgegevens (EAN/doos-EAN hieronder blijven wel gewoon
   // zichtbaar -- dat is de identificatie die logistiek/laboranten nodig
   // hebben, de ruwe GS1-scanstring en het printen van een los label niet).
@@ -4287,7 +4277,7 @@ function renderProductDetail(data) {
   }
   html += '</div></div></div>';
 
-  // Migratie 025, op verzoek van Harm: prominente banner als dit artikel
+  // Prominente banner als dit artikel
   // niet Actief is -- 'Niet leverbaar' (tijdelijk, met optionele
   // vervanger-link) of 'Niet meer in gebruik' (blijvend). De status zelf
   // wijzig je op het bewerkscherm (renderProductEdit()), hier alleen een
@@ -4319,11 +4309,11 @@ function renderProductDetail(data) {
   html += '<div class="section-title">' + t('pdStockByLocation') + '</div><table><tr><th>' + t('colLocation') + '</th><th>' + t('colCabinet') + '</th><th>' + t('colCurrent') + '</th><th>' + t('colMin') + '</th><th>' + t('colMax') + '</th><th>' + t('colValue') + '</th><th>' + t('colStatus') + '</th><th>' + t('pdAdvies') + '</th></tr>';
   data.voorraad_per_locatie.forEach(item => {
     const kastlocHtml = item.kastlocatie ? '<span class="kastlocatie-badge">' + escapeHtml(item.kastlocatie) + '</span>' : '-';
-    // Migratie 026: het aggregaat-overzicht (Min/Max Advies) verbergt no-op-
+    // Het aggregaat-overzicht (Min/Max Advies) verbergt no-op-
     // en genegeerde voorstellen, maar hier op de productdetailpagina laten
     // we altijd zien wat er speelt -- inclusief "al optimaal" en "te weinig
-    // data", zodat Harm hier nooit iets hoeft te missen (zie getProductDetail()).
-    // Migratie 031, op verzoek van Harm: kamers hebben geen eigen minimum
+    // data", zodat hier niets gemist wordt (zie getProductDetail()).
+    // Kamers hebben geen eigen minimum
     // meer -- item.isBerging (van getProductDetail()) bepaalt of de
     // advies-vergelijking en de Min-kolom het minimum meenemen (Berging)
     // of niet (kamers, waar 'min' altijd 0/n.v.t. is).
@@ -4348,7 +4338,7 @@ function renderProductDetail(data) {
   html += '</table>';
 
   if (data.loten.length > 0) {
-    // Migratie 046_loten_per_lot_uitklapbaar, op verzoek van Harm ("Loten
+    // ("Loten
     // op voorraad anders indelen; ik wil dat per lot een regel wordt
     // weergegeven (met aantal, vervaldatum, barcode, etc.), deze moet
     // uitklapbaar zijn om vervolgens te zien waar hoeveel liggen"):
@@ -4380,7 +4370,7 @@ function renderProductDetail(data) {
       groep.locaties.push({ locatie: item.locatie, huidig: item.huidig });
     });
 
-    // Migratie 035, op verzoek van Harm: barcode-kolom + "Bewerken"-actie
+    // Barcode-kolom + "Bewerken"-actie
     // per lot, voor als de GS1-scan het lotnummer/de vervaldatum niet
     // helemaal goed heeft herkend. Bewerken zet niet alleen dit lot recht
     // (over alle locaties waar het voorkomt, ongeacht ouderdom -- zie
@@ -4427,8 +4417,8 @@ function renderProductDetail(data) {
 
   if (data.transacties.length > 0) {
     html += '<div class="section-title">' + t('pdTransactionHistory') + '</div><table><tr><th>' + t('colDate') + '</th><th>' + t('colType') + '</th><th>' + t('colQuantity') + '</th><th>' + t('colLocation') + '</th><th>' + t('colSpecialist') + '</th><th>' + t('colScannedBy') + '</th><th>' + t('colNote') + '</th></tr>';
-    // Migratie 042_transactiehistorie_scanmoment, op verzoek van Harm
-    // ("transactiehistorie groeperen per scanmoment"): getTransactieHistorieVoorEanGeclusterd()
+    // Transactiehistorie groeperen per scanmoment:
+    // getTransactieHistorieVoorEanGeclusterd()
     // (includes/transacties.php) groepeert alle transactietypes nu per
     // scanactie (batch_id) i.p.v. één rij per losse regel. Een gegroepeerde
     // rij (aantalRegels > 1) toont een "bekijk regels"-toggle i.p.v. een
@@ -4460,8 +4450,7 @@ function renderProductDetail(data) {
     html += '</table>';
   }
 
-  // Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
-  // ("Productpagina: grafiek historisch verbruik"): getProductVerbruikPerMaand()
+  // getProductVerbruikPerMaand()
   // (includes/artikelen.php) geeft altijd de laatste 12 kalendermaanden
   // terug (ook lege maanden, hoeveelheid 0) -- alleen als het TOTAAL over
   // die 12 maanden 0 is, tonen we de lege staat i.p.v. een grafiek van
@@ -4478,7 +4467,7 @@ function renderProductDetail(data) {
 
   html += '<div class="section-title">' + t('pdOrderHistory') + '</div>';
   if (data.bestelhistorie.length > 0) {
-    // Op verzoek van Harm: elke rij hier moet doorklikbaar zijn naar de
+    // : elke rij hier moet doorklikbaar zijn naar de
     // volledige orderdetailpagina (showOrderDetail(), zelfde bestemming
     // als de .bs-detail-link-rijen op het Bestellingen-scherm) -- hier
     // stond voorheen alleen platte tekst, dus geen manier om bijv. de
@@ -4521,7 +4510,7 @@ function renderProductDetail(data) {
     el.addEventListener('click', function () { showProducentDetail(this.getAttribute('data-producent-id')); });
   });
 
-  // Migratie 025: statusbanner-links -- "vervangen door" springt naar de
+  // Statusbanner-links -- "vervangen door" springt naar de
   // productpagina van de vervanger, "status wijzigen" naar het bewerkscherm
   // (waar de status/vervanger-controls staan, zie renderProductEdit()).
   const statusEditLink = document.querySelector('.status-edit-link');
@@ -4529,7 +4518,7 @@ function renderProductDetail(data) {
   const vervangerLink = document.querySelector('.product-vervanger-link');
   if (vervangerLink) vervangerLink.addEventListener('click', function () { showProductDetail(this.getAttribute('data-ean-vervanger')); });
 
-  // Migratie 046_loten_per_lot_uitklapbaar, op verzoek van Harm: uitklapper
+  // Uitklapper
   // die per lotgroep toont waar hoeveel ligt (zie de groepering hierboven
   // in de render-code). Zelfde tekst-toggle-patroon als
   // trans-view-btn/rtViewLines bij Recente Transacties.
@@ -4544,9 +4533,9 @@ function renderProductDetail(data) {
     });
   });
 
-  // Migratie 035, op verzoek van Harm: lotnummer/vervaldatum per lot
+  // Lotnummer/vervaldatum per lot
   // corrigeren vanaf dit overzicht -- zie includes/lot_correcties.php.
-  // Migratie 046: werkt nu op een lotgroep (data._lotGroepen) i.p.v.
+  // Werkt nu op een lotgroep (data._lotGroepen) i.p.v.
   // rechtstreeks op data.loten, maar de correctie zelf blijft ongewijzigd
   // -- lot_corrigeren() in includes/lot_correcties.php paste hem toch al
   // toe op alle locaties waar dit lot voorkomt.
@@ -4587,7 +4576,7 @@ function renderProductDetail(data) {
 // =================================================================
 // PRODUCT BEWERKEN - edit-formulier voor de detailpagina
 // -----------------------------------------------------------------
-// Op verzoek van Harm ("ik wil daadwerkelijk alles kunnen bewerken. Ook
+// ("ik wil daadwerkelijk alles kunnen bewerken. Ook
 // moet het formulier er een beetje netjes uit zien ipv alles opsommend
 // achterelkaar"): dit was één lange, platte lijst van alle velden door
 // elkaar (data.commonFields simpelweg in volgorde uitgeklapt). Nu
@@ -4601,7 +4590,7 @@ function renderProductDetail(data) {
 // Artikel Toevoegen).
 // =================================================================
 /**
- * Migratie 029, op verzoek van Harm: dropdown-met-"nieuwe toevoegen" voor
+ * Dropdown-met-"nieuwe toevoegen" voor
  * een kastlocatie-veld -- zelfde patroon als het Producent-veld
  * (select data-key="..." + companion tekstveld dat zichtbaar wordt bij
  * de "__nieuw__"-optie). Gedeeld tussen renderProductEdit() en
@@ -4655,11 +4644,11 @@ function showProductEdit(ean, vanuitOnbekendeProducten) {
   // Zelfde sequentiële StocuroRun-opbouw als showArtikelToevoegen(): de
   // shim ondersteunt maar één actieve aanroep tegelijk, dus kastlocaties ->
   // locaties -> producenten -> categorieën -> pas dan de artikelgegevens
-  // zelf ophalen. Migratie 029: kastlocatieSuggesties toegevoegd, met
+  // Zelf ophalen. kastlocatieSuggesties toegevoegd, met
   // dezelfde "faalt de suggestielijst? gewoon met een lege lijst verder"-
   // aanpak als producenten/categorieën hieronder -- de dropdown valt dan
   // simpelweg terug op alleen de "nieuwe toevoegen"-optie.
-  // Migratie 037: vanuitOnbekendeProducten wordt hier alleen doorgegeven
+  // VanuitOnbekendeProducten wordt hier alleen doorgegeven
   // (niet gebruikt) -- zie renderProductEdit() hieronder voor waar dit
   // toe doet.
   StocuroRun.withSuccessHandler(function (kastlocatieSuggesties) {
@@ -4731,7 +4720,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
     const cat = (categorieen || []).filter(function (c) { return c.naam === categorieNaam; })[0];
     const specs = (cat && cat.specs) || [];
     if (specs.length === 0) return '';
-    // Op verzoek van Harm: zelfde dropdown-met-"nieuwe toevoegen"-patroon
+    // : zelfde dropdown-met-"nieuwe toevoegen"-patroon
     // als Artikel Toevoegen (zie specVeldHtml()) -- data-key is bewust het
     // attribuut hier (i.p.v. data-spec-key), want de generieke
     // saveProductEdit()-sweep leest alle input/select[data-key] hieronder
@@ -4750,16 +4739,16 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
 
   html += '<div class="edit-section-box"><div class="section-title">' + t('pePhoto') + '</div>';
 
-  // Migratie 023, op verzoek van Harm: foto rechtstreeks in de database
+  // Foto rechtstreeks in de database
   // i.p.v. alleen een link -- eigen upload/verwijder-knoppen, zelfde
   // clientside-aanpak (FileReader -> data-URL -> gewone JSON-POST) als
   // bij users/producent_contacten, alleen komt de foto hier niet op
   // schijf maar in artikelen.foto_data terecht (zie api/product_edit.php
-  // actie foto_bijwerken/foto_verwijderen). Migratie 028, op verzoek van
-  // Harm: het aparte "Fotolink"-tekstveld hierbeneden is weggehaald --
-  // alles gaat nu via deze upload-knop, een los invulbaar linkveld
-  // ernaast was verwarrend. Bestaande producten die nog een foto_link
-  // hebben (van vóór migratie 023) blijven intact en tonen die nog gewoon
+  // actie foto_bijwerken/foto_verwijderen). Het aparte "Fotolink"-
+  // tekstveld hierbeneden is weggehaald -- alles gaat nu via deze
+  // upload-knop, een los invulbaar linkveld ernaast was verwarrend.
+  // Bestaande producten die nog een foto_link hebben (van vóór deze
+  // upload-functie) blijven intact en tonen die nog gewoon
   // op de productdetailpagina zelf als fallback (getProductDetail()),
   // alleen niet meer hier op het bewerkscherm.
   html += '<div class="pf-foto-row" style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">';
@@ -4778,7 +4767,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   html += '<div class="form-group"><label>' + t('apCategory') + '</label><select id="peCategorieSelect" data-key="categorie">' + catOptionsHtml + '</select></div>';
   html += '<div class="form-group"><label>' + t('colArticleNumber') + '</label><input type="text" data-key="artikelref" value="' + escapeAttr(veld('artikelref')) + '"></div>';
   html += '</div>';
-  // Op verzoek van Harm: geen GS1-ruwe-scan-veld meer bij productgegevens --
+  // : geen GS1-ruwe-scan-veld meer bij productgegevens --
   // EAN (hieronder) blijft de zichtbare identificatie; artikelen.gs1_raw
   // blijft in de database staan (nog steeds gezet bij het aanmaken via
   // Artikel Toevoegen) maar wordt hier niet meer getoond of bewerkbaar gemaakt.
@@ -4807,7 +4796,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   html += '</div>';
 
   // --- Voorraad: Min/Max + kastlocatie per kamer. ---
-  // Migratie 031, op verzoek van Harm: kamers (ik/hybok/kar) hebben geen
+  // Kamers (ik/hybok/kar) hebben geen
   // minimum meer -- ze worden gegarandeerd dezelfde dag tot hun maximum
   // bijgevuld vanuit Berging, dus alleen het Max-veld wordt nog getoond.
   // Berging (de enige locatie die op een externe leverancier wacht)
@@ -4827,7 +4816,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   });
   html += '</div>';
 
-  // --- Extra locaties (migratie 007), alleen als dit artikel die heeft. ---
+  // --- Extra locaties, alleen als dit artikel die heeft. ---
   const extraVelden = data.commonFields.filter(function (f) { return /^extra_(min|max)_\d+$/.test(f.key); });
   if (extraVelden.length > 0) {
     html += '<div class="edit-section-box"><div class="section-title">' + t('peSectionExtraLocations') + '</div><div class="edit-grid">';
@@ -4837,14 +4826,14 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
     html += '</div></div>';
   }
 
-  // --- Doosverpakking (migratie 020). ---
+  // --- Doosverpakking. ---
   html += '<div class="edit-section-box"><div class="section-title">' + t('apDoosTitle') + '</div>';
   html += '<p class="form-hint">' + t('apDoosHint') + '</p><div class="edit-grid">';
   html += '<div class="form-group"><label>' + t('apDoosEan') + '</label><input type="text" data-key="doos_ean" value="' + escapeAttr(veld('doos_ean')) + '"></div>';
   html += '<div class="form-group"><label>' + t('apEenhedenPerDoos') + '</label><input type="number" min="2" data-key="eenheden_per_doos" value="' + escapeAttr(veld('eenheden_per_doos')) + '"></div>';
   html += '</div></div>';
 
-  // --- Logistiek (migratie 021). ---
+  // --- Logistiek. ---
   html += '<div class="edit-section-box"><div class="section-title">' + t('apLogistiekTitle') + '</div>';
   html += '<p class="form-hint">' + t('apLogistiekHint') + '</p>';
   html += '<div class="form-group"><label>' + t('apLogistiekCode') + '</label><input type="text" data-key="logistiek_code" value="' + escapeAttr(veld('logistiek_code')) + '"></div>';
@@ -4853,11 +4842,11 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   // --- Categorie-specifieke specificaties. ---
   html += '<div id="peSpecsContainer">' + renderSpecsVeldenEdit(data.categorie) + '</div>';
 
-  // Migratie 025, op verzoek van Harm: status ('Actief'/'Niet leverbaar'/
+  // Status ('Actief'/'Niet leverbaar'/
   // 'Niet meer in gebruik') + optionele vervanger-koppeling. Stond
   // eerder in een eigen sectie met een EIGEN "Opslaan"-knop (status_bijwerken,
-  // los van de generieke commonFields-actie hierboven) -- op verzoek van
-  // Harm ("Product bewerken heeft 2x opslaan button, dit kan 1 worden")
+  // los van de generieke commonFields-actie hierboven) -- bugfix
+  // ("Product bewerken heeft 2x opslaan button, dit kan 1 worden")
   // is dat nu samengevoegd: de velden staan hier nog wel in hun eigen
   // sectie (blijft een logisch aparte groep), maar er is nog maar ÉÉN
   // "Opslaan"-knop voor het hele formulier, zie saveProductEdit()
@@ -4909,12 +4898,12 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
     document.getElementById('peProducentNieuw').style.display = this.value === '__nieuw__' ? 'block' : 'none';
   });
 
-  // Migratie 029: kastlocatie-dropdowns (per kamer), zelfde toggle-patroon.
+  // Kastlocatie-dropdowns (per kamer), zelfde toggle-patroon.
   ['locatie_ik', 'locatie_hybok', 'locatie_berging'].forEach(function (veldKey) {
     wireKastlocatieVeld('pe', veldKey);
   });
 
-  // EAN wijzigen (op verzoek van Harm): eigen, cascaderende actie i.p.v.
+  // EAN wijzigen : eigen, cascaderende actie i.p.v.
   // het generieke commonFields-opslaan-mechanisme -- zie wijzigArtikelEan()
   // in includes/artikelen.php voor waarom dit niet gewoon een tekstveld
   // met data-key kan zijn.
@@ -4941,7 +4930,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
     });
   }
 
-  // Migratie 023: upload/verwijder-knoppen voor de in-database
+  // Upload/verwijder-knoppen voor de in-database
   // productfoto, zelfde aanpak als de gu-foto-*-knoppen op het
   // Gebruikers-scherm (readImageFileAsDataUrl -> apiPost), maar dan naar
   // api/product_edit.php (actie foto_bijwerken/foto_verwijderen) i.p.v.
@@ -4977,7 +4966,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
     });
   }
 
-  // Migratie 025: status/vervanger-sectie. De vervanger-controls tonen
+  // Status/vervanger-sectie. De vervanger-controls tonen
   // zich alleen bij status 'Niet leverbaar' -- geen zin om een vervanger
   // te kiezen voor een Actief of blijvend Niet meer in gebruik artikel.
   const peStatus = document.getElementById('peStatus');
@@ -5022,7 +5011,7 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
 }
 
 function saveProductEdit(ean, vanuitOnbekendeProducten) {
-  // Op verzoek van Harm: Besteltype/Producent/Categorie zijn nu dropdowns
+  // : Besteltype/Producent/Categorie zijn nu dropdowns
   // (<select data-key="...">) i.p.v. tekstvelden -- deze query moest
   // daarom uitgebreid worden, dat las eerder alleen input[data-key].
   const velden = document.querySelectorAll('#content input[data-key], #content select[data-key]');
@@ -5040,7 +5029,7 @@ function saveProductEdit(ean, vanuitOnbekendeProducten) {
     const nieuwEl = document.getElementById('peProducentNieuw');
     updates.producent = nieuwEl ? nieuwEl.value.trim() : '';
   }
-  // Migratie 029: zelfde "__nieuw__"-afhandeling voor de drie kastlocatie-dropdowns.
+  // Zelfde "__nieuw__"-afhandeling voor de drie kastlocatie-dropdowns.
   ['locatie_ik', 'locatie_hybok', 'locatie_berging'].forEach(function (veldKey) {
     resolveKastlocatieVeld(updates, 'pe', veldKey);
   });
@@ -5051,8 +5040,8 @@ function saveProductEdit(ean, vanuitOnbekendeProducten) {
   saveBtn.disabled = true;
   saveBtn.textContent = t('peSaving');
 
-  // Op verzoek van Harm ("Product bewerken heeft 2x opslaan button, dit
-  // kan 1 worden"): status/vervanger had een eigen "Opslaan"-knop met een
+  // Bugfix ("Product bewerken heeft 2x opslaan button, dit kan 1
+  // worden"): status/vervanger had een eigen "Opslaan"-knop met een
   // eigen actie (status_bijwerken, andere kolommen/logica dan de generieke
   // commonFields-update hierboven, zie includes/artikelen.php). Onder de
   // motorkap blijven dit twee losse API-aanroepen -- ze schrijven naar
@@ -5081,7 +5070,7 @@ function saveProductEdit(ean, vanuitOnbekendeProducten) {
           saveBtn.textContent = t('save');
           return;
         }
-        // Migratie 037, op verzoek van Harm: kwam je hier vandaan via
+        // Kwam je hier vandaan via
         // "Onbekende Producten" (een tijdelijk aangemaakt artikel afmaken),
         // ga dan terug naar die lijst i.p.v. naar de productpagina -- vaak
         // staan er meerdere te wachten, net als bij Onbekende Producten ->
@@ -5114,7 +5103,7 @@ function closePhotoModal() {
   document.getElementById('photoModalImg').src = '';
 }
 
-// Migratie 030, op verzoek van Harm: Product Zoeken en Categorieën
+// Product Zoeken en Categorieën
 // samengevoegd tot "Producten" met tabbalk -- twee ingangen op dezelfde
 // productenlijst (vrij zoeken vs. gegroepeerd per categorie).
 const PRODUCT_TABS = [
@@ -5146,14 +5135,13 @@ function showProductHub() {
 }
 
 // =================================================================
-// BESCHIKBAARHEID (migratie 030_groep_landingsscherm, op verzoek van
-// Harm): één zoekbaar overzicht van "wat is er, hoeveel, waar, status en
-// verbruik" per product -- bedoeld als landingsscherm voor de artsen-
+// BESCHIKBAARHEID: één zoekbaar overzicht van "wat is er, hoeveel, waar,
+// status en verbruik" per product -- bedoeld als landingsscherm voor de artsen-
 // groep, zodat een arts niet meer door Voorraad/Vervaldatums/Verbruik &
 // Trends heen hoeft te klikken voor die ene vraag. Klik door naar de
 // volledige productdetailpagina (showProductDetail) voor alles wat hier
 // niet in past (loten, transactiehistorie, bestelhistorie, ...). Toont
-// ook inkoopprijs/voorraadwaarde -- expliciet zo gekozen door Harm, geen
+// ook inkoopprijs/voorraadwaarde -- een expliciete keuze, geen
 // aparte financiele afscherming binnen dit scherm.
 // =================================================================
 // Moet in sync blijven met BESCHIKBAARHEID_VERBRUIK_DAGEN in
@@ -5221,8 +5209,7 @@ function renderBeschikbaarheid(data) {
 }
 
 // =================================================================
-// VOORRAAD-MEGATABEL (migratie 031_voorraad_tabel), op verzoek van Harm:
-// na de persona-navigatie (migratie 030_groep_landingsscherm) bleef de
+// VOORRAAD-MEGATABEL: na de persona-navigatie bleef de
 // zijbalk "geen sterke toevoeging" -- 16 losse dashboard-bestemmingen
 // achter dezelfde knoppenmuur, alleen in de kantlijn. Onderliggende
 // oorzaak: bijna alle voorraad-achtige schermen (Overzicht, Bijvullen,
@@ -5308,7 +5295,7 @@ function renderVoorraadTabel(data) {
     });
   });
 
-  // Bugfix op verzoek van Harm: deze twee knoppen leven in #vtBergingActions,
+  // Bugfix: deze twee knoppen leven in #vtBergingActions,
   // dat maar één keer wordt opgebouwd (hier), terwijl renderVoorraadTabelInhoud()
   // hieronder bij ELKE filterklik/kolomtoggle/zoekopdracht opnieuw draait.
   // Stonden deze listeners daar (zoals voorheen), dan kreeg de knop bij elke
@@ -5369,7 +5356,7 @@ function renderVoorraadTabelInhoud() {
   } else {
     html = '<table><tr><th>' + t('colProduct') + '</th><th>' + t('colCategory') + '</th><th>' + t('colLocation') + '</th>'
       + '<th>' + t('colCurrent') + '</th><th>' + t('colMin') + '</th><th>' + t('colMax') + '</th><th>' + t('colStockStatus') + '</th>'
-      // Migratie 045, op verzoek van Harm: "voorraad scherm moet ook laten
+      // "voorraad scherm moet ook laten
       // zien wanneer een product in bestelling is, dit is geen actie maar
       // een bestelstatus" -- altijd zichtbaar (geen vtCols-toggle), net als
       // de Voorraadstatus-kolom hiernaast, en niet in de contextuele
@@ -5388,7 +5375,7 @@ function renderVoorraadTabelInhoud() {
       const statusBadge = r.status && r.status !== 'Actief'
         ? ' ' + statusBadgeHtml(r.status === 'Niet leverbaar' ? t('statusNietLeverbaar') : t('statusNietMeerInGebruik'))
         : '';
-      // Migratie 031, op verzoek van Harm: kamers hebben geen eigen minimum
+      // Kamers hebben geen eigen minimum
       // meer -- r.min is voor die rijen altijd 0 (geen aparte kolom, niet
       // "minimum is 0"), dus toon "n.v.t." i.p.v. een misleidende 0.
       const minCel = r.isBerging ? r.min : '<span class="muted">' + t('mmNotApplicable') + '</span>';
@@ -5398,7 +5385,7 @@ function renderVoorraadTabelInhoud() {
         + '<td>' + r.huidig + '</td><td>' + minCel + '</td><td>' + r.max + '</td>'
         + '<td>' + statusBadgeHtml(r.voorraadStatus) + '</td>';
 
-      // Migratie 045: zelfde klikbare-badge-patroon als renderOverzichtTabellen()
+      // Zelfde klikbare-badge-patroon als renderOverzichtTabellen()
       // hierboven -- alleen een link als er ook echt een openstaande order is.
       html += r.orderStatus
         ? '<td><a class="order-status-link" data-ean="' + escapeAttr(r.ean) + '">' + statusBadgeHtml(r.orderStatus) + '</a></td>'
@@ -5416,7 +5403,7 @@ function renderVoorraadTabelInhoud() {
           : '<td class="muted">-</td>';
       }
       if (k.vervaldatum) {
-        // Bugfix, op verzoek van Harm: niet meer blind 'MONITOREN' tonen
+        // Bugfix: niet meer blind 'MONITOREN' tonen
         // zodra er een lot < 6 maanden is (dat omvat ook VERLOPEN/
         // SPOEDGEBRUIK) -- de echte classificatie van includes/voorraad.php::
         // classifyVervalStatus() gebruiken, meegegeven als
@@ -5428,7 +5415,7 @@ function renderVoorraadTabelInhoud() {
       }
       if (k.verbruik) html += '<td>' + r.verbruikRecent + '</td>';
       if (k.producent) html += '<td>' + escapeHtml(r.producent || '-') + '</td>';
-      // Migratie 031_bijvullen_kastlocatie: hier staat de locatie al in
+      // Hier staat de locatie al in
       // haar eigen kolom hiernaast, dus de kastlocatie-waarde zelf volstaat
       // (geen naamsoverlap-risico zoals op het Bijvullen-scherm, waar
       // bron- en bestemmingslocatie op dezelfde rij naast elkaar staan).
@@ -5446,7 +5433,7 @@ function renderVoorraadTabelInhoud() {
       } else if (r.magBijvullen) {
         actieHtml = statusBadgeHtml('LAAG') + ' +' + r.bijvullenHoeveel;
       } else if (r.moetBijgevuld) {
-        // Bugfix op verzoek van Harm: onder minimum, maar Berging heeft
+        // Bugfix: onder minimum, maar Berging heeft
         // zelf (nog) geen voorraad om vanuit bij te vullen -- dit MOET
         // zichtbaar blijven als tekort, niet als "-" (of erger, als
         // "voldoende voorraad") verdwijnen.
@@ -5476,7 +5463,7 @@ function renderVoorraadTabelInhoud() {
       openBestellingModal(this.getAttribute('data-ean'), this.getAttribute('data-naam'), this.getAttribute('data-aantal'));
     });
   });
-  // Bugfix op verzoek van Harm: de download/markeer-knoppen worden NIET
+  // Bugfix: de download/markeer-knoppen worden NIET
   // hier gebonden -- ze leven buiten #vtTableContainer (dat hierboven wel
   // steeds vervangen wordt) en zouden anders bij elke aanroep van deze
   // functie een extra listener erbij krijgen. Zie renderVoorraadTabel()
@@ -5530,7 +5517,7 @@ function markeerBergingBesteldVanuitVoorraad() {
 }
 
 // =================================================================
-// BIJVULLEN (migratie 031_bijvullen, op verzoek van Harm): een eigen
+// BIJVULLEN : een eigen
 // dashboard voor laboranten om aan het eind van (of gedurende) de dag
 // fysiek bij te vullen. "magBijvullen" bestond al als filterchip in
 // Voorraad, maar dat is een passieve weergave binnen een tabel met veel
@@ -5559,7 +5546,7 @@ function renderBijvullen(voorraad, locRows) {
   const bergingNaam = bergingRow ? bergingRow.naam : null;
   const kamerLocaties = actieveLocatieNamenBestelling(locRows);
 
-  // Migratie 031_bijvullen_kastlocatie, op verzoek van Harm: een
+  // Een
   // kastlocatie-waarde (bv. "Kast 1") is NOOIT uniek op zichzelf -- "Kast 1"
   // in Berging en "Kast 1" in de Interventiekamer zijn twee compleet
   // verschillende schappen die toevallig hetzelfde heten. Daarom hieronder
@@ -5578,7 +5565,7 @@ function renderBijvullen(voorraad, locRows) {
     });
   }
 
-  // Bugfix op verzoek van Harm: dit filterde voorheen alleen op
+  // Bugfix: dit filterde voorheen alleen op
   // "magBijvullen" (kamerlocatie, actief, onder minimum, besteltype
   // Automatisch, ÉN Berging heeft er zelf voorraad van). Stond Berging op
   // nul, dan verdween de rij hier volledig uit beeld, en een lege lijst
@@ -5616,8 +5603,7 @@ function renderBijvullen(voorraad, locRows) {
           return;
         }
         const vanafLabel = bergingNaam ? locatieMetKastlocatieLabel(bergingNaam, bergingKastlocatiePerEan[r.ean]) : '-';
-        // Migratie 040_productfotos_uitbreiden, op verzoek van Harm
-        // ("productfoto's uitbreiden waar mogelijk"): duimnagelfoto ook hier
+        // Duimnagelfoto ook hier
         // -- Bijvullen is een fysieke scan-to-transfer-taak, dus visueel
         // herkennen van het juiste product helpt net als bij Product Zoeken.
         html += '<tr><td>' + listThumbHtml(r.foto, r.naam) + '<a class="product-link" data-ean="' + escapeAttr(r.ean) + '">' + escapeHtml(r.naam) + '</a></td>'
@@ -5668,8 +5654,8 @@ function renderBijvullen(voorraad, locRows) {
         return;
       }
       // Herladen i.p.v. terug naar Home: dit scherm is bedoeld om
-      // meerdere producten na elkaar bij te vullen (zie Harm's verzoek),
-      // dus na een geslaagde scan gewoon de bijgewerkte tekortenlijst
+      // meerdere producten na elkaar bij te vullen, dus na een geslaagde
+      // scan gewoon de bijgewerkte tekortenlijst
       // opnieuw tonen.
       alert(tf('tfProcessed', { n: result.verwerkt }));
       showBijvullen();
@@ -5683,8 +5669,8 @@ function renderBijvullen(voorraad, locRows) {
 }
 
 // =================================================================
-// BESTELLINGEN (migratie 031_voorraad_tabel), op verzoek van Harm: Te
-// Bestellen (Handmatig), Open Orders en Mijn Bestellingen waren 3 tabs
+// BESTELLINGEN: Te Bestellen (Handmatig), Open Orders en Mijn
+// Bestellingen waren 3 tabs
 // achter dezelfde knop -- nog steeds 3 aparte databronnen/weergaven. Dit
 // is genoeg dezelfde onderliggende vraag ("wat moet er nog besteld
 // worden, en wat is de status") om er ÉÉN tabel van te maken met een
@@ -5705,7 +5691,7 @@ const BESTELLINGEN_FILTERS = [
   ['mijn', 'bsFilterMijn', function (r) { return r.isEigen; }],
 ];
 
-// Migratie 033, op verzoek van Harm: showBestellingen() accepteert nu een
+// ShowBestellingen() accepteert nu een
 // optioneel startfilter -- showBestellers()/showOpenOrders()/
 // showMijnBestellingen() hierboven zijn dunne aliassen hiernaartoe
 // geworden en willen elk hun eigen filterchip alvast aan hebben staan
@@ -5725,7 +5711,7 @@ function showBestellingen(startFilter) {
   }).getBestellersData();
 }
 
-// Migratie 033, op verzoek van Harm ("Mijn bestellingen: altijd
+// ("Mijn bestellingen: altijd
 // bestellingen van de ingelogde gebruiker zien. Een bestelling die wordt
 // geplaatst krijgt ook altijd de koppeling van degene die besteld"):
 // isEigen matcht nu rechtstreeks op besteller === de ingelogde gebruiker,
@@ -5754,7 +5740,7 @@ function bestellingenNormaliseer(bestellers, orders, eenmalig) {
   });
   (orders || []).forEach(function (r) {
     rijen.push({
-      // Op verzoek van Harm: elke geplaatste order blijft een eigen rij
+      // : elke geplaatste order blijft een eigen rij
       // (nooit samengevoegd per product, zie includes/orders.php::
       // upsertOrder()) -- datum/dagenOpen/besteltype (Handmatig/
       // Automatisch, zie includes/orders.php::bestelMethode()) maken twee
@@ -5828,7 +5814,7 @@ function renderBestellingenInhoud(heeftMijn) {
   if (rijen.length === 0) {
     html = '<p class="empty">' + t('bsEmpty') + '</p>';
   } else {
-    // Op verzoek van Harm: Datum, Dagen open en Besteltype (Handmatig/
+    // : Datum, Dagen open en Besteltype (Handmatig/
     // Automatisch) erbij, zodat losse orders voor hetzelfde product hier
     // duidelijk individueel te onderscheiden zijn i.p.v. optisch identiek
     // (zelfde reden als bestellingenNormaliseer() hierboven).
@@ -5844,19 +5830,19 @@ function renderBestellingenInhoud(heeftMijn) {
       } else {
         actieHtml = '<a class="product-link bs-detail-link" data-type="' + r.type + '" data-id="' + r.id + '">' + t('editLabel') + '</a>';
       }
-      // Op verzoek van Harm: geen label meer bij eigen bestellingen -- de
+      // : geen label meer bij eigen bestellingen -- de
       // 'Mijn'-filterchip laat dat al zien, een extra badge per rij
       // (die bovendien de MONITOREN-stijl hergebruikte, wat elders
       // "loten met 3-12 maanden houdbaarheid" betekent) was overbodig en
       // verwarrend.
       //
-      // Migratie 036, op verzoek van Harm: het onderscheid uit migratie 034
-      // (hieronder, ooit terecht bedoeld) bleek te grof -- een 'order'-rij
+      // Het onderscheid hieronder (ooit terecht bedoeld) bleek te grof
+      // -- een 'order'-rij
       // is in de orders-tabel altijd EEN product (die tabel kent geen
       // groepering van meerdere EAN's onder één bestelling), dus die
       // linkt net als 'handmatig' gewoon naar het PRODUCT. Alleen een
       // 'eenmalig'-rij kan écht meerdere verschillende producten bevatten
-      // (via de itemized eenmalige_bestelling_items-tabel, migratie 032)
+      // (via de itemized eenmalige_bestelling_items-tabel)
       // -- alleen die linkt naar de BESTELLING zelf. De actie-kolom
       // hiernaast (Bewerken) blijft voor beide naar de bestelling linken,
       // dat is een bewuste andere kolom met een andere bedoeling.
@@ -5895,13 +5881,12 @@ function renderBestellingenInhoud(heeftMijn) {
 }
 
 // =================================================================
-// RAPPORTAGE / MANAGEMENT COCKPIT (030_groep_landingsscherm, herzien in
-// migratie 044_rapportage_herzien op verzoek van Harm: "Rapportage-pagina
-// volledig herzien"). Combineert uitsluitend cijfers die al elders
+// RAPPORTAGE / MANAGEMENT COCKPIT: deze pagina is later volledig herzien.
+// Combineert uitsluitend cijfers die al elders
 // berekend worden -- expliciet geen nieuwe backend-aggregatie, zie ook
 // includes/beschikbaarheid.php voor dezelfde aanpak bij de artsen-groep.
 //
-// Voorheen (migratie 030/032): drie vaste, altijd-zichtbare secties
+// Voorheen: drie vaste, altijd-zichtbare secties
 // (Voorraadwaarde, laatste-maand Verbruik&Trends, top-5 Team), geen
 // enkele schakelaar ondanks dat de taaknaam destijds al "dimensie-
 // schakelaar" beloofde. Nu ECHT vijf dimensies via een tabbalk (zelfde
@@ -5944,13 +5929,13 @@ function showManagementCockpit() {
   StocuroRun.withSuccessHandler(function (d) { picc = d; nogTeLaden--; klaarAlsAlles(); }).getPiccRotatie('picc_rotatie');
   StocuroRun.withSuccessHandler(function (d) { minmax = d; nogTeLaden--; klaarAlsAlles(); }).getMinMaxAdviesOverzicht();
   StocuroRun.withSuccessHandler(function (d) { verplaatsadvies = d; nogTeLaden--; klaarAlsAlles(); }).getVerplaatsAdviesOverzicht();
-  // Migratie 044_rapportage_herzien: '1j' (laatste jaar) i.p.v. 'totaal' --
+  // '1j' (laatste jaar) i.p.v. 'totaal' --
   // voor een rapportage-KPI is een jaartotaal betekenisvoller dan de hele
   // historie sinds installatie; de drill-link opent gewoon de volledige
   // Afboekingen-pagina, die zelf haar eigen periodefilter behoudt.
   StocuroRun.withSuccessHandler(function (d) { afboekingen = d; nogTeLaden--; klaarAlsAlles(); }).getAfboekingenOverzicht('1j');
   if (magLicentie) {
-    // Migratie 044_licentie_registratie: geen StocuroRun-methode (zie
+    // Geen StocuroRun-methode (zie
     // showGebruikers()/laadHomeWidgets() hierboven), rechtstreeks fetch().
     fetch('api/gebruikers.php', { credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
@@ -6012,7 +5997,7 @@ function renderManagementCockpit(d) {
   html += '<div class="value-tile"><div class="value-label">' + t('trWriteOffsTitle') + '</div><div class="value-amount">€' + (laatsteAfboeking ? laatsteAfboeking.waarde.toFixed(2) : '0.00') + '</div></div>';
   html += '<div class="value-tile"><div class="value-label">' + t('trSavingsTitle') + '</div><div class="value-amount" style="color:#059669;">€' + (laatsteBesparing ? laatsteBesparing.totaalWaarde.toFixed(2) : '0.00') + '</div></div>';
   html += '</div>';
-  // Migratie 044_rapportage_herzien: mini-trend van de laatste 3 maanden
+  // Mini-trend van de laatste 3 maanden
   // (i.p.v. enkel de laatste maand) -- hergebruikt exact dezelfde
   // trends.maanden-array, alleen de laatste 3 elementen i.p.v. 1.
   const laatste3 = d.trends.maanden.slice(-3);
@@ -6038,7 +6023,7 @@ function renderManagementCockpit(d) {
     });
     html += '</table>';
   }
-  // Migratie 044_rapportage_herzien: PICC "wie is aan de beurt" erbij --
+  // PICC "wie is aan de beurt" erbij --
   // exact dezelfde weergave als de Home-widget (hwPiccTitle/hwAanDeBeurt/
   // hwGeenPiccProcedures), nieuw voor deze pagina.
   html += '<div class="section-title" style="margin-top:1rem;">' + t('hwPiccTitle') + '</div>';
@@ -6049,7 +6034,7 @@ function renderManagementCockpit(d) {
   // -- Dimensie: Acties (nieuw) -- Min/Max-adviezen, Verplaatsadvies,
   // Afboekingen laatste jaar, elk met een eigen drill-link. Zelfde
   // "wat vraagt aandacht"-insteek als het vroegere Actiecentrum
-  // (migratie 033), maar dan als apart Rapportage-dimensie i.p.v. een
+  //, maar dan als apart Rapportage-dimensie i.p.v. een
   // los scherm.
   html += '<div class="rp-dim-section" data-dim="acties" style="display:' + (rapportageDimensie === 'acties' ? 'block' : 'none') + ';">';
   html += '<p class="form-hint">' + t('rpActiesHint') + '</p>';
@@ -6117,7 +6102,7 @@ function showProductSearch() {
   setRoute('product-search');
   currentPage = 'productsearch';
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
-  // Op verzoek van Harm: de gecombineerde "Voorraad per locatie"-cel (alles
+  // : de gecombineerde "Voorraad per locatie"-cel (alles
   // door elkaar in één tekstregel) was onoverzichtelijk -- deze haalt nu
   // ook getLocaties() op (dezelfde bron als de locatiebeheerpagina, zie
   // includes/locaties.php::actieveLocatieNamen()) om per actieve locatie
@@ -6130,7 +6115,7 @@ function showProductSearch() {
   }).getLocaties();
 }
 
-// Op verzoek van Harm: alleen actieve locaties, in dezelfde volgorde als
+// : alleen actieve locaties, in dezelfde volgorde als
 // alleLocatiesSamengevoegd() (api/locaties.php) ze teruggeeft -- vaste
 // slots eerst (op hun eigen volgorde), dan extra locaties (op hun eigen
 // volgorde). Geen aparte globale sortering over beide groepen heen, dat
@@ -6165,7 +6150,7 @@ function renderProductSearch(data, locaties) {
   kolomLocaties.forEach(function (naam) { html += '<th>' + escapeHtml(naam) + '</th>'; });
   html += '<th>' + t('colTotal') + '</th><th>' + t('colOrder') + '</th><th>' + t('colExpiry') + '</th><th>' + t('colValue') + '</th></tr>';
   data.forEach(item => {
-    // Migratie 025: kleine badge naast de naam als dit artikel niet
+    // Kleine badge naast de naam als dit artikel niet
     // Actief is -- puur informatief, deze lijst zelf blijft altijd alle
     // artikelen tonen (ook niet meer in gebruik), zie getProductList() in
     // includes/artikelen.php. statusBadgeHtml() hergebruikt de bestaande
@@ -6181,8 +6166,7 @@ function renderProductSearch(data, locaties) {
     const perLocatie = {};
     (item.locaties || []).forEach(function (l) { perLocatie[l.locatie] = l.huidig; });
     html += '<tr data-categorie="' + escapeAttr(item.categorie || '') + '">'
-      // Migratie 040_productfotos_uitbreiden, op verzoek van Harm
-      // ("productfoto's uitbreiden waar mogelijk"): duimnagelfoto voor de
+      // Duimnagelfoto voor de
       // productnaam, zelfde listThumbHtml()-helper als hieronder bij
       // Bijvullen -- helpt bij het herkennen van een product in de lijst
       // zonder eerst te hoeven doorklikken naar de detailpagina.
@@ -6235,7 +6219,7 @@ function showBoodschappenlijst() {
   StocuroRun.withSuccessHandler(renderBoodschappenlijst).getBoodschappenData();
 }
 
-// Migratie 020, op verzoek van Harm: toont "(= X dozen)" achter een
+// Toont "(= X dozen)" achter een
 // afgeronde bestelhoeveelheid, als de backend een dozen-waarde meestuurt
 // (rondAfOpDoos() in includes/voorraad.php -- alleen gezet voor
 // producten met een doosverpakking). Puur een leesbaarheidstoevoeging,
@@ -6246,7 +6230,7 @@ function dozenSuffixHtml(dozen) {
   return ' <span style="color:#666; font-size:12px;">(' + tf('doosSuffix', { n: dozen }) + ')</span>';
 }
 
-// Migratie 026 (op verzoek van Harm): was "Boodschappenlijst", toonde
+// Dit scherm heette vroeger "Boodschappenlijst" en toonde
 // zowel bijvul- als bestel-items door elkaar. Nu een eenvoudige lijst van
 // alleen wat daadwerkelijk vanuit Berging kan worden bijgevuld -- de
 // backend (getBoodschappenData() in includes/voorraad.php) laat items
@@ -6263,7 +6247,7 @@ function renderBoodschappenlijst(data) {
   html += voorraadTabsHtml('boodschappenlijst');
   html += '<p class="form-hint">' + t('slRefillHint') + '</p>';
 
-  const locaties = Object.keys(data); // dynamisch: sleutels komen al uit de instelbare locatienamen (migratie 005)
+  const locaties = Object.keys(data); // dynamisch: sleutels komen al uit de instelbare locatienamen
   let hasAnyItems = false;
 
   locaties.forEach(loc => {
@@ -6321,7 +6305,7 @@ function renderBerging(data) {
       const refHtml = (item.producent || item.artikelref)
         ? escapeHtml(item.producent || '-') + '<br><span style="color:#666;font-size:12px;">' + escapeHtml(item.artikelref || '-') + '</span>'
         : '-';
-      // Migratie 021, op verzoek van Harm: barcode van de interne
+      // Barcode van de interne
       // logistiekcode i.p.v. de GS1-EAN (leverancierscode) -- bedoeld voor
       // een eigen schaplabel. code128Svg() geeft null terug als het veld
       // leeg is of tekens bevat die niet in Subset B passen; in beide
@@ -6344,7 +6328,7 @@ function renderBerging(data) {
     });
     html += '</table>';
 
-    // Migratie 026, op verzoek van Harm: "download PDF & mail Logistiek"
+    // "download PDF & mail Logistiek"
     // staat BEWUST los van "Markeer als besteld" -- downloaden/mailen
     // heeft geen bijwerkingen, alleen de tweede knop zet artikelen
     // daadwerkelijk als besteld weg (upsertOrder(), zie
@@ -6373,12 +6357,11 @@ function renderBerging(data) {
 }
 
 // -----------------------------------------------------------------
-// Minimale, dependency-vrije PDF-generator (migratie 026, op verzoek van
-// Harm): "Print/Exporteren" op de Berging-bestellijst is vervangen door
-// "download PDF & mail Logistiek", omdat een mailto:-link NOOIT
-// automatisch een bijlage kan meesturen (browserbeveiliging) -- na
-// afstemmen koos Harm voor het bestaande client-side patroon (PDF
-// downloaden + mailto met lege ontvanger openen) i.p.v. server-side
+// Minimale, dependency-vrije PDF-generator: "Print/Exporteren" op de
+// Berging-bestellijst is vervangen door "download PDF & mail
+// Logistiek", omdat een mailto:-link NOOIT automatisch een bijlage kan
+// meesturen (browserbeveiliging) -- daarom het bestaande client-side
+// patroon (PDF downloaden + mailto met lege ontvanger openen) i.p.v. server-side
 // e-mailverzending. Zelfde filosofie als code128Svg() elders in deze
 // app: geen externe library/CDN, zelf een geldige platte-tekst PDF-
 // bytestream opbouwen met de ingebouwde Helvetica-basisfont (een van de
@@ -6456,7 +6439,7 @@ function round2(n) {
  * Elke rij: { naam, aantalTekst, code } -- code is optioneel (logistiek-
  * code van dat artikel); als die aanwezig EN encodeerbaar is (Code128
  * subset B, zie code128BEncode()) wordt er een echte scanbare staafcode
- * bij de rij getekend (op verzoek van Harm: Logistiek moet dit direct
+ * Bij de rij getekend (Logistiek moet dit direct
  * vanaf het uitgeprinte formulier kunnen overnemen, niet alleen vanaf het
  * scherm). Zonder code, of een code die niet encodeerbaar is, komt er in
  * plaats daarvan dezelfde "geen logistiekcode ingesteld"-tekst als op het
@@ -6550,7 +6533,7 @@ function downloadSimplePdf(filename, title, subtitle, rows) {
 
 /**
  * Rijen voor de Berging-bestellijst-PDF: naam (+ interne ref), aantal-
- * tekst en de logistiekcode. Op verzoek van Harm: Logistiek moet de
+ * Tekst en de logistiekcode. : Logistiek moet de
  * bestellijst direct kunnen scannen, zowel vanaf het scherm als vanaf het
  * uitgeprinte/gedownloade formulier -- dus nu WEL een echte, scanbare
  * staafcode per rij in de PDF (downloadSimplePdf()/code128PdfBars()
@@ -6604,7 +6587,7 @@ function downloadEnMailBergingBestellijst(data) {
   }, 300);
 }
 
-// "Markeer als besteld" (migratie 025): losstaande actie van het printen
+// "Markeer als besteld": losstaande actie van het printen
 // hierboven -- zet elk artikel op de huidige lijst als order weg
 // (upsertOrder(), zelfde mechanisme als een handmatige bestelling), zodat
 // de normale Ontvangst-scan het straks vanzelf oppikt (FIFO). Bevestiging
@@ -6620,7 +6603,7 @@ function markeerBergingBesteld() {
   });
 }
 
-// Migratie 030, op verzoek van Harm: zelfde tabbalk-patroon als
+// Zelfde tabbalk-patroon als
 // VOORRAAD_TABS hierboven, nu voor de drie vervaldatum/lot-schermen
 // (Vervaldatums Detail, Lot-tracking, Vervaldatum Focus) die alle drie
 // dezelfde onderliggende vraag beantwoorden ("welke loten lopen af/zijn
@@ -6751,7 +6734,7 @@ function renderLotTracking(data) {
   wireVervalTabs();
 }
 
-// Migratie 030, op verzoek van Harm: Verbruik per Procedure en
+// Verbruik per Procedure en
 // Verbruikstrends samengevoegd tot "Verbruik & Trends" met tabbalk.
 // Afboekingen (Afschrijvingen) staat er als derde tab bij -- was een
 // losse menuknop in groupOrdering, maar hoort inhoudelijk beter hier: het
@@ -6814,7 +6797,7 @@ function renderVerbruik(data) {
   } else {
     // Structuur (zie includes/dashboards.php::getVerbruiksgebruik()): één
     // niveau, per procedure_type (.section-title) -> per-productgemiddelde
-    // PER PROCEDURE, over alle specialisten heen. Op verzoek van Harm is
+    // PER PROCEDURE, over alle specialisten heen. is
     // het specialist-niveau dat hier eerder stond verwijderd (kan op
     // termijn als vervelend voor artsen aanvoelen); "wie gebruikt wat"
     // per specialist staat nu alleen nog op de productdetailpagina.
@@ -6851,13 +6834,13 @@ function renderVerbruik(data) {
   wireUsageTabs();
 }
 
-// Migratie 030, op verzoek van Harm: Te Bestellen, Open Orders en (voor
+// Te Bestellen, Open Orders en (voor
 // specialist/laborant-accounts) Mijn Bestellingen delen nu één ingang
 // "Bestellingen" met tabbalk. Mijn Bestellingen toont alleen de eigen
 // eenmalige bestellingen van de ingelogde specialist/laborant -- dus
 // bewust NIET onvoorwaardelijk in de tabset (een beheerder-account heeft
 // geen eigen specialist-koppeling, die tab zou voor hen altijd leeg zijn).
-// Migratie 033, op verzoek van Harm: showBestellers()/showOpenOrders()
+// ShowBestellers()/showOpenOrders()
 // (net als showMijnBestellingen() hierboven) waren pre-consolidatie
 // pagina's die ROUTE_DISPATCH allang niet meer rechtstreeks aanwees --
 // elk had een eigen terugknop en toonde een subset van precies de drie
@@ -6906,7 +6889,7 @@ function renderVoorraadwaarde(data) {
   html += '<table><tr><th>' + t('colCategory') + '</th><th>' + t('colNumProducts') + '</th><th>' + t('colTotalUnits') + '</th><th>' + t('colValue') + '</th></tr>';
   Object.keys(data.perCategorie).sort((a, b) => data.perCategorie[b].waarde - data.perCategorie[a].waarde).forEach(cat => {
     const d = data.perCategorie[cat];
-    // Migratie 048, op verzoek van Harm: de categorie-links hier bleken
+    // De categorie-links hier bleken
     // niet meer kloppend te zijn ("via Management-cockpit -> Bekijk
     // volledige voorraadwaarde -> vanuit daar zijn de linkjes van de
     // categorieën ... niet meer kloppend / een lege pagina") -- verwijderd.
@@ -6932,7 +6915,7 @@ function showActiecentrum() {
   StocuroRun.withSuccessHandler(renderActiecentrum).getActiecentrumData();
 }
 
-// Migratie 030, op verzoek van Harm: het Actiecentrum toonde voorheen vijf
+// Het Actiecentrum toonde voorheen vijf
 // eigen tabellen (verlopen/spoedgebruik/leeg/laag/orders) die exact
 // dezelfde data nogmaals opbouwden als Vervaldatum Focus, Min/Max Advies
 // en Open Orders al deden -- twee plekken die bijgehouden moesten worden
@@ -7100,7 +7083,7 @@ function renderCategorien(data) {
     const d = data.summary[cat];
     tArt += d.aantalArtikelen; tStuks += d.stuks; tWaarde += d.waarde; tOnder += d.onderMin; tLoten += d.loten6;
     const onderHtml = d.onderMin > 0 ? statusBadgeHtml('LAAG') + ' ' + d.onderMin : '0';
-    // Migratie 026, op verzoek van Harm: dit getal moet klikbaar zijn naar
+    // Dit getal moet klikbaar zijn naar
     // precies de producten met een lot < 6 maanden -- alleen als er
     // daadwerkelijk iets is om naar door te klikken.
     const lotenHtml = d.loten6 > 0
@@ -7119,7 +7102,7 @@ function renderCategorien(data) {
       showCategorieDetail(this.getAttribute('data-cat'));
     });
   });
-  // Migratie 026: aparte klik-afhandeling voor de "Loten < 6mnd"-cel --
+  // Aparte klik-afhandeling voor de "Loten < 6mnd"-cel --
   // zelfde detailpagina, maar voorgefilterd op alleen die producten.
   document.querySelectorAll('.cat-loten6-link').forEach(el => {
     el.addEventListener('click', function() {
@@ -7159,18 +7142,18 @@ function showCategorieDetail(cat, filterLoten6) {
 
 // =================================================================
 // OPEN ORDERS - hangende bestellingen volgen (reguliere orders +
-// eenmalige/patiëntgebonden bestellingen, op verzoek van Harm: die
-// laatste stonden nergens in een overzicht met statusbeheer, alleen in
+// Eenmalige/patiëntgebonden bestellingen: die laatste stonden nergens
+// in een overzicht met statusbeheer, alleen in
 // een platte, alleen-lezen lijst binnen het aanvraagformulier zelf).
 // =================================================================
 const EENMALIGE_BESTELLING_STATUSSEN = ['Aangevraagd', 'Besteld', 'Ontvangen', 'Gebruikt', 'Retourneren'];
 
 // showOpenOrders() is hierboven al herzien tot een dunne alias naar
-// showBestellingen() (migratie 033) -- zie de toelichting bij
+// ShowBestellingen() -- zie de toelichting bij
 // showBestellers() hierboven. renderOpenOrders() is daarmee vervallen.
 
 // -----------------------------------------------------------------
-// Order detail/bewerking (migratie 027, op verzoek van Harm): klikbaar
+// Order detail/bewerking : klikbaar
 // vanuit Open Orders, Actiecentrum en Overzicht (de orderstatus-badge).
 // Zelfde "hele rij opnieuw versturen"-conventie als de eenmalige-
 // bestelling-editpagina hieronder.
@@ -7185,7 +7168,7 @@ function showOrderDetail(id) {
   }).getOrderDetail(id);
 }
 
-// Migratie 027: aparte ingang vanuit plekken die alleen een EAN kennen
+// Aparte ingang vanuit plekken die alleen een EAN kennen
 // (bijv. de orderstatus-badge op Overzicht) -- zoekt zelf de bijbehorende
 // open order op (api/order_detail.php?ean=...) en toont dan hetzelfde
 // detailscherm. Geen aparte route nodig: eenmaal gevonden is het gewoon
@@ -7205,7 +7188,7 @@ function showOrderDetailVoorEan(ean) {
   }).getOrderDetailVoorEan(ean);
 }
 
-// Migratie 033, op verzoek van Harm: gedeelde helper voor de "Besteld
+// Gedeelde helper voor de "Besteld
 // door"-dropdowns (order-detail hieronder, eenmalige-bestelling-bewerken
 // verderop) -- bouwt <option>s uit de gebruikerslijst
 // (getGebruikersNamen(), alleen actieve accounts) en voegt de HUIDIGE
@@ -7241,18 +7224,18 @@ function renderOrderDetail(data, gebruikers) {
   html += '<div class="form-group"><label>' + t('colProduct') + '</label><input type="text" value="' + escapeAttr(data.naam) + '" readonly></div>';
   html += '<div class="form-group"><label>' + t('colOrdered') + '</label><input type="number" id="odBesteld" min="0" value="' + data.besteld + '"></div>';
   html += '<div class="form-group"><label>' + t('colReceived') + '</label><input type="number" id="odOntvangen" min="0" value="' + data.ontvangen + '"></div>';
-  // Migratie 033, op verzoek van Harm: dropdown van bekende gebruikers
+  // Dropdown van bekende gebruikers
   // i.p.v. vrije tekst -- bij het plaatsen zelf is besteller altijd
   // automatisch de ingelogde gebruiker (zie api/bestelling.php), dit veld
   // is voor een beheerder om dat achteraf te corrigeren/toe te wijzen.
   html += '<div class="form-group"><label>' + t('colOrderedBy') + '</label><select id="odBesteller">' + bestellerOptiesHtml(gebruikers, data.besteller || '') + '</select></div>';
   html += '<div class="form-group"><label>' + t('colChannel') + '</label><input type="text" id="odKanaal" value="' + escapeAttr(data.kanaal || '') + '"></div>';
-  // Op verzoek van Harm: duidelijk Handmatig/Automatisch tonen, afgeleid
+  // : duidelijk Handmatig/Automatisch tonen, afgeleid
   // van het kanaal (zie includes/orders.php::bestelMethode()) -- alleen-
   // lezen, want dit volgt uit HOE de order is geplaatst, niet iets om hier
   // los van te wijzigen (pas het kanaalveld hierboven aan als dat nodig is).
   html += '<div class="form-group"><label>' + t('colOrderType') + '</label><input type="text" value="' + escapeAttr(data.besteltype ? orderTypeLabel(data.besteltype) : '-') + '" readonly></div>';
-  // Migratie 029, op verzoek van Harm: eerst/laatst ontvangen op tonen --
+  // Eerst/laatst ontvangen op tonen --
   // stond al in getOrderDetail()'s response maar werd hier nooit gerenderd.
   // Alleen tonen als er al minstens één ontvangst is geweest, anders is er
   // niks zinnigs te tonen behalve "nog niet ontvangen".
@@ -7264,7 +7247,7 @@ function renderOrderDetail(data, gebruikers) {
 
   html += '<div class="edit-actions"><button class="edit-save" id="odSave">' + t('save') + '</button><button class="edit-cancel" id="odProduct">' + t('odViewProduct') + '</button></div>';
 
-  // Op verzoek van Harm: "alle transacties rondom deze order" terugzien op
+  // : "alle transacties rondom deze order" terugzien op
   // de detailpagina, zie includes/orders.php::getOrderDetail()/
   // getTransactiesRondOrder() voor hoe dit venster (besteld_op t/m laatst
   // ontvangen, of tot nu als nog niet ontvangen) is bepaald. Zelfde
@@ -7275,16 +7258,15 @@ function renderOrderDetail(data, gebruikers) {
   if (data.transacties && data.transacties.length > 0) {
     html += '<table><tr><th>' + t('colDate') + '</th><th>' + t('colType') + '</th><th>' + t('colQuantity') + '</th><th>' + t('colLocation') + '</th><th>' + t('colSpecialist') + '</th><th>' + t('colScannedBy') + '</th><th>' + t('colNote') + '</th></tr>';
     data.transacties.forEach(function (item, idx) {
-      // Migratie 041_order_detail_ontvangst_clusteren, op verzoek van Harm
-      // ("ontvangst-transacties clusteren"): een Ontvangst-scan die
+      // Ontvangst-transacties clusteren: een Ontvangst-scan die
       // meerdere lots in één actie boekte, stond hier voorheen als evenveel
       // losse rijen -- includes/orders.php::getTransactiesRondOrderGeclusterd()
       // groepeert die nu tot één samengevatte rij (geclusterd:true) met de
       // som van de hoeveelheid en een "bekijk lots"-uitklapper eronder,
       // zelfde regels-array-idee als de Recente Transacties-batches
       // (renderRecenteTransactieRow() hierboven). Ongeclusterde rijen
-      // (elk ander transactietype, of een Ontvangst van vóór migratie 014
-      // zonder batch_id) tonen gewoon als vanouds één rij.
+      // (elk ander transactietype, of een oudere Ontvangst zonder
+      // batch_id) tonen gewoon als vanouds één rij.
       if (item.geclusterd && item.regels.length > 1) {
         html += '<tr><td>' + item.timestamp.substring(0, 16) + '</td><td>' + transactieTypeLabel(item.type) + '</td><td>' + item.hoeveelheid + '</td><td>' + escapeHtml(item.locatie) + '</td><td>' + (item.specialist || '-') + '</td><td>' + escapeHtml(item.gescandDoor || '-') + '</td>'
           + '<td><button type="button" class="action-btn od-lots-toggle" data-idx="' + idx + '">' + tf('odBekijkLots', { n: item.regels.length }) + '</button></td></tr>';
@@ -7334,7 +7316,7 @@ function renderOrderDetail(data, gebruikers) {
 // -----------------------------------------------------------------
 // Eenmalige bestelling: detail- en editpagina, bereikbaar door in Open
 // Orders (of de alleen-lezen lijst op het aanvraagformulier) op een
-// regel te klikken. Op verzoek van Harm: niet meer een status-select
+// Regel te klikken. : niet meer een status-select
 // direct in het overzicht, maar eerst de volledige inhoud zien (ook de
 // opmerkingen) en van daaruit de eigenschappen bewerken.
 // -----------------------------------------------------------------
@@ -7344,7 +7326,7 @@ function showEenmaligeBestellingDetail(id) {
   StocuroRun.withSuccessHandler(renderEenmaligeBestellingDetail).getEenmaligeBestellingDetail(id);
 }
 
-// Migratie 035, op verzoek van Harm: dezelfde itemtabel (EAN/Lot/
+// Dezelfde itemtabel (EAN/Lot/
 // Vervaldatum/status per gescande regel) moet zowel op de detailpagina
 // als op de bewerkpagina te zien zijn -- eerst stond dit alleen op
 // Bewerken, en moest je daar altijd eerst naartoe klikken om te zien
@@ -7375,7 +7357,7 @@ function eenmaligeBestellingItemsTabelHtml(items) {
 function renderEenmaligeBestellingDetail(data) {
   if (data.error) {
     document.getElementById('content').innerHTML = '<button class="back-btn" id="backBtn">' + t('backLabel') + '</button><h2>' + t('errorLabel') + ': ' + data.error + '</h2>';
-    // Migratie 035, op verzoek van Harm: terug moet naar het Eenmalige
+    // Terug moet naar het Eenmalige
     // Bestelling-overzicht (waar je vandaan komt), niet naar de
     // algemene Bestellingen-lijst.
     wire('backBtn', goBack);
@@ -7389,7 +7371,7 @@ function renderEenmaligeBestellingDetail(data) {
   html += '<div class="info-box"><div class="info-label">' + t('colDate') + '</div><div class="info-value">' + escapeHtml(data.tijdstempel) + '</div></div>';
   html += '<div class="info-box"><div class="info-label">' + t('colPatientNo') + '</div><div class="info-value">' + escapeHtml(data.patientnummer) + '</div></div>';
   html += '<div class="info-box"><div class="info-label">' + t('colDescription') + '</div><div class="info-value">' + escapeHtml(data.artikelomschrijving) + '</div></div>';
-  // Migratie 027 (op verzoek van Harm): EAN/Lot/Vervaldatum NIET meer op
+  // EAN/Lot/Vervaldatum NIET meer op
   // de detailpagina -- een eenmalige bestelling gaat bijna altijd om
   // meerdere verschillende producten tegelijk (de vrije-tekst
   // omschrijving hierboven dekt dat), dus een los EAN/lot/vervaldatum
@@ -7404,7 +7386,7 @@ function renderEenmaligeBestellingDetail(data) {
   html += '<div class="info-box"><div class="info-label">' + t('colStatus') + '</div><div class="info-value">' + statusBadgeHtml(data.status) + '</div></div>';
   html += '</div>';
 
-  // Migratie 035, op verzoek van Harm: direct de gescande items (EAN/
+  // Direct de gescande items (EAN/
   // Lot/Vervaldatum/status) tonen op de detailpagina zelf -- voorheen
   // moest je daarvoor eerst op "Bewerken" klikken, terwijl je hier vaak
   // alleen komt om te kijken wat er al binnen is.
@@ -7413,15 +7395,15 @@ function renderEenmaligeBestellingDetail(data) {
   html += '<div class="section-title">' + t('colNote') + '</div>';
   html += '<p>' + (data.opmerking ? escapeHtml(data.opmerking) : '<span class="empty">' + t('noneRecorded') + '</span>') + '</p>';
 
-  // Mailto-knop (op verzoek van Harm, migratie 026): "Mail specialist" en
+  // Mailto-knop: "Mail specialist" en
   // "Mail planning" waren twee identieke knoppen die alleen verschilden
   // in het vooraf ingevulde "aan"-adres -- samengevoegd tot één "Stuur
   // e-mail"-knop. Die vult het specialist-e-mailadres alvast in als dat
   // bekend is (zelfde als de oude "Mail specialist"-knop deed), maar de
   // ontvanger kan in de eigen mailclient net zo makkelijk worden
   // aangepast naar planning/logistiek -- vandaar geen twee aparte
-  // knoppen meer nodig. Patiëntnummer staat nu WEL in de mailinhoud (op
-  // uitdrukkelijk verzoek van Harm) -- let op dat e-mail geen beveiligd
+  // knoppen meer nodig. Patiëntnummer staat nu WEL bewust in de
+  // mailinhoud -- let op dat e-mail geen beveiligd
   // kanaal is voor persoonsgegevens.
   html += '<div class="edit-actions">'
     + '<button class="action-btn" id="ebMailSend">' + t('ebMailSend') + '</button>'
@@ -7443,10 +7425,9 @@ function renderEenmaligeBestellingDetail(data) {
 
 /**
  * Bouwt een mailto:-link met onderwerp + inhoud van een eenmalige
- * bestelling, voor de "Stuur e-mail"-knop. Bevat op uitdrukkelijk
- * verzoek van Harm ook het patiëntnummer (migratie 026) -- eerder
- * bewust weggelaten vanwege het persoonsgegeven-karakter, maar Harm
- * geeft aan dat de ontvanger (specialist/planning) dit nodig heeft.
+ * bestelling, voor de "Stuur e-mail"-knop. Bevat bewust ook het
+ * patiëntnummer -- eerder weggelaten vanwege het persoonsgegeven-
+ * karakter, maar de ontvanger (specialist/planning) heeft dit nodig.
  */
 function eenmaligeBestellingMailtoUrl(data, aan) {
   const onderwerp = tf('ebMailSubject', { id: data.id, omschrijving: data.artikelomschrijving, status: statusDisplayLabel(data.status) });
@@ -7454,7 +7435,7 @@ function eenmaligeBestellingMailtoUrl(data, aan) {
     tf('ebMailLineOrder', { id: data.id }),
     tf('ebMailLinePatient', { patientnummer: data.patientnummer || '-' }),
     tf('ebMailLineDescription', { omschrijving: data.artikelomschrijving }),
-    // Migratie 027: geen EAN meer in de mail, zelfde reden als op de
+    // Geen EAN meer in de mail, zelfde reden als op de
     // detailpagina (meestal meerdere verschillende producten).
     tf('ebMailLineQuantity', { n: data.hoeveelheid }),
     tf('ebMailLineProcedure', { procedure: data.procedure || '-' }),
@@ -7492,7 +7473,7 @@ function renderEenmaligeBestellingEdit(data, specialisten, procedures, gebruiker
   html += '<h2>' + t('ebEditTitle') + '</h2>';
   html += '<div id="formError" class="login-error" style="display:none;"></div>';
 
-  // Migratie 032 (op verzoek van Harm, tweede feedbackronde -- de eerdere
+  // (tweede feedbackronde -- de eerdere
   // afspraak hierover was nog niet zichtbaar doorgevoerd): elke gescande
   // GS1-regel wordt voortaan een eigen itemrij (EAN/product/lot/
   // vervaldatum) i.p.v. samengevoegd tot één vlakke rij, want een
@@ -7506,7 +7487,7 @@ function renderEenmaligeBestellingEdit(data, specialisten, procedures, gebruiker
   html += '<div class="form-group"><label>' + t('oeGs1Scan') + '</label><textarea id="ebeGs1" rows="6" placeholder="' + escapeAttr(t('oeGs1Placeholder')) + '"></textarea><div id="ebeGs1Hint" class="gs1-hint" style="display:none;"></div><p class="form-hint">' + t('oeGs1Hint') + '</p></div>';
   html += '<div id="onbekendPaneel"></div>';
 
-  // Migratie 033/035, op verzoek van Harm: de itemtabel toont ook wat er
+  // De itemtabel toont ook wat er
   // MET elk item is gebeurd nadat het is ontvangen -- gewoon verder
   // gescand via Materiaal Verbruik of Verplaatsing+Retouren zet dit
   // automatisch op 'verbruikt'/'retour', zie
@@ -7520,7 +7501,7 @@ function renderEenmaligeBestellingEdit(data, specialisten, procedures, gebruiker
   html += '<div class="form-group"><label>' + t('colDescription') + '</label><input type="text" id="ebeOmschrijving" value="' + escapeAttr(data.artikelomschrijving) + '"></div>';
   html += '<div class="form-group"><label>' + t('colProcedure') + '</label><select id="ebeProcedure"><option value="">' + t('oeSelectProcedure') + '</option>' + optiesMetSelectie(procedures, data.procedure) + '</select></div>';
   html += '<div class="form-group"><label>' + t('colSpecialist') + '</label><select id="ebeSpecialist"><option value="">' + t('oeSelectSpecialist') + '</option>' + specialistOptionsHtml(specialisten, data.specialist) + '</select></div>';
-  // Migratie 033, op verzoek van Harm: dropdown i.p.v. vrije tekst -- zie
+  // Dropdown i.p.v. vrije tekst -- zie
   // bestellerOptiesHtml() hierboven.
   html += '<div class="form-group"><label>' + t('colOrderedBy') + '</label><select id="ebeBesteller">' + bestellerOptiesHtml(gebruikers, data.besteller || '') + '</select></div>';
   html += '<div class="form-group"><label>' + t('colStatus') + '</label><select id="ebeStatus">' + EENMALIGE_BESTELLING_STATUSSEN.map(function (s) {
@@ -7537,7 +7518,7 @@ function renderEenmaligeBestellingEdit(data, specialisten, procedures, gebruiker
   document.getElementById('cancelEditBtn2').addEventListener('click', function () { showEenmaligeBestellingDetail(data.id); });
   initGs1ScanHint('ebeGs1', 'ebeGs1Hint');
 
-  // Migratie 032: twee-fase opslaan, zelfde patroon als de scanformulieren
+  // Twee-fase opslaan, zelfde patroon als de scanformulieren
   // (zie renderScanOntvangstForm()). Een onbekende EAN in de nieuw
   // gescande regels blokkeert het opslaan (ook van de andere velden)
   // totdat er een omschrijving is ingevuld in het onbekendPaneel; dan
@@ -7584,7 +7565,7 @@ function renderEenmaligeBestellingEdit(data, specialisten, procedures, gebruiker
 // =================================================================
 // VERBRUIKSTRENDS + SLOW MOVERS
 // =================================================================
-// Migratie 026: cache van de laatst opgehaalde trends-data, zodat het
+// Cache van de laatst opgehaalde trends-data, zodat het
 // terugknopje vanaf de product-drilldown (showVerbruiksTrendDetail())
 // direct kan her-renderen i.p.v. opnieuw op te halen -- zelfde patroon als
 // catOverzichtData bij Categorieën.
@@ -7599,7 +7580,7 @@ function showTrends() {
   }).getVerbruiksTrends();
 }
 
-// Migratie 026: bouwt een cel-waarde die -- alleen als er ook echt iets
+// Bouwt een cel-waarde die -- alleen als er ook echt iets
 // achter zit (count > 0) -- doorklikbaar is naar de productenlijst voor
 // precies dat (maand, reeks[, sub]). Bij count === 0 gewoon platte tekst,
 // zodat je nooit naar een gegarandeerd lege lijst klikt.
@@ -7717,7 +7698,7 @@ function renderTrends(data) {
       showProductDetail(this.getAttribute('data-ean'));
     });
   });
-  // Migratie 026: elke aangeklikte cel (zie trendDrillLink() hierboven)
+  // Elke aangeklikte cel (zie trendDrillLink() hierboven)
   // opent de productenlijst erachter.
   document.querySelectorAll('.trend-drill-link').forEach(el => {
     el.addEventListener('click', function() {
@@ -7727,7 +7708,7 @@ function renderTrends(data) {
   wireUsageTabs();
 }
 
-// Migratie 026: product-drilldown achter één cel van het Trends-tabblad.
+// Product-drilldown achter één cel van het Trends-tabblad.
 // Zie includes/dashboards.php::getVerbruiksTrendDetail() voor reeks/sub.
 function showVerbruiksTrendDetail(maand, reeks, sub, titel) {
   setRoute('trend-detail');
@@ -7768,15 +7749,14 @@ function renderVerbruiksTrendDetail(data, titel) {
 
 // =================================================================
 // LEADERBOARD - wie heeft de meeste scans gedaan, wie de meeste
-// procedures van een bepaald type (migratie 010). Twee losse tellingen,
+// Procedures van een bepaald type. Twee losse tellingen,
 // zie includes/leaderboard.php voor de onderbouwing van dat onderscheid.
 // Periode en procedure-type-filter zijn client-side state (net als
 // vervalFocusFilter bij Expiry Focus) -- opnieuw ophalen bij wijziging.
 // =================================================================
 let leaderboardPeriode = 'maand';
 let leaderboardProcedureType = '';
-// Migratie 044_leaderboard_picc_uitbreiden, op verzoek van Harm
-// ("Leaderboard 'wie is aan de beurt' uitbreiden"): getPiccRotatie()
+// Leaderboard 'wie is aan de beurt' uitbreiden: getPiccRotatie()
 // (includes/leaderboard.php) bestond al -- tot nu toe alleen gebruikt
 // voor het compacte Home-widget (alleen de eerste in de rij, zie
 // renderHomeWidgets()). Onafhankelijk van periode/procedure-filter
@@ -7785,9 +7765,9 @@ let leaderboardProcedureType = '';
 // opgehaald bij elke periode-/filterwijziging.
 let leaderboardPiccData = null;
 
-// Migratie 030, op verzoek van Harm: Leaderboard en "Het Team" (voorheen
-// een onderdeel van het gecombineerde Nieuws-dashboard, migratie 028)
-// samengevoegd tot "Team & Prestaties" met tabbalk -- allebei draaien om
+// Leaderboard en "Het Team" (voorheen een onderdeel van het
+// gecombineerde Nieuws-dashboard) samengevoegd tot "Team & Prestaties"
+// met tabbalk -- allebei draaien om
 // wie er in het team zit, alleen de ene kant toont prestatiecijfers en de
 // andere kant toont wie het is (met foto).
 const TEAM_TABS = [
@@ -7821,7 +7801,7 @@ function showTeamHub() {
 function showLeaderboard() {
   setRoute('leaderboard');
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
-  // Migratie 044_leaderboard_picc_uitbreiden: de PICC-rotatie hoeft maar
+  // De PICC-rotatie hoeft maar
   // eenmaal per paginabezoek opgehaald te worden (zie toelichting bij
   // leaderboardPiccData hierboven) -- gebeurt hier PARALLEL aan de
   // leaderboard-telling zelf, zelfde veilige patroon (eigen closure per
@@ -7830,7 +7810,7 @@ function showLeaderboard() {
   fetchLeaderboardData();
 }
 
-// Migratie 044_leaderboard_picc_uitbreiden, op verzoek van Harm: volledige
+// Volledige
 // rotatie-wachtrij per PICC-procedure (niet alleen de eerste, zoals het
 // Home-widget) -- rendert in zijn eigen placeholder-div (#lbPiccSection,
 // zie renderLeaderboard()) zodat dit onafhankelijk kan bijwerken zodra
@@ -7890,7 +7870,7 @@ function renderLeaderboard(data) {
   });
   html += '</div></div>';
 
-  // Migratie 044_leaderboard_picc_uitbreiden: volledige rotatie-wachtrij,
+  // Volledige rotatie-wachtrij,
   // los van de periodefilter hierboven (zie leaderboardPiccData/
   // renderLeaderboardPiccSection() bovenin dit bestand) -- gevuld zodra
   // getPiccRotatie() terugkomt, niet noodzakelijk vóór deze render-pas klaar.
@@ -7954,8 +7934,8 @@ function renderLeaderboard(data) {
   wireTeamTabs();
 }
 
-// Migratie 030: "Het Team"-tab van het Team & Prestaties-dashboard --
-// voorheen onderdeel van renderNieuwsDashboard() (migratie 028), nu een
+// "Het Team"-tab van het Team & Prestaties-dashboard --
+// Voorheen onderdeel van renderNieuwsDashboard(), nu een
 // eigen scherm/endpoint (zie api/team_overzicht.php).
 function showTeamOverzicht() {
   setRoute('team');
@@ -8063,7 +8043,7 @@ function renderMinMaxAdvies(data) {
           });
       const houdbaarheidLabel = r.houdbaarheidMaanden !== null ? r.houdbaarheidMaanden + ' ' + t('mmMonths') : t('mmUnknown');
 
-      // Migratie 031, op verzoek van Harm: kamers hebben geen eigen minimum
+      // Kamers hebben geen eigen minimum
       // meer -- r.huidigMin/r.adviesMin zijn dan 0 resp. null (geen kolom
       // meer, niet "advies is 0"). Toon "n.v.t." i.p.v. een misleidend getal.
       const huidigMinCel = r.isBerging ? r.huidigMin : '<span class="muted">' + t('mmNotApplicable') + '</span>';
@@ -8074,7 +8054,7 @@ function renderMinMaxAdvies(data) {
         + '<td>' + adviesMinCel + '</td><td><strong>' + r.adviesMax + '</strong></td>'
         + '<td class="mm-basis-cell">' + escapeHtml(basisLabel) + '</td><td>' + houdbaarheidLabel + '</td>'
         + '<td><button class="action-btn mm-apply-btn" data-ean="' + r.ean + '" data-locatie="' + escapeAttr(r.locatie) + '" data-min="' + dataMin + '" data-max="' + r.adviesMax + '">' + t('mmApply') + '</button> '
-        // Migratie 026, op verzoek van Harm: elke rij die het overzicht
+        // Elke rij die het overzicht
         // haalt, stelt (na de server-side no-op-filter) altijd een echte
         // wijziging voor -- dus hier onvoorwaardelijk ook een "Negeren"-
         // knop, geen extra conditie nodig.
@@ -8124,7 +8104,7 @@ function applyMinMaxRow(btn) {
   }).applyMinMaxAdvies(ean, locatie, min, max);
 }
 
-// Migratie 026, op verzoek van Harm: "negeren" verbergt dit voorstel op
+// "negeren" verbergt dit voorstel op
 // het overzicht voor MINMAX_NEGEER_MAANDEN (config/constants.php, 3
 // maanden) -- de rij wordt simpelweg uit de DOM verwijderd i.p.v. het
 // hele overzicht opnieuw op te halen, dat voelt directer aan.
@@ -8235,7 +8215,7 @@ function renderFoutlog(data) {
 }
 
 // -----------------------------------------------------------------
-// "Onbekende Producten" (migratie 022): barcodes die tijdens een scan
+// "Onbekende Producten": barcodes die tijdens een scan
 // niet herkend werden, met de omschrijving die de scanner ervoor heeft
 // ingevuld -- zie includes/onbekende_scans.php. "Afronden" gebeurt door
 // het artikel daadwerkelijk aan te maken (Artikel Toevoegen, EAN
@@ -8263,7 +8243,7 @@ function renderOnbekendeProducten(data) {
   } else {
     html += '<table><tr><th>' + t('colEan') + '</th><th>' + t('onbOmschrijvingen') + '</th><th>' + t('colLocation') + '</th><th>' + t('tkKeerGezien') + '</th><th>' + t('opLastSeen') + '</th><th></th></tr>';
     data.forEach(function (item) {
-      // Migratie 037, op verzoek van Harm: sinds onbekende regels meteen
+      // Sinds onbekende regels meteen
       // een echt artikel krijgen (zie maakArtikelenVoorOnbekendeRegels()
       // in includes/transacties.php), bestaat dat artikel hier vrijwel
       // altijd al -- heeftArtikel bepaalt of de knop naar BEWERKEN van dat
@@ -8284,7 +8264,7 @@ function renderOnbekendeProducten(data) {
   wire('backBtn', goBack);
   document.querySelectorAll('.op-bewerk-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      // Migratie 037: dit product bestaat al (met de omschrijving als
+      // Dit product bestaat al (met de omschrijving als
       // tijdelijke naam) -- rechtstreeks naar het bewerkscherm, met
       // vanuitOnbekendeProducten=true zodat na opslaan weer hierheen
       // teruggekeerd wordt (er staan vaak meerdere te wachten).
@@ -8293,8 +8273,8 @@ function renderOnbekendeProducten(data) {
   });
   document.querySelectorAll('.op-maak-artikel-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      // Vangnet voor een openstaande melding van vóór migratie 037,
-      // waarvoor er (uitzonderlijk) nog geen artikel bestaat -- zelfde
+      // Vangnet voor een oudere openstaande melding waarvoor er
+      // (uitzonderlijk) nog geen artikel bestaat -- zelfde
       // aanmaakformulier-route als voorheen.
       showArtikelToevoegen(this.getAttribute('data-ean'), null, null, true);
     });
@@ -8307,7 +8287,7 @@ function openBestellingModal(ean, naam, aantal) {
   document.getElementById('modalAantal').value = aantal;
   document.getElementById('modalKanaal').value = 'OBZ';
   document.getElementById('modalOpmerking').value = '';
-  // Migratie 033, op verzoek van Harm: "Besteld door" is geen vrij veld
+  // "Besteld door" is geen vrij veld
   // meer -- de server zet dit altijd op de ingelogde gebruiker (zie
   // api/bestelling.php), dezelfde aanpak als bij de eenmalige bestelling
   // (renderEenmaligeBestellingForm()). Alleen nog een informatieve regel.
@@ -8326,7 +8306,7 @@ function submitBestelling() {
     if (result.success) {
       alert(result.message);
       document.getElementById('bestelModal').classList.remove('show');
-      // Migratie 033: showBestellers() was hier het verweesde,
+      // ShowBestellers() was hier het verweesde,
       // pre-consolidatie scherm -- zie de toelichting bij showBestellers()
       // hierboven.
       showBestellingen();
@@ -8367,7 +8347,7 @@ document.getElementById('photoModal').addEventListener('click', function(e) {
 // functies die in de oude Apps Script-versie bestonden.
 // =======================================================================
 
-// Migratie 040, op verzoek van Harm ("Alleen JPG, PNG of WEBP-afbeeldingen
+// ("Alleen JPG, PNG of WEBP-afbeeldingen
 // zijn toegestaan" bleef Nederlands in de foutmelding): PHP-endpoints
 // hebben geen begrip van CURRENT_LANG en geven foutmeldingen dus altijd in
 // het Nederlands terug (zie bijv. includes/upload.php::decodeFotoDataUrl()).
@@ -8398,7 +8378,7 @@ function apiPost(url, body, onSuccess, onError) {
   })
     .then(function (r) {
       if (r.status === 401) { window.location.href = 'login.php'; throw new Error('Not logged in'); }
-      // Migratie 035-hotfix: dit las voorheen altijd meteen r.json(), wat bij
+      // Bugfix: dit las voorheen altijd meteen r.json(), wat bij
       // een PHP fatal error (lege response-body, geen JSON) de rauwe, cryptische
       // browserfout ("Unexpected end of JSON input") liet doorsijpelen i.p.v.
       // een bruikbare melding -- zelfde probleem, en zelfde oplossing, als de
@@ -8418,7 +8398,7 @@ function apiPost(url, body, onSuccess, onError) {
     .then(function (res) {
       if (res.ok) { if (onSuccess) onSuccess(res.data); }
       else {
-        // Migratie 040: vertaal een bekende, vaste backend-foutmelding (zie
+        // Vertaal een bekende, vaste backend-foutmelding (zie
         // API_ERROR_LABEL_KEYS/apiErrorLabel() hierboven) vlak voordat de
         // ~20 bestaande onError-handlers (alert(err.error)/...) hem te zien
         // krijgen -- onbekende/dynamische meldingen blijven ongewijzigd.
@@ -8435,7 +8415,7 @@ function apiPost(url, body, onSuccess, onError) {
 }
 
 /**
- * Migratie 022, op verzoek van Harm: als een scanformulier onbekende
+ * Als een scanformulier onbekende
  * barcodes tegenkomt, wordt er NIETS geboekt (blokkerend, alles-of-niets)
  * totdat er per onbekende regel een korte omschrijving is ingevuld -- zie
  * splitsBekendOnbekend()/ontbrekendeOmschrijvingen() in
@@ -8472,7 +8452,7 @@ function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen) {
 }
 
 // =====================================================================
-// Live scanregel-compleetheidscheck (op verzoek van Harm na
+// Live scanregel-compleetheidscheck (na
 // een gemeld praktijkprobleem): verschillende leveranciers/verpakkings-
 // niveaus in omloop betekent dat een product soms één combinatiebarcode
 // heeft (GTIN + batch + vervaldatum in één) en soms twee losse (GTIN apart
@@ -8566,8 +8546,8 @@ function initGs1ScanHint(textareaId, hintId) {
 }
 
 // =====================================================================
-// CODE128 (subset B) barcode-generator (migratie 021, op verzoek van
-// Harm): een eigen, kleine implementatie i.p.v. een externe library --
+// CODE128 (subset B) barcode-generator: een eigen, kleine implementatie
+// i.p.v. een externe library --
 // dit is een self-hosted app zonder build-stap of CDN-afhankelijkheid,
 // dus alles zit in dit ene bestand. Dekt printbare ASCII (spatie t/m ~,
 // code 32-126), ruim genoeg voor een handmatig ingevoerde interne
@@ -8648,7 +8628,7 @@ function code128Svg(tekst, opts) {
   return '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' + rects + '</svg>';
 }
 
-// Profielfoto-uploads (migratie 015, users + producent_contacten): leest
+// Profielfoto-uploads (users + producent_contacten): leest
 // een gekozen bestand clientside in als data-URL (FileReader), zodat het
 // als gewone JSON-string meekan in een apiPost()-body -- zie
 // includes/upload.php voor de serverkant. Max 2MB, zelfde grens als
@@ -8672,7 +8652,7 @@ function readImageFileAsDataUrl(file, onLoad, onError) {
   reader.readAsDataURL(file);
 }
 
-// Locatienamen zijn instelbaar (migratie 005, api/locaties.php) -- geen
+// Locatienamen zijn instelbaar (api/locaties.php) -- geen
 // hardgecodeerde constante meer. fetchLocaties() haalt de actuele rijen
 // op ([{slot, naam, volgorde, actief}]), de twee helpers eronder filteren
 // tot de namenlijst die eerder LOCATIES/LOCATIES_BESTELLING was.
@@ -8709,8 +8689,8 @@ function actieveNaamOptionsHtml(items) {
 
 // Specialist/laborant-keuzelijst (getSpecialisten()) voor de <select>-
 // gebaseerde formulieren (Eenmalige Bestelling aanmaken/bewerken, en de
-// inline specialist-correctie op Recente Transacties) -- op verzoek van
-// Harm ("Licentiemodel: geen naam-registratie zonder licentie") toont dit
+// inline specialist-correctie op Recente Transacties) -- vanuit het
+// licentiemodel (geen naam-registratie zonder licentie) toont dit
 // een naam zonder geldige licentie nog wel (transparant over wie er is),
 // maar als disabled option met een duidelijke reden erbij, zodat hij niet
 // gekozen kan worden. `huidig` (optioneel) houdt, net als
@@ -8733,7 +8713,7 @@ function specialistOptionsHtml(items, huidig) {
 
 // Klikvriendelijke keuzeknoppen i.p.v. dropdowns voor de scanformulieren
 // (Ontvangst/Verbruik/Vervallen Afboeken/Verplaatsing+Retournering) --
-// op verzoek van Harm: dit zijn de formulieren die het vaakst en vaak
+// : dit zijn de formulieren die het vaakst en vaak
 // onder tijdsdruk worden ingevuld, dus één tik i.p.v. dropdown-openen
 // + kiezen (twee acties) scheelt tijd en fouten. Eenmalige Bestelling
 // blijft bewust bij dropdowns (komt zelden voor, buiten scope).
@@ -8741,7 +8721,7 @@ function specialistOptionsHtml(items, huidig) {
 // bestaand `document.getElementById(id).value`-uitlezen bij submit
 // ongewijzigd werkt -- alleen rendering en klik-afhandeling zijn nieuw.
 // `disabledMap` is optioneel: een object van optie-waarde naar reden-tekst
-// (bv. "Geen geldige licentie") -- op verzoek van Harm ("Licentiemodel:
+// (bv. "Geen geldige licentie") -- ("Licentiemodel:
 // geen naam-registratie zonder licentie") voor de specialist-keuzeknoppen
 // op Materiaal Verbruik. Zo'n knop krijgt het echte disabled-attribuut
 // (de browser blokkeert clicks daarop vanzelf, geen aparte JS-check nodig
@@ -8824,7 +8804,7 @@ function renderScanOntvangstForm(locRows) {
         return;
       }
       alert(tf('roProcessed', { n: result.verwerkt, m: result.overgeslagen }));
-      // Op verzoek van Harm: na een geslaagde actie op deze pagina blijven
+      // : na een geslaagde actie op deze pagina blijven
       // i.p.v. terug naar Home te springen (dat voelde alsof je "telkens
       // naar de homepage gaat") -- het formulier wordt in plaats daarvan
       // leeggemaakt voor een volgende scan, met de gekozen locatie
@@ -8864,7 +8844,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
   const locNamen = actieveLocatieNamen(locRows);
   const procedureNamen = actieveProcedures.map(function (p) { return p.naam; });
 
-  // PICC-regel (migratie 019, op verzoek van Harm): welke namen als
+  // PICC-regel : welke namen als
   // uitvoerder ("specialist"-veld) gekozen mogen worden hangt af van de
   // GEKOZEN procedure, niet van wie er is ingelogd -- de ingelogde
   // gebruiker die dit formulier indient is niet per se degene die de
@@ -8882,7 +8862,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
       .map(function (s) { return s.naam; });
   }
 
-  // Licentiecontrole (op verzoek van Harm, "Licentiemodel: geen naam-
+  // Licentiecontrole ("Licentiemodel: geen naam-
   // registratie zonder licentie"): naam -> reden-tekst voor elke
   // specialist/laborant zonder geldige licentie, meegegeven aan
   // keuzeknoppenHtml() zodat die naam wel zichtbaar blijft in de lijst
@@ -8915,8 +8895,8 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
   bindKeuzeknoppen('verbruikLocatie');
   bindKeuzeknoppen('verbruikSpecialist');
   initGs1ScanHint('verbruikGs1', 'verbruikGs1Hint');
-  // Procedure staat nu vóór Specialist in het formulier (op verzoek van
-  // Harm: specialist is afhankelijk van de gekozen procedure, dus dat
+  // Procedure staat nu vóór Specialist in het formulier: specialist is
+  // afhankelijk van de gekozen procedure, dus dat
   // moet je eerst kiezen) -- deze handler filtert de uitvoerderslijst
   // opnieuw zodra de procedure verandert.
   bindKeuzeknoppen('verbruikProcedure', function (gekozenProcedure) {
@@ -8948,9 +8928,9 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
         toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
         return;
       }
-      // Migratie 026 (op verzoek van Harm): "slimme ruimte" -- als een
-      // product geen voorraad had in de gescande ruimte maar wel
-      // ondubbelzinnig in precies één andere ruimte, is het daar
+      // "Slimme ruimte": als een product geen voorraad had in de
+      // gescande ruimte maar wel ondubbelzinnig in precies één andere
+      // ruimte, is het daar
       // automatisch afgeschreven (zie verwerkScan() in
       // includes/transacties.php). Dat melden we hier expliciet, zodat
       // het geen verrassing is bij het navragen in Recente Transacties.
@@ -8961,7 +8941,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
         }).join('\n');
       }
       alert(melding);
-      // Op verzoek van Harm: op deze pagina blijven i.p.v. naar Home --
+      // : op deze pagina blijven i.p.v. naar Home --
       // zie de toelichting bij renderScanOntvangstForm() hierboven.
       btn.disabled = false;
       document.getElementById('verbruikGs1').value = '';
@@ -9029,7 +9009,7 @@ function renderVervalAfboekenForm(locRows) {
         return;
       }
       alert(tf('wfWrittenOff', { n: result.verwerkt, m: result.overgeslagen }));
-      // Op verzoek van Harm: op deze pagina blijven i.p.v. naar Home --
+      // : op deze pagina blijven i.p.v. naar Home --
       // zie de toelichting bij renderScanOntvangstForm() hierboven.
       btn.disabled = false;
       document.getElementById('vervalGs1').value = '';
@@ -9101,8 +9081,8 @@ function renderVerplaatsingForm(locRows) {
         toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
         return;
       }
-      // Migratie 034 (op verzoek van Harm): zelfde soort "slimme ruimte"-
-      // melding als bij Verbruik Scannen (migratie 026) -- hier voor de
+      // Zelfde soort "slimme ruimte"-melding als bij Verbruik Scannen --
+      // hier voor de
       // 'retourneren'-actie: staat het product niet in de gekozen
       // 'van'-locatie maar wel in Berging, dan is de retour daar
       // automatisch vandaan geboekt (zie retournering() in
@@ -9115,7 +9095,7 @@ function renderVerplaatsingForm(locRows) {
         }).join('\n');
       }
       alert(melding);
-      // Op verzoek van Harm: op deze pagina blijven i.p.v. naar Home --
+      // : op deze pagina blijven i.p.v. naar Home --
       // zie de toelichting bij renderScanOntvangstForm() hierboven.
       btn.disabled = false;
       document.getElementById('vpGs1').value = '';
@@ -9145,7 +9125,7 @@ function showEenmaligeBestelling() {
   }).getSpecialisten();
 }
 
-// Migratie 026 (op verzoek van Harm): bij het AANMAKEN van een eenmalige
+// Bij het AANMAKEN van een eenmalige
 // bestelling is het fysieke product er nog niet -- dus geen GS1-scan,
 // EAN, lot of vervaldatum meer op dit formulier, dat gebeurt allemaal
 // pas op de bewerkpagina zodra de bestelling daadwerkelijk binnenkomt
@@ -9160,7 +9140,7 @@ function renderEenmaligeBestellingForm(specialisten, procedures) {
   html += '<div id="formError" class="login-error" style="display:none;"></div>';
   html += '<div class="form-group"><label>' + t('oePatientNumber') + '</label><input type="text" id="ebPatient" required></div>';
   html += '<div class="form-group"><label>' + t('oeProductDescription') + '</label><input type="text" id="ebOmschrijving" required></div>';
-  // Migratie 027 (op verzoek van Harm): geen "benodigd aantal"-veld meer
+  // Geen "benodigd aantal"-veld meer
   // bij het aanvragen zelf -- dat is op dit moment zeer willekeurig (het
   // product is er nog niet). Het daadwerkelijke aantal wordt zoals
   // gebruikelijk pas bij ontvangst afgeleid uit het aantal gescande GS1-
@@ -9199,7 +9179,7 @@ function renderEenmaligeBestellingForm(specialisten, procedures) {
     }, function () {
       btn.disabled = false;
       alert(t('oeRequested'));
-      // Op verzoek van Harm: op deze pagina blijven i.p.v. naar Home --
+      // : op deze pagina blijven i.p.v. naar Home --
       // zie de toelichting bij renderScanOntvangstForm() hierboven. Dit
       // formulier is geen herhaalde-scan-flow zoals Ontvangst/Verbruik/
       // Verplaatsing, dus hier wordt het hele formulier leeggemaakt i.p.v.
@@ -9247,8 +9227,8 @@ function renderEenmaligeLijst(data) {
 // -----------------------------------------------------------------
 // Artikel toevoegen
 // -----------------------------------------------------------------
-// Migratie 026 (op verzoek van Harm): lichtgewicht client-side "voorbeeld"-
-// extractie van het GTIN/EAN uit een gescande GS1-barcode -- puur voor
+// Lichtgewicht client-side "voorbeeld"-extractie van het GTIN/EAN uit
+// een gescande GS1-barcode -- puur voor
 // live UI-feedback zodra er gescand wordt (Artikel Toevoegen). Dezelfde
 // regel als parseGS1Raw()/normalizeEAN() in includes/gs1_parser.php en
 // includes/ean.php: AI 01 gevolgd door 14 cijfers, links aangevuld met
@@ -9267,7 +9247,7 @@ function extractEanFromGs1(raw) {
   return ean;
 }
 
-// Migratie 025: prefillData/vervangtVoorEan zijn optioneel, alleen gezet
+// PrefillData/vervangtVoorEan zijn optioneel, alleen gezet
 // als je hier komt via "Nieuw artikel aanmaken als vervanger" op het
 // bewerkscherm (renderProductEdit()) -- de bestaande aanroepen (Forms-
 // menu, Onbekende Producten) blijven vanzelf werken met alleen prefillEan
@@ -9276,7 +9256,7 @@ function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOn
   setRoute('artikel-toevoegen');
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
   fetchLocaties(function (locRows) {
-    // Migratie 026 (op verzoek van Harm): producent wordt een dropdown
+    // Producent wordt een dropdown
     // van bestaande producenten i.p.v. een vrij tekstveld. Als het
     // ophalen van de producentenlijst mislukt (bijv. een groep die wel
     // artikel-toevoegen maar niet het Producenten-scherm mag zien, zie
@@ -9284,14 +9264,14 @@ function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOn
     // formulier zelf niet -- dan valt de dropdown gewoon terug op alleen
     // "nieuwe producent invoeren".
     StocuroRun.withSuccessHandler(function (producenten) {
-      // Migratie 028: categorielijst + hun eigenschappen, voor de
+      // Categorielijst + hun eigenschappen, voor de
       // categorie-dropdown en de daaronder dynamisch getoonde
       // eigenschapsvelden (zie renderNaSpecsVelden() hieronder). Zelfde
       // graceful-fallback-aanpak als bij producenten hierboven -- mislukt
       // dit, dan toont het formulier gewoon geen eigenschapsvelden i.p.v.
       // helemaal te blokkeren.
       StocuroRun.withSuccessHandler(function (categorieen) {
-        // Migratie 029: kastlocatie-suggesties erbij, zelfde graceful-
+        // Kastlocatie-suggesties erbij, zelfde graceful-
         // fallback-aanpak (mislukt de suggestielijst, dan gewoon met een
         // lege lijst verder -- de dropdown valt terug op alleen "nieuw").
         StocuroRun.withSuccessHandler(function (kastlocatieSuggesties) {
@@ -9308,8 +9288,8 @@ function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOn
   });
 }
 
-// Migratie 028: vertaalsleutel per oorspronkelijke (migratie 028 seed-
-// data) categorienaam -- zie toelichting bij de categorie-<select>
+// Vertaalsleutel per oorspronkelijke (seed-data) categorienaam -- zie
+// toelichting bij de categorie-<select>
 // hieronder in renderArtikelToevoegenForm().
 const CATEGORIE_LABEL_KEYS = {
   'Stent': 'catStent', 'Voerdraad': 'catGuidewire', 'Embolisatie': 'catEmbolisation',
@@ -9317,7 +9297,7 @@ const CATEGORIE_LABEL_KEYS = {
 };
 const CATEGORIE_FALLBACK = ['Stent', 'Voerdraad', 'Embolisatie', 'Sheath', 'Ballon', 'Catheter', 'Overig'];
 
-// Op verzoek van Harm: "Bij nieuwe producten alle eigenschappen als
+// : "Bij nieuwe producten alle eigenschappen als
 // dropdown aanbieden voor uniformiteit, met de optie een nieuwe aan te
 // maken" -- zelfde dropdown-met-"__nieuw__"-patroon als Producent
 // (naProducentSelect/peProducentSelect) en Kastlocatie
@@ -9416,14 +9396,14 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   }
   html += '<div id="formError" class="login-error" style="display:none;"></div>';
 
-  // Migratie 025: bij het aanmaken van een vervanger-artikel worden
+  // Bij het aanmaken van een vervanger-artikel worden
   // categorie/besteltype (en verderop min-max/producent/prijs)
   // vooraf ingevuld vanuit het originele artikel (pre.*) -- EAN, foto,
   // doos-verpakking en logistiekcode bewust NIET, want dat zijn
   // eigenschappen van het FYSIEKE product zelf, niet iets wat je van het
   // origineel overneemt.
   function catSel(v) { return pre.categorie === v ? ' selected' : ''; }
-  // Migratie 028, op verzoek van Harm: categorielijst komt nu uit de
+  // Categorielijst komt nu uit de
   // database (includes/categorieen.php, beheerbaar via Stamgegevens)
   // i.p.v. hardcoded hier. De 7 oorspronkelijke categorieën behouden hun
   // vertaalde label (CATEGORIE_LABEL_KEYS hieronder) zodat de Engelse UI
@@ -9442,14 +9422,14 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   }).join('');
   function mm(key) { return (pre[key] !== undefined && pre[key] !== '') ? escapeAttr(String(pre[key])) : '0'; }
 
-  // Op verzoek van Harm: zelfde sectie-indeling (Identificatie/Besteldata/
+  // : zelfde sectie-indeling (Identificatie/Besteldata/
   // Voorraad/Doosverpakking/Logistiek) en kaartstijl (.edit-section-box)
   // als het bewerkscherm (renderProductEdit()) i.p.v. één lange, platte
   // opsomming -- beide formulieren horen consistent aan te voelen.
   html += '<div class="edit-section-box"><div class="section-title">' + t('peSectionIdentification') + '</div>';
   html += '<div class="form-group"><label>' + t('apGs1Scan') + '</label><input type="text" id="naGs1"></div>';
   html += '<div class="form-group"><label>' + t('apEanManual') + '</label><input type="text" id="naEan" value="' + escapeAttr(prefillEan || '') + '"><p class="form-hint">' + t('apEanAutoHint') + '</p></div>';
-  // Bugfix op verzoek van Harm: dit veld werd voorheen NIET op dit
+  // Bugfix: dit veld werd voorheen NIET op dit
   // formulier getoond, waardoor het bij aanmaken alleen via GS1 AI(240)
   // gevuld kon worden (fout, zie addArtikel() in includes/artikelen.php) --
   // nu een gewoon handmatig invoerveld, net als op het bewerkscherm.
@@ -9461,8 +9441,8 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '<div id="naSpecsContainer">' + renderNaSpecsVelden(pre.categorie || catNamen[0], categorieen, null) + '</div>';
   html += '</div>';
 
-  // Migratie 026 (op verzoek van Harm): dropdown van bestaande
-  // producenten + optie om een nieuwe naam in te vullen. artikelen.producent
+  // Dropdown van bestaande producenten + optie om een nieuwe naam in te
+  // vullen. artikelen.producent
   // blijft bewust vrije tekst (geen FK, zie includes/producenten.php) --
   // een hier getypte nieuwe naam wordt gewoon als tekst opgeslagen op het
   // artikel, zonder dat er meteen een volledige producent-contactkaart
@@ -9486,7 +9466,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '</div>';
 
   // --- Voorraad: Min/Max per kamer, zelfde room-group-stijl als het bewerkscherm. ---
-  // Migratie 031, op verzoek van Harm: kamers (ik/hybok/kar) hebben geen
+  // Kamers (ik/hybok/kar) hebben geen
   // minimum meer -- alleen Berging (naMinBerging) behoudt het Min-veld.
   html += '<div class="edit-section-box"><div class="section-title">' + t('apMinMax') + '</div>';
   [['ik', 'Room A', 'naMinIk', 'naMaxIk'], ['hybok', 'Room B', 'naMinHybok', 'naMaxHybok'], ['kar', 'Cart', 'naMinKar', 'naMaxKar'], ['berging', 'Storage', 'naMinBerging', 'naMaxBerging']].forEach(function (slot) {
@@ -9496,7 +9476,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
       html += '<div class="form-group"><label>' + t('apMin') + naam + '</label><input type="number" id="' + slot[2] + '" value="' + mm('min_' + slot[0]) + '"></div>';
     }
     html += '<div class="form-group"><label>' + t('apMax') + naam + '</label><input type="number" id="' + slot[3] + '" value="' + mm('max_' + slot[0]) + '"></div>';
-    // Migratie 029, op verzoek van Harm: kastlocatie-dropdown ook al bij
+    // Kastlocatie-dropdown ook al bij
     // het aanmaken beschikbaar (stond eerder alleen op het bewerkscherm) --
     // de Kar heeft geen kastlocatie, zelfde uitzondering als op dat scherm.
     if (slot[0] !== 'kar') {
@@ -9506,7 +9486,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   });
   html += '</div>';
 
-  // Doosverpakking (migratie 020, optioneel, op verzoek van Harm): sommige
+  // Doosverpakking (optioneel): sommige
   // producten worden per stuk verbruikt/verplaatst maar door de
   // leverancier per doos geleverd (bijv. voerdraden/PICC-lijnen in een
   // doos van 5), met een eigen doos-EAN naast het stuk-EAN hierboven.
@@ -9519,7 +9499,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '<div class="form-group"><label>' + t('apEenhedenPerDoos') + '</label><input type="number" id="naEenhedenPerDoos" min="2"></div>';
   html += '</div></div>';
 
-  // Interne logistiekcode (migratie 021, op verzoek van Harm): volledig
+  // Interne logistiekcode : volledig
   // handmatig, los van de doos-EAN hierboven en van artikelref (dat is
   // het nummer van de fabrikant zelf) -- zie ARTIKEL_EDIT_FIELDS in
   // includes/artikelen.php.
@@ -9533,7 +9513,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   document.getElementById('content').innerHTML = html;
   wire('backBtn', goBack);
 
-  // Migratie 026 (op verzoek van Harm): GS1 is de voorkeur, EAN is de
+  // GS1 is de voorkeur, EAN is de
   // terugval voor als er geen GS1 beschikbaar is -- zodra er een geldig
   // GTIN uit de GS1-scan te halen valt, vullen we het EAN-veld ermee
   // (overschrijfbaar, het blijft een gewoon tekstveld voor de
@@ -9549,7 +9529,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
     const ean = extractEanFromGs1(this.value);
     if (ean) document.getElementById('naDoosEan').value = ean;
   });
-  // Op verzoek van Harm, na een gemelde bug: een barcodescanner
+  // Na een gemelde bug: een barcodescanner
   // onderscheidt geen velden -- landt er per ongeluk een volledige
   // GS1-barcode (met AI-voorvoegsel) in het KALE-EAN-veld hierboven i.p.v.
   // in het GS1-scanveld ernaast, dan werd dat eerder ongewijzigd
@@ -9566,14 +9546,14 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
     const ean = extractEanFromGs1(this.value);
     if (ean) this.value = ean;
   });
-  // Migratie 029: kastlocatie-dropdowns (per kamer), zelfde toggle-patroon als producent.
+  // Kastlocatie-dropdowns (per kamer), zelfde toggle-patroon als producent.
   ['locatie_ik', 'locatie_hybok', 'locatie_berging'].forEach(function (veldKey) {
     wireKastlocatieVeld('na', veldKey);
   });
   document.getElementById('naProducentSelect').addEventListener('change', function () {
     document.getElementById('naProducentNieuw').style.display = this.value === '__nieuw__' ? 'block' : 'none';
   });
-  // Migratie 028: eigenschapsvelden zijn afhankelijk van de gekozen
+  // Eigenschapsvelden zijn afhankelijk van de gekozen
   // categorie -- bij een wisseling de container gewoon opnieuw tekenen
   // (verliest eerder ingevulde eigenschapswaarden bij een categoriewissel,
   // wat hier terecht is: andere categorie = andere eigenschappen, een
@@ -9594,14 +9574,14 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
     errorEl.style.display = 'none';
     btn.disabled = true;
 
-    // Migratie 026: producent komt van de dropdown, tenzij "nieuwe
+    // Producent komt van de dropdown, tenzij "nieuwe
     // producent" gekozen is -- dan van het losse tekstveld ernaast.
     const producentSelectie = document.getElementById('naProducentSelect').value;
     const producentWaarde = producentSelectie === '__nieuw__'
       ? document.getElementById('naProducentNieuw').value.trim()
       : producentSelectie;
 
-    // Migratie 028: categorie-specifieke eigenschapsvelden (data-spec-key)
+    // Categorie-specifieke eigenschapsvelden (data-spec-key)
     // generiek meesturen -- addArtikel() (includes/artikelen.php) plukt
     // hier zelf de sleutels uit die bij de gekozen categorie horen, dus
     // volstaat het om gewoon alle aanwezige spec-velden mee te sturen.
@@ -9617,7 +9597,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
     // companion-tekstveld is getypt (zie specVeldHtml()/resolveSpecNieuwVelden()).
     resolveSpecNieuwVelden(specBody, document.getElementById('naSpecsContainer'), 'data-spec-key-nieuwvoor');
 
-    // Migratie 029: kastlocatie-dropdowns -- "__nieuw__" oplossen naar de
+    // Kastlocatie-dropdowns -- "__nieuw__" oplossen naar de
     // getypte waarde in de companion-invoer, zelfde patroon als producent.
     const kastlocatieWaardes = {};
     ['locatie_ik', 'locatie_hybok', 'locatie_berging'].forEach(function (veldKey) {
@@ -9635,7 +9615,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
       productnaam: document.getElementById('naNaam').value,
       categorie: document.getElementById('naCategorie').value,
       besteltype: document.getElementById('naBesteltype').value,
-      // Migratie 031: geen naMinIk/naMinHybok/naMinKar meer -- kamers
+      // Geen naMinIk/naMinHybok/naMinKar meer -- kamers
       // hebben geen minimum-veld meer op dit formulier.
       max_ik: document.getElementById('naMaxIk').value,
       max_hybok: document.getElementById('naMaxHybok').value,
@@ -9648,17 +9628,17 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
       doos_ean: document.getElementById('naDoosEan').value,
       eenheden_per_doos: document.getElementById('naEenhedenPerDoos').value,
       logistiek_code: document.getElementById('naLogistiekCode').value,
-      // Migratie 025: als dit artikel wordt aangemaakt als vervanger voor
+      // Als dit artikel wordt aangemaakt als vervanger voor
       // een ander (zie renderProductEdit()), koppelt api/artikel_toevoegen.php
       // dat na het aanmaken meteen (includes/artikelen.php::koppelAlsVervanger()).
       vervangtVoorEan: vervangtVoorEan || undefined,
     }, specBody), function (result) {
       alert(tf('apAdded', { ean: result.ean }));
-      // Migratie 022: als dit EAN nog open meldingen had op "Onbekende
+      // Als dit EAN nog open meldingen had op "Onbekende
       // Producten" (bijv. omdat we hier vandaan kwamen), meteen
       // afronden -- geen no-op fout als dat niet het geval was.
       apiPost('api/onbekende_scans.php', { ean: result.ean }, function () {}, function () {});
-      // Migratie 033, op verzoek van Harm: kwam je hier vanuit Onbekende
+      // Kwam je hier vanuit Onbekende
       // Producten, dan terug naar die lijst i.p.v. naar de nieuwe
       // productpagina -- vaak gaat het om meerdere eenmalig bestelde
       // producten achter elkaar, en de backend heeft intussen (zie
@@ -9668,7 +9648,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
         showOnbekendeProducten();
         return;
       }
-      // Migratie 025: bij een vervanger-aanmaak terug naar het ORIGINELE
+      // Bij een vervanger-aanmaak terug naar het ORIGINELE
       // artikel (waar de "vervangen door"-koppeling nu zichtbaar is),
       // anders zoals gebruikelijk naar het nieuw aangemaakte artikel zelf.
       showProductDetail(vervangtVoorEan || result.ean);
@@ -9681,13 +9661,13 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
 }
 
 // -----------------------------------------------------------------
-// Gebruikersbeheer (alleen is_beheerder=1, migratie 019 -- zie
+// Gebruikersbeheer (alleen is_beheerder=1 -- zie
 // includes/auth.php::requireBeheerder())
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------
-// Stamgegevens: alleen nog procedure-typen (migratie 004). De vroegere
-// specialisten-lijst hier is verwijderd (migratie 019, op verzoek van
-// Harm) -- specialisten/laboranten zijn nu altijd gebruikersaccounts,
+// Stamgegevens: alleen nog procedure-typen. De vroegere
+// specialisten-lijst hier is verwijderd -- specialisten/laboranten zijn
+// nu altijd gebruikersaccounts,
 // beheerd via het Gebruikers-scherm (showGebruikers()), niet hier.
 // Deactiveren i.p.v. verwijderen -- zie toelichting in
 // includes/stamgegevens.php. Alleen beheerder.
@@ -9695,7 +9675,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
 function showStamgegevens() {
   setRoute('stamgegevens');
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
-  // Migratie 028: naast procedure-typen ook de beheerde categorielijst +
+  // Naast procedure-typen ook de beheerde categorielijst +
   // hun eigenschappen ophalen (zelfde geketende-fetch-patroon als
   // showOpenOrders() voor reguliere + eenmalige bestellingen).
   StocuroRun.withSuccessHandler(function (procedures) {
@@ -9712,7 +9692,7 @@ function renderProcedureTypenTabel(procedures) {
     const actief = item.actief == 1;
     html += '<tr><td>' + escapeHtml(item.naam) + '</td>';
     html += '<td>' + (actief ? t('activeLabel') : t('inactiveLabel')) + '</td>';
-    // PICC-regel (migratie 019): welke procedures een Laborant ook zelf
+    // PICC-regel: welke procedures een Laborant ook zelf
     // als uitvoerder mag hebben op Scan Usage (in de praktijk nu alleen
     // PICC-lijn) -- zie renderScanVerbruikForm() en includes/
     // transacties.php::verwerkScan() voor de client- resp. server-side
@@ -9724,7 +9704,7 @@ function renderProcedureTypenTabel(procedures) {
   return html;
 }
 
-// Migratie 028: één categorie-blok (naam + actief-knop + eigenschappenlijst
+// één categorie-blok (naam + actief-knop + eigenschappenlijst
 // + eigenschap-toevoegen-mini-formulier) in het nieuwe Stamgegevens-blok
 // "Categorieën & Eigenschappen". Losse functie i.p.v. inline in
 // renderStamgegevens() omdat dit per categorie herhaald wordt.
@@ -9764,7 +9744,7 @@ function renderStamgegevens(procedures, categorieen) {
   html += '<div class="form-group"><label>' + t('mdNewProcedure') + '</label><input type="text" id="nieuweProcedure"></div>';
   html += '<div class="edit-actions"><button class="edit-save" id="procedureToevoegen">' + t('addLabel') + '</button></div>';
 
-  // Migratie 028, op verzoek van Harm: categorielijst + hun eigenschappen
+  // Categorielijst + hun eigenschappen
   // (bijv. Ballon -> diameter/lengte/compatibel voerdraad) zijn nu hier
   // beheerbaar i.p.v. hardcoded in de code -- zie includes/categorieen.php.
   html += '<div class="section-title">' + t('mdCategorieen') + '</div>';
@@ -9812,7 +9792,7 @@ function renderStamgegevens(procedures, categorieen) {
     apiPost('api/procedure_typen.php', { actie: 'toevoegen', naam: naam }, showStamgegevens, toonFout);
   });
 
-  // Migratie 028: categorie-beheer wiring -- elke actie herlaadt het hele
+  // Categorie-beheer wiring -- elke actie herlaadt het hele
   // Stamgegevens-scherm (showStamgegevens), zelfde eenvoudige "refresh na
   // schrijven"-aanpak als bij procedure-typen hierboven.
   document.querySelectorAll('.stam-cat-toggle').forEach(function (btn) {
@@ -9853,7 +9833,7 @@ function renderStamgegevens(procedures, categorieen) {
 
 // -----------------------------------------------------------------
 // Locations: de vier locatie-slots hernoemen/aan-of-uitzetten
-// (migratie 005). Alleen beheerder. Zie includes/locaties.php voor de
+//. Alleen beheerder. Zie includes/locaties.php voor de
 // beperking (vier vaste slots, geen onbeperkt aantal locaties).
 // -----------------------------------------------------------------
 function showLocatiesBeheer() {
@@ -9919,14 +9899,14 @@ function renderLocatiesBeheer(locRows) {
   });
 }
 
-// Migratie 019 (rollenmodel-herziening, op verzoek van Harm): dit scherm
+// Dit scherm
 // is nu de ENIGE plek voor functie/beheerder-instellingen van een
 // account (geen aparte Stamgegevens > Specialisten-lijst en geen
 // specialist_id-koppeling meer -- zie api/gebruikers.php). Naast de
 // gebruikerslijst zelf toont dit scherm ook de "Nog te migreren"-lijst:
 // namen uit de oude 'specialisten'-tabel die nog geen bijbehorend
 // inlogaccount hebben (api/specialisten.php?legacy=1).
-// Migratie 044_licentie_registratie, op verzoek van Harm (onderdeel van
+// (onderdeel van
 // "Licentiemodel: registratie blokkeren zonder geldige licentie +
 // profielpagina"): zelf-service profielpagina, bereikbaar via de naam in
 // de header (zie #profileLink hieronder in dit bestand + app.php). Toont
@@ -10017,7 +9997,7 @@ function showGebruikers() {
   Promise.all([
     fetch('api/gebruikers.php', { credentials: 'same-origin' }).then(function (r) { return r.json(); }),
     fetch('api/specialisten.php?legacy=1', { credentials: 'same-origin' }).then(function (r) { return r.json(); }),
-    // Migratie 024: groepenlijst erbij, voor de groep-checkboxes per
+    // Groepenlijst erbij, voor de groep-checkboxes per
     // gebruiker hieronder.
     fetch('api/groepen.php', { credentials: 'same-origin' }).then(function (r) { return r.json(); }),
   ]).then(function (results) {
@@ -10027,7 +10007,7 @@ function showGebruikers() {
 
 // Kleine avatar-thumbnail of, zonder foto, een cirkel met de eerste letter
 // van de naam -- gebruikt voor zowel gebruikersaccounts als producent-
-// contactpersonen (migratie 015).
+// Contactpersonen.
 function avatarHtml(foto, naam) {
   if (foto) {
     return '<img src="' + escapeAttr(foto) + '" class="avatar-thumb" alt="">';
@@ -10036,9 +10016,8 @@ function avatarHtml(foto, naam) {
   return '<span class="avatar-placeholder">' + escapeHtml(letter) + '</span>';
 }
 
-// Migratie 047_leaderboard_picc_uitbreiden, op verzoek van Harm
-// ("Leaderboard met wie aan de beurt is uitbreiden met foto en minimaal 3
-// personen op volgorde van wie aan de beurt is"): gedeelde renderer voor
+// Leaderboard met wie aan de beurt is uitgebreid met foto en minimaal 3
+// personen op volgorde van wie aan de beurt is: gedeelde renderer voor
 // zowel de Home-widget (renderHomeWidgets()) als de Team & Prestaties-
 // dimensie op Rapportage (renderRapportage()) -- beide toonden voorheen
 // alleen de eerstvolgende persoon als platte "{procedure}: {naam}"-tekst
@@ -10069,7 +10048,7 @@ function piccRotatieHtml(piccRotaties) {
   return html;
 }
 
-// Migratie 040_productfotos_uitbreiden, op verzoek van Harm ("productfoto's
+// ("productfoto's
 // uitbreiden waar mogelijk"): zelfde duimnagel-idee als avatarHtml()
 // hierboven, maar vierkant (product, geen gezicht) -- gedeeld tussen
 // Product Zoeken en Bijvullen zodat een rij ook zonder naar de
@@ -10082,16 +10061,16 @@ function listThumbHtml(foto, naam) {
   return '<span class="list-thumb-placeholder">' + escapeHtml(letter) + '</span>';
 }
 
-// Weergavenaam voor een users.rol-waarde (migratie 019: specialist/
+// Weergavenaam voor een users.rol-waarde (specialist/
 // laborant/bekijker) -- gedeeld door Gebruikers en Leaderboard, zie ook
-// includes/leaderboard.php::getMeesteProcedures() dat sinds migratie 019
-// dezelfde rol-waarden teruggeeft (voorheen specialisten.type).
+// includes/leaderboard.php::getMeesteProcedures() dat sindsdien dezelfde
+// rol-waarden teruggeeft (voorheen specialisten.type).
 function functieLabel(rol) {
   return { specialist: t('guRoleSpecialist'), laborant: t('guRoleLaborant'), bekijker: t('guRoleBekijker') }[rol] || rol || '-';
 }
 
 // Weergavenaam voor het OUDE specialisten.type-veld (arts/laborant/
-// overig) -- sinds migratie 019 alleen nog gebruikt voor de "Nog te
+// overig) -- sindsdien alleen nog gebruikt voor de "Nog te
 // migreren"-lijst op het Gebruikers-scherm (namen uit de opgeheven
 // 'specialisten'-tabel zonder gekoppeld account, zie
 // getNietGemigreerdeSpecialisten()). Niet te verwarren met
@@ -10102,7 +10081,7 @@ function specialistTypeLabel(type) {
 }
 
 /**
- * Migratie 036, op verzoek van Harm: licentiestatus-badge + "Code
+ * Licentiestatus-badge + "Code
  * koppelen"-knop per gebruiker op het Gebruikers-scherm. u.licentieStatus
  * komt kant-en-klaar van de server (api/gebruikers.php, LIVE
  * geverifieerd via includes/license.php::controleerLicentieGebruiker())
@@ -10124,7 +10103,7 @@ function licentieStatusHtml(u) {
 }
 
 function renderGebruikers(data, legacy, groepen) {
-  // Migratie 051, op verzoek van Harm: "alle knoppen op deze pagina" moeten
+  // "alle knoppen op deze pagina" moeten
   // links uitgelijnde tekst hebben i.p.v. de standaard-gecentreerde
   // knoptekst van de browser (zie .gu-page button hieronder in
   // assets/css/style.css) -- .gu-page is puur een scope-klasse, geen eigen
@@ -10133,7 +10112,7 @@ function renderGebruikers(data, legacy, groepen) {
   let html = '<div class="gu-page">';
   html += '<h2>' + t('users') + '</h2>';
 
-  // Migratie 037, op verzoek van Harm: installatiebreed feit, meegestuurd
+  // Installatiebreed feit, meegestuurd
   // op elke rij (dit endpoint geeft een kale JSON-array terug, geen
   // {data:[...]}-envelop) -- de eerste rij volstaat om het te lezen.
   if (Array.isArray(data) && data[0] && data[0].licentieAnomalieAantal > 1) {
@@ -10142,7 +10121,7 @@ function renderGebruikers(data, legacy, groepen) {
   }
 
   const functieOpties = ['specialist', 'laborant', 'bekijker'];
-  // Migratie 024: groepenlijst kan leeg zijn (bv. als api/groepen.php om
+  // Groepenlijst kan leeg zijn (bv. als api/groepen.php om
   // wat voor reden dan ook geen array teruggeeft) -- val dan terug op een
   // lege lijst i.p.v. dat de rest van dit scherm crasht.
   const groepenLijst = Array.isArray(groepen) ? groepen : [];
@@ -10158,7 +10137,7 @@ function renderGebruikers(data, legacy, groepen) {
     }).join('');
   }
 
-  // Migratie 050_gebruikers_herindeling, op verzoek van Harm: compacte
+  // Compacte
   // "chips" met de namen van de al-toegekende groepen (i.p.v. de altijd
   // opengeklapte checkbox-doos die de tabelrij eerst onnodig hoog maakte).
   // Het bewerkbare checkbox-paneel zelf (groepCheckboxesHtml) klapt pas open
@@ -10174,10 +10153,10 @@ function renderGebruikers(data, legacy, groepen) {
   }
 
   if (Array.isArray(data)) {
-    // Migratie 053_gebruikers_kaarten, op verzoek van Harm ("user pagina
+    // ("user pagina
     // blijft onoverzichtelijk. Zet de gegevens Name/Email/Function/Groups/
     // Rights/Language/Last login/License onderelkaar met daarachter de
-    // edit knoppen"): de brede 10-koloms-tabel (migratie 050) was nog
+    // Edit knoppen"): de brede 10-koloms-tabel was nog
     // steeds moeilijk leesbaar zodra het venster niet extreem breed is --
     // elke kolom moest vechten om ruimte. Vervangen door één kaart per
     // gebruiker (.gu-card): elk veld op zijn eigen rij (label links,
@@ -10197,12 +10176,12 @@ function renderGebruikers(data, legacy, groepen) {
       const groepenVanUser = Array.isArray(u.groepen) ? u.groepen : [];
       html += '<div class="gu-card">'
         + '<div class="gu-card-header">' + avatarHtml(u.foto, u.naam)
-        // Migratie 039/040/052, op verzoek van Harm ("Naam, e-mail van
-        // gebruikers zijn niet aan te passen. Maak dit aanpasbaar." ->
-        // "Het wijzigen van gebruikers gegevens moet via een knop i.p.v.
-        // een tekstveld die ik direct kan aanpassen." -> "de weergave van
-        // naam en e-mail is lelijk, een soort box waar de tekst niet
-        // leesbaar in is"): de waarde staat standaard in een gewone <span>
+        // Feedback-geschiedenis: "Naam, e-mail van gebruikers zijn niet
+        // aan te passen. Maak dit aanpasbaar." -> "Het wijzigen van
+        // gebruikers gegevens moet via een knop i.p.v. een tekstveld die
+        // ik direct kan aanpassen." -> "de weergave van naam en e-mail
+        // is lelijk, een soort box waar de tekst niet leesbaar in is":
+        // de waarde staat standaard in een gewone <span>
         // (.gu-naam-tekst/.gu-email-tekst, breekt normaal af over meerdere
         // regels, geen enkele opmaak die op een invoerveld lijkt) en het
         // <input> ernaast is standaard `display:none` -- pas de "Naam/
@@ -10227,19 +10206,19 @@ function renderGebruikers(data, legacy, groepen) {
         + '<button type="button" class="action-btn gu-groepen-toggle" data-id="' + u.id + '">' + t('guGroepenWijzigen') + '</button>'
         + '<div class="gu-groepen-panel" id="guGroepenPanel' + u.id + '" style="display:none;">' + groepCheckboxesHtml(groepenVanUser) + '</div>'
         + '</div></div>';
-      // Op verzoek van Harm: het vinkje stond kaal, zonder enige tekst
+      // : het vinkje stond kaal, zonder enige tekst
       // ernaast -- je moest voor de betekenis terug naar het kolomlabel
       // kijken. Nu staat het vinkje VOOR een eigen label (zelfde volgorde
       // als het "nieuwe gebruiker"-formulier onderaan), zodat het meteen
       // duidelijk is wat het vinkje betekent. Beheerder+Actief zijn sinds
-      // migratie 050 samen onder één "Rechten"-veld gestapeld.
+      // sindsdien samen onder één "Rechten"-veld gestapeld.
       html += '<div class="gu-field"><span class="gu-field-label">' + t('guRechten') + '</span>'
         + '<div class="gu-rechten-cell">'
         + '<label class="inline-check"><input type="checkbox" class="gu-beheerder-check" data-id="' + u.id + '"' + (u.is_beheerder ? ' checked' : '') + '> ' + t('guBeheerderVlag') + '</label>'
         + '<label class="inline-check"><input type="checkbox" class="gu-actief-check" data-id="' + u.id + '"' + (u.actief ? ' checked' : '') + '> ' + t('colActive') + '</label>'
         + '</div></div>';
-      // Op verzoek van Harm: taal van een gebruiker moet vanuit dit
-      // overzicht wijzigbaar zijn -- zelfde dropdown-patroon als Functie
+      // Taal van een gebruiker moet vanuit dit overzicht wijzigbaar
+      // zijn -- zelfde dropdown-patroon als Functie
       // hierboven, meegestuurd in dezelfde "Opslaan"-actie per kaart.
       html += '<div class="gu-field"><span class="gu-field-label">' + t('colLanguage') + '</span>'
         + '<select class="gu-taal-select" data-id="' + u.id + '">'
@@ -10250,14 +10229,14 @@ function renderGebruikers(data, legacy, groepen) {
       html += '<div class="gu-field"><span class="gu-field-label">' + t('guLicentie') + '</span><span>' + licentieStatusHtml(u) + '</span></div>';
       html += '</div>'; // .gu-card-body
 
-      // Migratie 050/053: alle bewerk-/actieknoppen (Naam/e-mail bewerken,
-      // Opslaan, Wachtwoord resetten, Foto) staan samen in één actiebalk
-      // ONDER de velden -- exact het "gegevens onder elkaar, met
-      // daarachter de edit-knoppen"-patroon dat Harm vroeg.
+      // Alle bewerk-/actieknoppen (Naam/e-mail bewerken, Opslaan,
+      // Wachtwoord resetten, Foto) staan samen in één actiebalk ONDER de
+      // velden -- exact het "gegevens onder elkaar, met daarachter de
+      // edit-knoppen"-patroon dat hiervoor nodig was.
       html += '<div class="gu-card-actions">'
         + '<button type="button" class="action-btn gu-naam-email-toggle" data-id="' + u.id + '">' + t('guNaamEmailWijzigen') + '</button>'
         + '<button class="action-btn gu-opslaan-btn" data-id="' + u.id + '">' + t('save') + '</button>'
-        // Op verzoek van Harm: wachtwoord resetten vanuit dit overzicht --
+        // Wachtwoord resetten vanuit dit overzicht --
         // los van de "Opslaan"-knop hierboven (die alleen rol/beheerder/
         // actief/groepen bijwerkt), want dit is een onafhankelijke actie
         // die geen van de kaartvelden nodig heeft.
@@ -10272,13 +10251,13 @@ function renderGebruikers(data, legacy, groepen) {
   }
   html += '<p class="form-hint">' + t('guHint') + '</p>';
   html += '<p class="form-hint">' + t('guFunctieHint') + '</p>';
-  // Migratie 024: directe link naar het Groepen-scherm zelf, want het
+  // Directe link naar het Groepen-scherm zelf, want het
   // aanmaken/bewerken van een groep (welke schermen, schrijftoegang) hoort
   // hier niet thuis -- dat gebeurt op het aparte Groepen-scherm, dit
   // scherm koppelt alleen gebruikers aan al bestaande groepen.
   html += '<p><button class="action-btn" id="guNaarGroepen">' + t('guNaarGroepen') + '</button></p>';
 
-  // "Nog te migreren" (migratie 019, op verzoek van Harm): namen uit de
+  // "Nog te migreren" : namen uit de
   // oude Stamgegevens-lijst die nog geen echt inlogaccount hebben. Er
   // komen geen nieuwe rijen meer bij -- dit is puur de resterende,
   // aflopende lijst van vóór de samenvoeging van specialisten met
@@ -10306,12 +10285,12 @@ function renderGebruikers(data, legacy, groepen) {
     + '</select></div>';
   html += '<div class="form-group"><label><input type="checkbox" id="guBeheerder"> ' + t('guBeheerderVlag') + '</label></div>';
   html += '<div class="form-group"><label>' + t('guLanguage') + '</label><select id="guTaal"><option value="en">English</option><option value="nl">Nederlands</option></select></div>';
-  // Migratie 050: deze div is GEEN tabelcel (staat los onder het formulier),
+  // Deze div is GEEN tabelcel (staat los onder het formulier),
   // dus krijgt de doos-stijl (.gu-groepen-panel, voorheen op .gu-groepen-cell
   // zelf) rechtstreeks en altijd zichtbaar -- hier is geen chips/toggle-
   // gedrag nodig, er valt bij een nieuw account nog niets samen te vatten.
   html += '<div class="form-group"><label>' + t('guGroepen') + '</label><div class="gu-groepen-panel" id="guGroepenNieuw">' + groepCheckboxesHtml([]) + '</div></div>';
-  // Migratie 044_licentie_registratie, op verzoek van Harm ("Licentiemodel:
+  // ("Licentiemodel:
   // registratie blokkeren zonder geldige licentie"): een nieuw account kan
   // niet meer aangemaakt worden zonder een geldige activatiecode + het
   // bevestigde besteladres -- zie api/gebruikers.php voor de serverzijdige
@@ -10358,11 +10337,11 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Migratie 050_gebruikers_herindeling, op verzoek van Harm: het
+  // Het
   // Groepen-checkbox-paneel staat standaard dicht (zie groepenChipsHtml()
   // hierboven) en klapt alleen open/dicht via deze knop -- zelfde
   // toggle-tekst-patroon als .lot-loc-toggle op de productdetailpagina
-  // (migratie 046). De checkboxes binnenin blijven altijd bevraagbaar via
+  //. De checkboxes binnenin blijven altijd bevraagbaar via
   // querySelectorAll, ook terwijl het paneel dicht (display:none) staat,
   // dus de bestaande .gu-groepen-cell[data-id] .gu-groep-check:checked
   // selector in de Opslaan-handler hieronder werkt ongewijzigd door.
@@ -10376,10 +10355,10 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Migratie 040/052, op verzoek van Harm (eerst "moet via een knop i.p.v.
-  // een tekstveld dat ik direct kan aanpassen", later "de weergave van
+  // Feedback-geschiedenis (eerst "moet via een knop i.p.v. een
+  // tekstveld dat ik direct kan aanpassen", later "de weergave van
   // naam/e-mail is lelijk, een soort box waar de tekst niet leesbaar in
-  // is"): sinds migratie 052 staat de waarde standaard in een gewone
+  // is"): sindsdien staat de waarde standaard in een gewone
   // <span> (.gu-naam-tekst/.gu-email-tekst, breekt normaal af, geen
   // invoerveld-opmaak) en ligt het <input> er verborgen (`display:none`)
   // naast. Deze knop wisselt tekst <-> invoerveld om i.p.v. voorheen alleen
@@ -10415,7 +10394,7 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Eén "Opslaan" per rij (migratie 019) i.p.v. een los koppel-veld --
+  // Eén "Opslaan" per rij i.p.v. een los koppel-veld --
   // functie, beheerder-vlag en actief-status van een bestaand account
   // wijzigen nu in één keer, zie api/gebruikers.php actie
   // 'gebruiker_bijwerken'.
@@ -10425,11 +10404,10 @@ function renderGebruikers(data, legacy, groepen) {
       const rol = document.querySelector('.gu-rol-select[data-id="' + id + '"]').value;
       const isBeheerder = document.querySelector('.gu-beheerder-check[data-id="' + id + '"]').checked;
       const actief = document.querySelector('.gu-actief-check[data-id="' + id + '"]').checked;
-      // Op verzoek van Harm: taal is nu ook per rij wijzigbaar, in dezelfde
-      // "Opslaan"-actie als functie/beheerder/actief/groepen.
+      // Taal is nu ook per rij wijzigbaar, in dezelfde "Opslaan"-actie
+      // als functie/beheerder/actief/groepen.
       const taal = document.querySelector('.gu-taal-select[data-id="' + id + '"]').value;
-      // Migratie 039/052, op verzoek van Harm: naam/e-mail zitten sinds
-      // migratie 039 in deze rij, en staan sinds migratie 052 in een
+      // Naam/e-mail zitten al in deze rij, en staan inmiddels in een
       // tekst-span die pas via de "Naam/e-mail bewerken"-knop wordt
       // vervangen door een zichtbaar <input> (zie renderGebruikers()
       // hierboven en de .gu-naam-email-toggle click-handler). Deze rij kan
@@ -10446,7 +10424,7 @@ function renderGebruikers(data, legacy, groepen) {
       const bewerktNu = naamInput.style.display !== 'none';
       const naam = (bewerktNu ? naamInput.value : naamTekst.textContent).trim();
       const email = (bewerktNu ? emailInput.value : emailTekst.textContent).trim();
-      // Migratie 024: groepslidmaatschap zit in dezelfde rij-checkboxes als
+      // Groepslidmaatschap zit in dezelfde rij-checkboxes als
       // de rest van dit account, dus in dezelfde "Opslaan"-actie meesturen.
       const gekozenGroepen = Array.prototype.slice.call(
         document.querySelectorAll('.gu-groepen-cell[data-id="' + id + '"] .gu-groep-check:checked')
@@ -10475,7 +10453,7 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Op verzoek van Harm: wachtwoord resetten vanuit het Gebruikers-
+  // : wachtwoord resetten vanuit het Gebruikers-
   // overzicht. Zelfde prompt()-patroon als "Code koppelen" hieronder --
   // een zeldzame beheerdersactie die maar één waarde nodig heeft, geen
   // apart modaal waard. Het nieuwe wachtwoord wordt NIET gemaild (geen
@@ -10503,7 +10481,7 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Migratie 036, op verzoek van Harm: activatiecode koppelen aan één
+  // Activatiecode koppelen aan één
   // specifieke gebruiker -- een simpele prompt() volstaat hier (geen
   // apart modaal nodig, dit is een zeldzame beheerdersactie), zie
   // includes/license.php::koppelLicentieCode().
@@ -10513,14 +10491,14 @@ function renderGebruikers(data, legacy, groepen) {
       const naam = this.getAttribute('data-naam');
       const code = prompt(tf('guLicentieCodePrompt', { naam: naam }));
       if (!code || !code.trim()) return;
-      // Migratie 037, herzien: naast de code vraagt de beheerder ook een
+      // Naast de code vraagt de beheerder ook een
       // bevestiging van het besteladres (niet het e-mailadres van het
       // doelaccount) -- zie includes/license.php::koppelLicentieCode().
       const bevestigdEmail = prompt(tf('guLicentieEmailPrompt'));
       if (!bevestigdEmail || !bevestigdEmail.trim()) return;
       btn.disabled = true;
       apiPost('api/gebruikers.php', { actie: 'licentie_koppelen', id: id, code: code.trim(), bevestigd_email: bevestigdEmail.trim() }, function (result) {
-        // Bugfix (op verzoek van Harm): koppelLicentieCode() geeft bij een
+        // Bugfix: koppelLicentieCode() geeft bij een
         // onjuiste/ongeldige code gewoon {success:false, error:'...'} terug
         // (net als alle andere business-foutmeldingen in deze app, zie
         // includes/api_helpers.php::apiTry() -- dat blijft altijd HTTP 200,
@@ -10549,7 +10527,7 @@ function renderGebruikers(data, legacy, groepen) {
     });
   });
 
-  // Profielfoto per gebruiker (migratie 015): de zichtbare knop opent de
+  // Profielfoto per gebruiker: de zichtbare knop opent de
   // verborgen bestandsinput, en de eigenlijke upload gebeurt zodra daarin
   // een bestand gekozen is (change-event) -- geen aparte "bevestigen"-stap,
   // consistent met hoe een os-bestandskiezer normaal werkt.
@@ -10586,7 +10564,7 @@ function renderGebruikers(data, legacy, groepen) {
 }
 
 // -----------------------------------------------------------------
-// Groepen (migratie 024, op verzoek van Harm): het permissiesysteem
+// Groepen : het permissiesysteem
 // bovenop rol/is_beheerder -- een groep bepaalt welke schermen zichtbaar/
 // toegankelijk zijn en of leden mogen schrijven, zie includes/groepen.php
 // en includes/schermen.php voor het volledige ontwerp. Alleen beheerder
@@ -10680,7 +10658,7 @@ function renderGroepEdit(data) {
     html += '</div>';
   });
 
-  // Migratie 030_groep_landingsscherm, op verzoek van Harm: welk scherm
+  // Welk scherm
   // leden van deze groep direct na inloggen zien i.p.v. altijd Home (zie
   // gebruikerLandingScherm() in includes/groepen.php). Opties = de
   // schermen die deze groep op dit moment aangevinkt heeft -- de server
@@ -10754,7 +10732,7 @@ function renderGroepEdit(data) {
 
 // -----------------------------------------------------------------
 // Producenten: contactgegevens (website, algemeen e-mail/telefoon,
-// contactpersonen) per leverancier/fabrikant (migratie 012). Iedereen
+// Contactpersonen) per leverancier/fabrikant. Iedereen
 // die ingelogd is mag bekijken; alleen beheerder mag toevoegen/bewerken/
 // verwijderen (api/producenten.php). artikelen.producent zelf blijft
 // vrije tekst -- deze tabel wordt puur op naam gekoppeld, zie
@@ -10832,8 +10810,7 @@ function renderProducenten(data) {
 }
 
 // =================================================================
-// NIEUWS / CONTACTPERSONEN (migratie 028, opgesplitst in migratie 030,
-// op verzoek van Harm): waren met "Het Team" samen één dashboard -- Het
+// NIEUWS / CONTACTPERSONEN: waren met "Het Team" samen één dashboard -- Het
 // Team is verhuisd naar het Team & Prestaties-dashboard (zie
 // showTeamOverzicht() hierboven, TEAM_TABS). Nieuws en Contactpersonen
 // blijven losse schermen, elk met een eigen scherm-recht. Zie
@@ -10933,8 +10910,8 @@ function renderContactpersonen(data) {
 }
 
 // =================================================================
-// CONTACTEN (migratie 031_voorraad_tabel), op verzoek van Harm: Producenten
-// (bedrijven) en Contactpersonen (mensen, cross-bedrijf) waren twee losse
+// CONTACTEN: Producenten (bedrijven) en Contactpersonen (mensen,
+// cross-bedrijf) waren twee losse
 // menu-ingangen op dezelfde onderliggende data (contactpersonen horen al
 // bij een producent) -- nu één pagina met een weergave-schakelaar i.p.v.
 // twee aparte dashboards. Beide bestaande endpoints blijven ongewijzigd,
@@ -10982,15 +10959,15 @@ function contactenBedrijvenHtml(data) {
   return html;
 }
 
-// Migratie 031_contacten_klikbaar, op verzoek van Harm: contactpersonen
+// Contactpersonen
 // direct klikbaar maken voor hun gegevens, i.p.v. eerst te moeten
 // doorklikken naar de producent-detailpagina. Telefoon/email zijn meteen
 // tel:/mailto:-links.
 //
-// Bugfix, op verzoek van Harm: "Contacten pagina naast de foto ook de
+// Bugfix: "Contacten pagina naast de foto ook de
 // contact gegevens direct in beeld" -- de contactgegevens stonden
 // hierboven verborgen achter een klik-om-uit-te-klappen kaartje (bewust
-// zo gebouwd bij migratie 031, maar bleek in de praktijk een extra stap
+// zo gebouwd, maar bleek in de praktijk een extra stap
 // te veel: laboranten willen bij een leverancier bellen/mailen zonder
 // eerst elk kaartje open te hoeven klikken). Nu staan telefoon/email/
 // opmerking gewoon altijd zichtbaar naast de foto, geen los klikstaatje
@@ -11127,7 +11104,7 @@ function renderProducentDetail(data) {
   if (data.contacten.length === 0) {
     html += '<p class="empty">' + t('prNoContacts') + '</p>';
   } else {
-    // Migratie 029, op verzoek van Harm: notitie-kolom per contactpersoon
+    // Notitie-kolom per contactpersoon
     // (vrij tekstveld, was er al op producent-niveau maar niet per persoon).
     html += '<table><tr><th></th><th>' + t('colName') + '</th><th>' + t('colFunction') + '</th><th>' + t('colPhone') + '</th><th>' + t('colEmail') + '</th><th>' + t('colNote') + '</th>' + (isBeheerder ? '<th></th>' : '') + '</tr>';
     data.contacten.forEach(function (c) {
@@ -11200,7 +11177,7 @@ function renderProducentDetail(data) {
     });
   });
 
-  // Profielfoto per contactpersoon (migratie 015): contact_bewerken stuurt
+  // Profielfoto per contactpersoon: contact_bewerken stuurt
   // alle bestaande velden opnieuw mee (zie includes/producenten.php) --
   // alleen 'foto' (nieuwe upload) of 'verwijder_foto' verandert hier.
   document.querySelectorAll('.pc-foto-btn').forEach(function (btn) {
@@ -11216,7 +11193,7 @@ function renderProducentDetail(data) {
       readImageFileAsDataUrl(this.files && this.files[0], function (dataUrl) {
         apiPost('api/producenten.php', {
           actie: 'contact_bewerken', id: id, naam: c.naam, functie: c.functie, telefoon: c.telefoon, email: c.email,
-          // Migratie 029: opmerking meesturen zodat een foto-upload de
+          // Opmerking meesturen zodat een foto-upload de
           // bestaande notitie niet stilzwijgend leegmaakt (contact_bewerken()
           // zet elk veld dat hier niet meekomt op NULL, zie includes/producenten.php).
           opmerking: c.opmerking, foto: dataUrl,
@@ -11302,7 +11279,7 @@ function showProducentEdit(data) {
 // -----------------------------------------------------------------
 // Uitloggen
 // -----------------------------------------------------------------
-// Migratie 044_licentie_registratie, op verzoek van Harm ("profielpagina"):
+// ("profielpagina"):
 // #profileLink bestaat alleen voor een echt ingelogde gebruiker (niet voor
 // een gast, zie app.php) -- daarom de null-check, in plaats van dit element
 // altijd te verwachten.
@@ -11334,7 +11311,7 @@ if (langSelectEl) {
 
 applyStaticTranslations();
 
-// App-schil (migratie 030_groep_landingsscherm): zijbalk precies één keer
+// App-schil: zijbalk precies één keer
 // opbouwen, vóór de route bepaald wordt hieronder -- de eerste showXxx()
 // die bootstrapRoute() aanroept, zet via setRoute() meteen de juiste
 // actieve link (zie updateSidebarActive()).
@@ -11363,7 +11340,7 @@ wireSidebarSearch();
       ROUTE_DISPATCH[key](param);
       return;
     }
-    // Migratie 030_groep_landingsscherm, op verzoek van Harm: alleen als
+    // Alleen als
     // er GEEN hash is (een kale paginalaad, bv. net ingelogd) kijken we
     // of deze gebruiker via zijn/haar groep(en) een landingsscherm heeft
     // (window.CURRENT_USER.landingScherm, server-side al gevalideerd door

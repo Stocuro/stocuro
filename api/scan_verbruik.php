@@ -28,7 +28,7 @@ $body = readJsonBody();
 $locatie = $body['locatie'] ?? '';
 $gs1Raw = $body['gs1_raw'] ?? '';
 $type = ($body['reden'] ?? '') === 'vervaldatum_bereikt' ? 'Vervallen' : 'Verbruik';
-// Migratie 024: dit ene endpoint bedient twee schermen (zie de
+// Dit ene endpoint bedient twee schermen (zie de
 // bestandskop hierboven) -- welk scherm-recht nodig is hangt af van
 // $type, niet van het bestand zelf.
 apiRequireScherm($type === 'Vervallen' ? 'verval-afboeken' : 'scan-verbruik');
@@ -43,7 +43,7 @@ apiTry(fn() => verwerkScan($type, $locatie, $gs1Raw, [
     'procedureType' => $body['procedure_type'] ?? '',
     'opmerking' => $body['opmerking'] ?? '',
     'gebruikerNaam' => $user['naam'],
-    // Migratie 022: bij een hersubmit na een "onbekende barcode"-melding
+    // Bij een hersubmit na een "onbekende barcode"-melding
     // stuurt de frontend een map ruwe regel -> omschrijving mee.
     'omschrijvingen' => $body['omschrijvingen'] ?? [],
 ]));

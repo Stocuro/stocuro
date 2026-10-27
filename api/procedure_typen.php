@@ -1,11 +1,11 @@
 <?php
 /**
- * Keuzelijst procedure-typen (migratie 004).
+ * Keuzelijst procedure-typen.
  *
  * GET  -> lijst procedure-typen
  * POST -> { actie: 'toevoegen', naam } of { actie: 'wisselen', id, actief }
  *      -> { actie: 'laborant_wisselen', id, laborant_toegestaan } --
- *         migratie 019: mag een Laborant deze procedure ook zelf
+ *         mag een Laborant deze procedure ook zelf
  *         uitvoeren (in de praktijk nu alleen PICC-lijn), zie
  *         includes/transacties.php::verwerkScan().
  */

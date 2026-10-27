@@ -11,7 +11,7 @@
  * zijn de basis waar requireRole('beheerder') op leunt, dus een wijziging
  * hier zou per ongeluk ook alle beheerderscontroles verzwakken.
  *
- * Gast-modus (op verzoek van Harm: een bezoeker moet alles kunnen
+ * Gast-modus (een bezoeker moet alles kunnen
  * BEKIJKEN -- dashboards, formulieren, beheerschermen -- zonder in te
  * loggen, voor demonstratiedoeleinden, maar nergens iets kunnen
  * INVOEREN of WIJZIGEN) zit in twee aparte, nieuwe functies hieronder
@@ -24,11 +24,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/database.php';
-// Migratie 024: groepen.php require't zelf alleen config/database.php
+// Groepen.php require't zelf alleen config/database.php
 // (niet dit bestand), dus geen circulaire require -- gebruikerMagSchrijven-
 // ViaGroep()/gebruikerSchermen() worden hieronder gebruikt.
 require_once __DIR__ . '/groepen.php';
-// Migratie 036 (licentiemodel): controleerLicentieGebruiker()/
+// ControleerLicentieGebruiker()/
 // herlicentieControleNodig()/markeerLicentieGecontroleerd() worden
 // hieronder gebruikt in currentUser()/attemptLogin() -- zie
 // includes/license.php voor de volledige toelichting.
@@ -48,7 +48,7 @@ function startSessionIfNeeded(): void {
 }
 
 /**
- * Migratie 036, op verzoek van Harm: dit is de ENE plek waar elke
+ * Dit is de ENE plek waar elke
  * ingelogde gebruiker doorheen komt (requireLogin(), requireRole(),
  * requireBeheerder() en requireLoginOfGast()/currentUserOfGast() leunen
  * hier allemaal op), dus hier -- en alleen hier -- zit de periodieke
@@ -108,7 +108,7 @@ function requireRole(string $rol): array {
 }
 
 /**
- * Migratie 019: "Beheerder" is geen functie (rol) meer, maar een los
+ * "Beheerder" is geen functie (rol) meer, maar een los
  * vinkje (users.is_beheerder) dat bovenop elke functie (specialist/
  * laborant/bekijker) gezet kan worden. Deze functie vervangt de oude
  * requireRole('beheerder')-aanroepen -- strikt (nooit een gast
@@ -165,7 +165,7 @@ function requireLoginOfGast(): array {
  * Gebruikers) blijven apiRequireRole('beheerder') gebruiken, die al
  * strikt genoeg was en dus ongewijzigd blijft.
  *
- * Migratie 024 (groepensysteem, op verzoek van Harm): schrijftoegang komt
+ * Schrijftoegang komt
  * nu uit de groepen waar de gebruiker bij hoort (elke groep heeft een
  * eigen mag_schrijven-vinkje, includes/groepen.php::
  * gebruikerMagSchrijvenViaGroep()) i.p.v. de vroegere harde koppeling aan
@@ -210,7 +210,7 @@ function attemptLogin(string $email, string $wachtwoord): array {
         return ['success' => false, 'error' => 'Onjuiste inloggegevens'];
     }
 
-    // Migratie 036, op verzoek van Harm: licentiecontrole bij ELKE login,
+    // Licentiecontrole bij ELKE login,
     // niet pas bij de eerstvolgende periodieke hercontrole -- zo krijgt
     // iemand meteen de specifieke reden te zien (geen code gekoppeld /
     // verlopen) i.p.v. pas na een sessie stilzwijgend uitgelogd te
@@ -228,7 +228,7 @@ function attemptLogin(string $email, string $wachtwoord): array {
         'naam' => $user['naam'],
         'email' => $user['email'],
         'rol' => $user['rol'],
-        // Migratie 019: los vinkje bovenop de functie (rol), zie
+        // Los vinkje bovenop de functie (rol), zie
         // requireBeheerder()/requireSchrijfToegang() hierboven.
         'is_beheerder' => (bool) $user['is_beheerder'],
         'taal' => $user['taal'] ?: 'en',
@@ -242,7 +242,7 @@ function attemptLogin(string $email, string $wachtwoord): array {
 }
 
 /**
- * Zelf-service taalvoorkeur (migratie 009): elke ingelogde gebruiker mag
+ * Zelf-service taalvoorkeur: elke ingelogde gebruiker mag
  * zijn eigen taal wijzigen -- dit is nu een accountinstelling, geen
  * browser-lokale (localStorage) keuze meer op elke pagina van de
  * ingelogde app (zie assets/js/app.js voor het waarom). Werkt op de

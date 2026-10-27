@@ -1,6 +1,6 @@
 <?php
 /**
- * Groepenbeheer (migratie 024, op verzoek van Harm): permissiegroepen
+ * Groepenbeheer : permissiegroepen
  * aanmaken/bewerken/verwijderen, elk met een eigen schrijftoegang-vlag en
  * een checkbox-matrix van schermen. Volledig beheerder-only, GET en POST
  * allebei -- dit is zelf een van de twee schermen die nooit via een groep
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $naam = (string) ($body['naam'] ?? '');
     $magSchrijven = !empty($body['mag_schrijven']);
     $schermen = is_array($body['schermen'] ?? null) ? $body['schermen'] : [];
-    // Migratie 030_groep_landingsscherm: optioneel veld, leeg/afwezig = NULL
+    // Optioneel veld, leeg/afwezig = NULL
     // (groepen.php::valideerLandingScherm() zet dit verder recht als de
     // waarde geen geldig, aan deze groep toegekend scherm is).
     $landingScherm = isset($body['landing_scherm']) && $body['landing_scherm'] !== ''

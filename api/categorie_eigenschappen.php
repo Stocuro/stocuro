@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 028: beheerde categorielijst + categorie-specifieke
+ * Beheerde categorielijst + categorie-specifieke
  * eigenschappen. Zie includes/categorieen.php.
  *
  * Let op de bestandsnaam: dit is NIET hetzelfde endpoint als

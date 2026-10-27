@@ -2,7 +2,7 @@
 /**
  * Lichtgewicht migratierunner (migratieplan hoofdstuk 9.3).
  *
- * Migratie 036: de daadwerkelijke logica is verplaatst naar
+ * De daadwerkelijke logica is verplaatst naar
  * includes/installer.php::voerMigratiesUit(), zodat install.php (de
  * browser-installer/updater in de hoofdmap) en dit command-line script
  * precies dezelfde code gebruiken -- dit bestand is nu alleen nog een

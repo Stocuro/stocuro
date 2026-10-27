@@ -1,8 +1,8 @@
 <?php
 /**
- * Groepen (migratie 024, op verzoek van Harm): vrij aanmaakbare
+ * Groepen : vrij aanmaakbare
  * permissiegroepen naast de bestaande rol ('specialist'/'laborant'/
- * 'bekijker', migratie 019 -- die blijft ONGEWIJZIGD bestaan voor zijn
+ * 'bekijker' -- die blijft ONGEWIJZIGD bestaan voor zijn
  * klinische betekenis, zie de uitgebreide toelichting bovenaan
  * sql/migrations/024_groepen.sql). Een groep bepaalt: welke schermen
  * (includes/schermen.php) de leden te zien krijgen, en of ze mogen
@@ -225,7 +225,7 @@ function setGebruikerGroepen(int $gebruikerId, array $groepIds, ?string $gebruik
  * 'groepen', de twee beheerder-only schermen die nooit via een groep
  * toegekend worden -- zie includes/schermen.php). Een gast (geen echt
  * account, $gebruikerId === null) krijgt dezelfde volledige
- * configureerbare lijst als vóór migratie 024 (canViewAdminScreens was
+ * Configureerbare lijst als vóór (canViewAdminScreens was
  * toen ook al gast-vriendelijk voor de vier Beheer-schermen) -- dit
  * systeem regelt alleen de rechten van ECHTE accounts, gast-gedrag blijft
  * bewust ongewijzigd.
@@ -255,7 +255,7 @@ function gebruikerMagSchrijvenViaGroep(int $gebruikerId): bool {
 }
 
 /**
- * Migratie 030_groep_landingsscherm, op verzoek van Harm: rolgebonden
+ * Rolgebonden
  * landingspagina's -- welk scherm moet deze gebruiker zien direct na
  * inloggen, in plaats van altijd de volledige menupagina (showHome())?
  *

@@ -36,7 +36,7 @@ function readJsonBody(): array {
  * Gast-modus: dit roept bewust requireLoginOfGast() aan, niet het
  * strikte requireLogin() uit includes/auth.php -- dat maakt ELK
  * endpoint dat alleen leest automatisch bruikbaar zonder in te loggen
- * (op verzoek van Harm: alle dashboards/formulieren/beheerschermen
+ * (alle dashboards/formulieren/beheerschermen
  * bekijkbaar zonder account, voor demonstratiedoeleinden). Endpoints die
  * ook schrijven moeten daarom, vlak vóór de daadwerkelijke schrijfactie,
  * ALTIJD ook apiRequireWriteAccess() aanroepen -- dat is de enige plek
@@ -54,7 +54,7 @@ function apiRequireRole(string $rol): array {
 }
 
 /**
- * Migratie 019: vervangt apiRequireRole('beheerder') overal -- "Beheerder"
+ * Vervangt apiRequireRole('beheerder') overal -- "Beheerder"
  * is nu een los vinkje (users.is_beheerder), geen functie/rol-waarde meer,
  * zie includes/auth.php::requireBeheerder().
  */
@@ -76,7 +76,7 @@ function apiRequireWriteAccess(): array {
 }
 
 /**
- * Migratie 024 (groepensysteem): aanroepen vlak na apiRequireLogin() in
+ * Aanroepen vlak na apiRequireLogin() in
  * elk endpoint dat bij een specifiek scherm hoort (zie includes/
  * schermen.php voor de volledige lijst scherm-keys). Geeft een 403 als
  * geen van de groepen van deze gebruiker (of, voor een gast, de

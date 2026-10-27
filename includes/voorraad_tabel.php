@@ -1,7 +1,7 @@
 <?php
 /**
- * Migratie 031_voorraad_tabel, op verzoek van Harm: na de persona-navigatie
- * (migratie 030_groep_landingsscherm) bleef de zijbalk toch een muur van
+ * Na de persona-navigatie
+ * Bleef de zijbalk toch een muur van
  * knoppen -- 16 losse dashboard-bestemmingen alleen al buiten Formulieren/
  * Beheer om. Onderliggende reden: bijna al die schermen zijn dezelfde
  * databron (artikel x locatie, met lot-detail erbij), alleen elke keer
@@ -93,7 +93,7 @@ function getVoorraadTabel(): array {
         if (locatieSlotVoorNaam($row['locatie']) === 'berging') $bergingHuidigPerEan[$row['ean']] = $row['huidig'];
     }
 
-    // Migratie 03X, op verzoek van Harm (drie gemelde bugs):
+    // (drie gemelde bugs):
     //   1. "Handmatig bestellen" moet een optelsom over alle locaties zijn,
     //      niet een los getal per locatie-rij -- hergebruikt de al langer
     //      bestaande, al juiste aggregatie in getBestellersData() (die
@@ -116,7 +116,7 @@ function getVoorraadTabel(): array {
     foreach (getBestellersData() as $p) {
         $locatieNamen = array_keys($p['locaties']);
         sort($locatieNamen, SORT_STRING);
-        // Migratie 031: 'locaties' bevat sinds kort alleen kamers met een
+        // 'locaties' bevat sinds kort alleen kamers met een
         // echte behoefte (zie getBestellersData()) -- als geen enkele kamer
         // zelf krap zit maar Berging wél onder haar eigen minimum zit (de
         // trigger die dit product hier heeft laten verschijnen), zou
@@ -130,7 +130,7 @@ function getVoorraadTabel(): array {
             'primaireLocatie' => $primaireLocatie,
         ];
     }
-    // Bugfix op verzoek van Harm: 'huidig'/'max' komen hier ook mee (naast
+    // Bugfix: 'huidig'/'max' komen hier ook mee (naast
     // 'nodig'/'dozenNodig') -- getBergingData() (includes/voorraad.php)
     // levert die inmiddels al als optelsom over alle locaties, niet meer
     // als Bergings eigen fysieke voorraad/max. Hieronder alleen op de
@@ -153,7 +153,7 @@ function getVoorraadTabel(): array {
         $artikel = $artikelen[$ean] ?? [];
         $isBerging = locatieSlotVoorNaam($loc) === 'berging';
         $isActief = ($row['status'] ?? 'Actief') === 'Actief';
-        // Migratie 031, op verzoek van Harm: kamers hebben geen eigen
+        // Kamers hebben geen eigen
         // minimum meer (ze worden gegarandeerd dezelfde dag tot hun
         // maximum bijgevuld vanuit Berging) -- "heeft een gat" betekent
         // voor een kamer dus simpelweg "zit niet op het maximum", en voor
@@ -167,7 +167,7 @@ function getVoorraadTabel(): array {
         // Min/max-advies: alleen "actief" tonen als het advies status 'ok'
         // heeft én afwijkt van de huidige instelling, en niet recent
         // genegeerd is -- zelfde twee filters als getMinMaxAdviesOverzicht().
-        // Migratie 031: kamers hebben geen adviesMin/huidigMin meer (altijd
+        // Kamers hebben geen adviesMin/huidigMin meer (altijd
         // null resp. 0) -- daar alleen het max-advies vergelijken, anders
         // zou elke kamerrij hier altijd als "wijkt af" tonen (null !== 0).
         $advies = $minMaxPerEanLocatie[$ean][$loc] ?? null;
@@ -186,7 +186,7 @@ function getVoorraadTabel(): array {
         // "Moet bijgevuld" (voorheen Bijvullen/Boodschappenlijst): een
         // kamerlocatie (nooit Berging zelf) met een gat t.o.v. haar
         // maximum -- LOS van of Berging er zelf voorraad van heeft.
-        // Bugfix op verzoek van Harm: voorheen bestond alleen
+        // Bugfix: voorheen bestond alleen
         // "magBijvullen" (hieronder), dat ALLEEN waar is als Berging
         // voorraad heeft -- stond Berging op nul, dan verdween de rij
         // overal uit beeld, en een leeg filterresultaat werd door de
@@ -195,7 +195,7 @@ function getVoorraadTabel(): array {
         // "tekort, maar Berging is leeg" kan tonen in plaats van niets/
         // verkeerd "voldoende".
         //
-        // Bugfix, op verzoek van Harm: NIET meer beperkt tot Automatisch-
+        // Bugfix: NIET meer beperkt tot Automatisch-
         // besteltype. Een Handmatig besteld artikel kan óók in Berging
         // belanden (bijv. eenmalig extra besteld), en als het daar op
         // voorraad ligt terwijl een kamer een tekort heeft, hoort dat
@@ -209,7 +209,7 @@ function getVoorraadTabel(): array {
 
         // Berging-bestelbehoefte (voorheen aparte Berging-bestellijst):
         // optelsom van tekorten over ALLE locaties (zie getBergingData() in
-        // includes/voorraad.php, migratie 03X) -- niet alleen Bergings eigen
+        // includes/voorraad.php) -- niet alleen Bergings eigen
         // gat, en Handmatig-besteltype telt hier niet mee. Deze waarde komt
         // dus al kant-en-klaar aggregeerd binnen; hier alleen op de
         // Berging-rij van dit artikel zetten (er is er maar één per ean).
@@ -220,7 +220,7 @@ function getVoorraadTabel(): array {
 
         // Handmatig te bestellen (voorheen "Bestellers"): optelsom over
         // ALLE locaties van dit artikel (zie getBestellersData() in
-        // includes/voorraad.php) -- bugfix op verzoek van Harm: dit was
+        // Includes/voorraad.php) -- Bugfix: dit was
         // voorheen een los getal per locatie-rij i.p.v. één totaal. Om een
         // dubbele/verspreide bestelknop voor hetzelfde artikel te vermijden
         // wordt de aggregaat-waarde alleen op de alfabetisch eerste locatie
@@ -231,7 +231,7 @@ function getVoorraadTabel(): array {
         $handmatigNodig = ($handmatigAgg && $handmatigAgg['primaireLocatie'] === $loc) ? $handmatigAgg['totaal'] : null;
         $handmatigDozenNodig = ($handmatigAgg && $handmatigAgg['primaireLocatie'] === $loc) ? $handmatigAgg['dozen'] : null;
 
-        // Bugfix op verzoek van Harm: op de Berging-rij van een product met
+        // Bugfix: op de Berging-rij van een product met
         // een systeembrede bestelbehoefte (bergingKanBestellen) tonen
         // 'huidig'/'max' niet langer Bergings eigen fysieke voorraad/max,
         // maar de optelsom over alle locaties -- 'min' blijft wél Bergings
@@ -247,8 +247,7 @@ function getVoorraadTabel(): array {
             'naam' => $row['naam'],
             'categorie' => $artikel['categorie'] ?? '',
             'producent' => $artikel['producent'] ?? '',
-            // Migratie 040_productfotos_uitbreiden, op verzoek van Harm
-            // ("productfoto's uitbreiden waar mogelijk"): $artikel komt uit
+            // Productfoto's waar mogelijk meegeven: $artikel komt uit
             // artikelenMap() (SELECT *, includes/voorraad.php), dus
             // foto_data/foto_mime zijn al in het geheugen -- alleen nog de
             // dataURL-encoding erbij (zelfde patroon als getProductDetail()/
@@ -258,7 +257,7 @@ function getVoorraadTabel(): array {
                 ? 'data:' . ($artikel['foto_mime'] ?: 'image/jpeg') . ';base64,' . base64_encode($artikel['foto_data'])
                 : null,
             'locatie' => $loc,
-            // Migratie 031: frontend gebruikt dit om de Min-kolom voor
+            // Frontend gebruikt dit om de Min-kolom voor
             // kamers als "n.v.t." te tonen (kamers hebben geen minimum meer).
             'isBerging' => $isBerging,
             'huidig' => $weergaveHuidig,
@@ -273,7 +272,7 @@ function getVoorraadTabel(): array {
             'orderStatus' => $row['orderStatus'],
             'eenhedenPerDoos' => $row['eenhedenPerDoos'],
             'eerstvolgendeVervaldatum' => $verval['weergave'] ?? null,
-            // Bugfix, op verzoek van Harm: de frontend toonde hier altijd
+            // Bugfix: de frontend toonde hier altijd
             // hardcoded het label "MONITOREN" zodra er een lot < 6 maanden
             // was (loten6 > 0) -- maar "< 6 maanden" omvat ook al VERLOPEN
             // en SPOEDGEBRUIK loten (allebei ook < 6 maanden). Een al

@@ -1,6 +1,6 @@
 <?php
 /**
- * Min/Max Advies (migratie 011, includes/minmax.php).
+ * Min/Max Advies (zie includes/minmax.php).
  *
  * GET  -> volledig advies-overzicht (getMinMaxAdviesOverzicht()) -- toont
  *         alleen nog rijen die daadwerkelijk iets voorstellen (migratie

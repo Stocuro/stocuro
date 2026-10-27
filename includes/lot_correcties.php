@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 035, op verzoek van Harm: "op de detailpagina van een
+ * "op de detailpagina van een
  * specifiek product is nu een overzicht van Loten te zien die zijn
  * ingescand. Soms wordt een barcode gescand die kennelijk niet helemaal
  * goed herkend wordt met EAN, Vervaldatum en Lotnummer. Ik wil per

@@ -232,7 +232,7 @@ try {
     $insProc = $pdo->prepare('INSERT INTO procedure_typen (naam, actief) VALUES (:naam, 1)');
     foreach ($PROCEDURE_TYPEN as $p) $insProc->execute([':naam' => $p]);
 
-    // Migratie 031, op verzoek van Harm: min_ik/min_hybok/min_kar bestaan
+    // Min_ik/min_hybok/min_kar bestaan
     // niet meer (kamers hebben geen eigen minimum meer, zie
     // includes/voorraad.php::artikelMinMax()) -- de 'min'-array hierboven
     // per artikel blijft ongewijzigd (handig als referentiegetal / voor

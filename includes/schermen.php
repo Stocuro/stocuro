@@ -1,6 +1,6 @@
 <?php
 /**
- * Canonieke lijst van alle schermen in de app (migratie 024, groepen-
+ * Canonieke lijst van alle schermen in de app (t.b.v. het groepen-
  * systeem). Eén plek die zowel de frontend (checkbox-matrix op het
  * Groepen-beheerscherm, menu-opbouw in showHome()) als de backend
  * (apiRequireScherm(), zie includes/api_helpers.php) gebruiken, zodat er
@@ -33,7 +33,7 @@ const SCHERMEN = [
 
     // --- Dashboards ---
     'actiecentrum'        => ['sectie' => 'dashboards', 'labelKey' => 'actionCenter'],
-    // Migratie 026 (op verzoek van Harm): "Tasks" was één scherm met vier
+    // "Tasks" was één scherm met vier
     // heel verschillende soorten taken door elkaar (databeheer-taken naast
     // fysiek vloerwerk). Nu twee losse scherm-keys/dashboards, zodat een
     // groep specifiek toegang tot het ene kan krijgen zonder het andere.
@@ -41,7 +41,7 @@ const SCHERMEN = [
     'taken-laborant'      => ['sectie' => 'dashboards', 'labelKey' => 'tasksLab'],
     'recente-transacties' => ['sectie' => 'dashboards', 'labelKey' => 'recentTransactions'],
     'overzicht'           => ['sectie' => 'dashboards', 'labelKey' => 'overview'],
-    // Migratie 026 (op verzoek van Harm): heette "Boodschappenlijst",
+    // Heette vroeger "Boodschappenlijst",
     // scherm-key blijft ongewijzigd (geen breaking change voor bestaande
     // groepsrechten), alleen het label wijzigt naar "Bijvullen".
     'boodschappenlijst'   => ['sectie' => 'dashboards', 'labelKey' => 'refillList'],
@@ -72,7 +72,7 @@ const SCHERMEN = [
     'leaderboard'         => ['sectie' => 'dashboards', 'labelKey' => 'leaderboard'],
     'product-search'      => ['sectie' => 'dashboards', 'labelKey' => 'searchProducts'],
     'producenten'         => ['sectie' => 'dashboards', 'labelKey' => 'producenten'],
-    // Migratie 028, bijgewerkt in migratie 030 (op verzoek van Harm): was
+    // Was
     // één scherm 'nieuws' met drie onderdelen (nieuws/team/contact-
     // personen) samen. Nu drie losse schermen met elk een eigen recht --
     // 'team' hoort inhoudelijk bij "Team & Prestaties" (samen met
@@ -83,12 +83,12 @@ const SCHERMEN = [
     'nieuws'              => ['sectie' => 'dashboards', 'labelKey' => 'newsTitle'],
     'team'                => ['sectie' => 'dashboards', 'labelKey' => 'newsTeamTitle'],
     'contactpersonen'     => ['sectie' => 'dashboards', 'labelKey' => 'newsContactsTitle'],
-    // Migratie 030_groep_landingsscherm, op verzoek van Harm: samengesteld
+    // Samengesteld
     // "wat is er, hoeveel, waar, status en verbruik"-overzicht, bedoeld als
     // landingsscherm voor de artsen-groep (zie groepen.landing_scherm) --
     // ze hoeven dan niet meer door Voorraad/Vervaldatums/Verbruik & Trends
     // heen te klikken voor één simpele beschikbaarheidsvraag. Toont ook
-    // inkoopprijs/voorraadwaarde (expliciet zo gekozen door Harm), dus geen
+    // inkoopprijs/voorraadwaarde (expliciete keuze), dus geen
     // aparte financiele-afscherming binnen dit scherm.
     'beschikbaarheid'     => ['sectie' => 'dashboards', 'labelKey' => 'beschikbaarheidTitle'],
     // Samenvoeging van bestaande kengetallen (voorraadwaarde, verbruiks-

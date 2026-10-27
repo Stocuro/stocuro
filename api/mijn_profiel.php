@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 044_licentie_registratie, op verzoek van Harm (onderdeel van
+ * (onderdeel van
  * "Licentiemodel: registratie blokkeren zonder geldige licentie +
  * profielpagina"): zelf-service profielpagina -- elke ECHT ingelogde
  * gebruiker (bewust requireLogin() hieronder, niet de gastvriendelijke

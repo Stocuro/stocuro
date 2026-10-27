@@ -1,6 +1,6 @@
 <?php
 /**
- * Producenten-contactgegevens (migratie 012). Iedereen die ingelogd is
+ * Producenten-contactgegevens. Iedereen die ingelogd is
  * mag opvragen; alleen beheerder mag toevoegen/bewerken/verwijderen --
  * zelfde rolverdeling als api/specialisten.php.
  *

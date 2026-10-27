@@ -2,7 +2,7 @@
 /**
  * Min/Max Advies: geadviseerd minimum-/maximumniveau per artikel x locatie,
  * afgeleid uit historisch verbruik, piekverbruik, houdbaarheid en levertijd
- * -- op verzoek van Harm, om min/max-niveaus objectiever te kunnen bepalen
+ * -- om min/max-niveaus objectiever te kunnen bepalen
  * dan "uit de losse pols". Uitgangspunt, expliciet zo gevraagd: nooit meer
  * voorraad aanhouden dan nodig.
  *
@@ -13,7 +13,7 @@
  * regel per locatietype):
  *
  * - KAMERS (elke locatie behalve 'berging' -- de vaste slots ik/hybok/kar
- *   en eventuele extra locaties, migratie 007): deze worden intern
+ *   en eventuele extra locaties): deze worden intern
  *   bijgevuld vanuit berging (meestal dezelfde dag, zie includes/locaties.php
  *   voor de aanvul-rol van 'berging'), dus de externe leverancierslevertijd
  *   is hier niet relevant. Wat wel telt: een dagvoorraad op de plank.
@@ -40,8 +40,8 @@
  * gemeten verbruik altijd (bijna) nul zijn, en dus ook het advies.
  *
  * Levertijd (besteld -> ontvangen) wordt PER PRODUCT berekend uit
- * orders.tijdstempel -> orders.laatst_ontvangen_op (migratie 011, gezet
- * door includes/orders.php::updateOrdersWithFIFO() bij een ontvangst),
+ * orders.tijdstempel -> orders.laatst_ontvangen_op (gezet door
+ * includes/orders.php::updateOrdersWithFIFO() bij een ontvangst),
  * met een terugvalketen bij te weinig eigen orderhistorie: product-
  * gemiddelde (>= 3 volledig ontvangen orders) -> globaal gemiddelde over
  * alle producten (>= 3) -> vaste aanname (LEVERTIJD_DAGEN_DEFAULT,
@@ -75,8 +75,8 @@ require_once __DIR__ . '/artikelen.php';
  * Ruwe (dagen, aantal samples)-uitkomst uit orders, zonder terugvalketen
  * -- $ean = null voor het globale gemiddelde over alle producten. Alleen
  * volledig ontvangen orders (hoeveelheid_ontvangen >= hoeveelheid_besteld)
- * MET een gezette laatst_ontvangen_op (migratie 011 -- orders die vóór
- * die migratie al volledig ontvangen waren, hebben dat veld niet met
+ * MET een gezette laatst_ontvangen_op (orders van vóór dat veld bestond
+ * en die al volledig ontvangen waren, hebben het niet met
  * terugwerkende kracht gevuld gekregen en tellen terecht niet mee: daar
  * is geen betrouwbare levertijd van bekend).
  */
@@ -262,7 +262,7 @@ function berekenMinMaxAdvies(?string $eersteActiviteit, array $wekelijkseAantall
         $adviesMinIntern = (int) ceil($gemWeek * ($levertijd['dagen'] / 7 + MINMAX_BUFFER_WEKEN));
         $adviesMax = $adviesMinIntern + (int) ceil($piekWeek * MINMAX_DEKKING_PIEK_WEKEN);
     } else {
-        // Migratie 031, op verzoek van Harm: kamers hebben geen eigen
+        // Kamers hebben geen eigen
         // minimum meer (ze worden gegarandeerd dezelfde dag tot hun
         // maximum bijgevuld vanuit Berging) -- dit advies gaat voor kamers
         // dus alleen nog over het maximum (de par-waarde/capaciteit,
@@ -285,7 +285,7 @@ function berekenMinMaxAdvies(?string $eersteActiviteit, array $wekelijkseAantall
     return [
         'status' => 'ok',
         'formule' => $isBerging ? 'levertijd' : 'dagvoorraad',
-        // Migratie 031: alleen Berging heeft nog een echt minimum-advies --
+        // Alleen Berging heeft nog een echt minimum-advies --
         // voor kamers is dit null (geen kolom meer, zie hierboven), niet 0
         // (dat zou "advies is 0" betekenen, in plaats van "niet van
         // toepassing").
@@ -305,7 +305,7 @@ function berekenMinMaxAdvies(?string $eersteActiviteit, array $wekelijkseAantall
 }
 
 /**
- * EAN+locatie -> wanneer genegeerd (migratie 026, op verzoek van Harm).
+ * EAN+locatie -> wanneer genegeerd.
  * Alleen relevant voor het aggregaat-overzicht hieronder -- de
  * productdetailpagina negeert dit bewust (zie getProductDetail(),
  * includes/artikelen.php): een voorstel blijft daar altijd zichtbaar.
@@ -318,7 +318,7 @@ function getGenegeerdeMinMaxAdviezen(): array {
 }
 
 /**
- * "Negeer dit voorstel" (migratie 026): verdwijnt van het Min/Max
+ * "Negeer dit voorstel": verdwijnt van het Min/Max
  * Advies-overzicht tot MINMAX_NEGEER_MAANDEN later (config/constants.php)
  * -- daarna wordt het, als het dan nog steeds geldt, opnieuw aangeboden.
  * INSERT ... ON DUPLICATE KEY UPDATE zodat een tweede keer negeren de
@@ -339,11 +339,11 @@ function negeerMinMaxAdvies(string $ean, string $locatie): array {
  * voor een combinatie die daar helemaal niet gebruikt wordt, is ruis),
  * met het huidige min/max erbij ter vergelijking.
  *
- * $alleenEan (migratie 026): scoopt tot één product -- gebruikt door
+ * $alleenEan: scoopt tot één product -- gebruikt door
  * getProductDetail() (includes/artikelen.php) om het min/max-voorstel
  * voor DAT product op de productdetailpagina te tonen.
  *
- * $inclusiefAlles (migratie 026, op verzoek van Harm): het Min/Max
+ * $inclusiefAlles : het Min/Max
  * Advies-overzicht zelf moet twee dingen NIET meer tonen (beheersbaar
  * blijven): (1) rijen waar het advies exact gelijk is aan de huidige
  * min/max -- niets te wijzigen, en (2) rijen die recent genegeerd zijn
@@ -370,7 +370,7 @@ function getMinMaxAdviesOverzicht(?string $alleenEan = null, bool $inclusiefAlle
         $ean = (string) $eanRaw;
         if ($alleenEan !== null && $ean !== $alleenEan) continue;
 
-        // Migratie 025, op verzoek van Harm: een artikel dat 'Niet
+        // Een artikel dat 'Niet
         // leverbaar' of 'Niet meer in gebruik' is, krijgt geen nieuw
         // besteladvies -- geen zin om te adviseren iets te herbestellen
         // wat je niet kunt of niet meer wilt bestellen. Bestaande
@@ -405,7 +405,7 @@ function getMinMaxAdviesOverzicht(?string $alleenEan = null, bool $inclusiefAlle
             );
 
             if (!$inclusiefAlles) {
-                // Filter 1: niets te wijzigen -- niet tonen. Migratie 031:
+                // Filter 1: niets te wijzigen -- niet tonen. 
                 // kamers hebben geen adviesMin/huidigMin meer (altijd null
                 // resp. 0) -- daar alleen het max-advies vergelijken, anders
                 // zou dit filter een kamerrij nooit als "niets te wijzigen"
@@ -427,7 +427,7 @@ function getMinMaxAdviesOverzicht(?string $alleenEan = null, bool $inclusiefAlle
                 [
                     'ean' => $ean, 'naam' => $artikel['productnaam'], 'locatie' => $locatie,
                     'huidigMin' => $huidigMin, 'huidigMax' => $huidigMax,
-                    // Migratie 031: frontend gebruikt dit om de Min-kolom voor
+                    // Frontend gebruikt dit om de Min-kolom voor
                     // kamers als "n.v.t." te tonen i.p.v. een misleidende 0.
                     'isBerging' => $isBerging,
                 ],
@@ -449,7 +449,7 @@ function getMinMaxAdviesOverzicht(?string $alleenEan = null, bool $inclusiefAlle
  * aangeroepen -- alleen op expliciet verzoek van een gebruiker
  * (api/minmax_advies.php, POST), zie de bestandskop hierboven.
  *
- * Migratie 031, op verzoek van Harm: kamers (elke locatie behalve
+ * Kamers (elke locatie behalve
  * 'berging', inclusief extra locaties) hebben geen minimum-kolom meer --
  * $min wordt voor die locaties genegeerd (alleen max_$slot resp.
  * extra_max_$id wordt geschreven). Alleen Berging schrijft nog beide.

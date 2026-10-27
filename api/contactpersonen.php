@@ -1,7 +1,7 @@
 <?php
 /**
- * Migratie 030, op verzoek van Harm: "Contactpersonen"-onderdeel dat eerst
- * op het gecombineerde Nieuws-dashboard stond (migratie 028), nu een eigen
+ * "Contactpersonen"-onderdeel dat eerst
+ * Op het gecombineerde Nieuws-dashboard stond, nu een eigen
  * scherm met een eigen scherm-recht ('contactpersonen'). Alleen lezen,
  * zie includes/nieuws_dashboard.php voor getContactpersonenOverzicht()
  * zelf (ongewijzigd).

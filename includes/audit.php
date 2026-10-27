@@ -1,6 +1,6 @@
 <?php
 /**
- * Generieke audit trail (migratie 010) voor beheersacties die geen eigen
+ * Generieke audit trail voor beheersacties die geen eigen
  * transactielog-achtige tabel hebben: orders, eenmalige bestellingen,
  * productbewerkingen/-toevoegingen, gebruikers-/locatie-/stamgegevens-
  * beheer. Scanacties (Ontvangst/Verbruik/Verplaatsing/Retournering/

@@ -1,7 +1,7 @@
 <?php
 /**
  * Berging-bestellijst. GET blijft zoals het was (lezen, gastvriendelijk).
- * Migratie 025, op verzoek van Harm: POST { actie: 'markeer_besteld' } --
+ * POST { actie: 'markeer_besteld' } --
  * markeert de HUIDIGE lijst als besteld (apart van printen/exporteren,
  * zie renderBerging() in assets/js/app.js), dus apiRequireWriteAccess()
  * hier net als elk ander schrijf-endpoint.

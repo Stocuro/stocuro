@@ -1,7 +1,7 @@
 <?php
 /**
  * Lichtgewicht naamkeuzelijst van alle actieve gebruikers (elke rol) --
- * migratie 033, op verzoek van Harm: de "Besteld door"-velden (bestel-
+ * De "Besteld door"-velden (bestel-
  * modal, order-detail, eenmalige-bestelling-bewerken) worden een dropdown
  * van bekende systeemgebruikers i.p.v. vrije tekst. Niet te verwarren met
  * api/gebruikers.php (volledig gebruikersbeheer, beheerder-only) -- dit

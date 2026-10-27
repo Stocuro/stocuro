@@ -1,10 +1,10 @@
 <?php
 /**
  * Gebruikersbeheer, alleen voor beheerders (migratieplan hoofdstuk
- * 9.2/9.4; migratie 019: "beheerder" is een los vinkje, is_beheerder,
+ * 9.2/9.4; "beheerder" is een los vinkje, is_beheerder,
  * geen functie meer -- zie includes/auth.php::requireBeheerder()).
  *
- * Migratie 019 (rollenmodel-herziening, op verzoek van Harm): dit scherm
+ * Dit scherm
  * is nu de ENIGE plek om een specialist/laborant/bekijker aan te maken
  * of te wijzigen -- de vroegere aparte Stamgegevens > Specialisten-lijst
  * is samengevoegd met Gebruikers, want iedereen die met het systeem
@@ -17,7 +17,7 @@
  * POST -> { actie: 'aanmaken' (of weggelaten), naam, email, wachtwoord,
  *         rol? (specialist/laborant/bekijker), is_beheerder?, taal?,
  *         licentie_code, licentie_bevestigd_email }
- *         -- migratie 044_licentie_registratie, op verzoek van Harm: de
+ *         -- de
  *         laatste twee velden zijn VERPLICHT sinds die migratie -- een
  *         nieuw account wordt alleen aangemaakt als licentie_code een
  *         geldige, nog niet-gekoppelde activatiecode is en
@@ -30,14 +30,14 @@
  *      -> { actie: 'gebruiker_bijwerken', id, rol, is_beheerder, actief, taal?, naam?, email? }
  *         -- wijzigt functie/beheerder-vlag/actief van een BESTAAND
  *         account in één keer (vervangt het oude, smallere
- *         'specialist_koppelen' uit migratie 017 -- dat bestond om een
+ *         'specialist_koppelen' -- dat bestond om een
  *         los account aan een Stamgegevens-naam te koppelen; nu functie
  *         en account één en dezelfde rij zijn, is een brede "wijzig dit
- *         account"-actie logischer). taal is optioneel, op verzoek van
- *         Harm: een beheerder kan hiermee de taal van een ANDER account
- *         wijzigen (voorheen kon alleen de gebruiker dit zelf, zie
+ *         account"-actie logischer). taal is optioneel: een beheerder
+ *         kan hiermee de taal van een ANDER account wijzigen (voorheen
+ *         kon alleen de gebruiker dit zelf, zie
  *         api/mijn_taal.php -- dat blijft gewoon bestaan).
- *         Migratie 039, op verzoek van Harm ("Naam, e-mail van gebruikers
+ *         ("Naam, e-mail van gebruikers
  *         zijn niet aan te passen. Maak dit aanpasbaar."): naam en email
  *         zijn nu ook optioneel meegeefbaar. Bij een gewijzigde naam wordt
  *         eerst registreerHernoeming('specialist', oud, nieuw) aangeroepen
@@ -45,7 +45,7 @@
  *         historie (Leaderboard, Verbruik per Procedure, PICC-rotatie) de
  *         omdoop kan volgen i.p.v. te splitsen -- zie ook includes/
  *         leaderboard.php en includes/artikelen.php voor de leeskant van
- *         die fix. email heeft een UNIQUE-constraint (migratie 002); een
+ *         Die fix. email heeft een UNIQUE-constraint; een
  *         dubbele waarde geeft een nette foutmelding i.p.v. een
  *         onafgevangen PDOException, zelfde patroon als
  *         updateLocatieExtra() in includes/locaties.php.
@@ -57,14 +57,14 @@
  *         vergeten"-mailflow in deze app, zie toelichting hieronder bij
  *         die actie); zelfde minimumlengte-eis (8) als bij aanmaken.
  *
- * taal (migratie 009) is de starttaalvoorkeur voor het nieuwe account --
+ * Taal is de starttaalvoorkeur voor het nieuwe account --
  * de gebruiker zelf kan dit later altijd zelf wijzigen (Sign out-menu,
  * zie api/mijn_taal.php), en sinds hierboven kan een beheerder dit ook
- * voor een ANDER account wijzigen via 'gebruiker_bijwerken'. Sinds
- * migratie 039 kan een beheerder via diezelfde actie ook naam/e-mail
+ * voor een ANDER account wijzigen via 'gebruiker_bijwerken'. Sindsdien
+ * kan een beheerder via diezelfde actie ook naam/e-mail
  * bewerken (zie hierboven) -- dat kon voorheen niet.
  *
- * rol 'specialist'/'laborant' (migratie 019): volledige schrijfrechten
+ * Rol 'specialist'/'laborant': volledige schrijfrechten
  * (scannen, bestellen, alles), zie includes/auth.php::
  * requireSchrijfToegang() -- alleen 'bekijker' is alleen-lezen, tenzij
  * ook is_beheerder=1. Een Laborant mag bij Scan Usage alleen procedures
@@ -75,16 +75,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/../includes/api_helpers.php';
 require_once __DIR__ . '/../includes/audit.php';
 require_once __DIR__ . '/../includes/upload.php';
-// Migratie 024: groepen (welke schermen/schrijftoegang) zijn een LOS
+// Groepen (welke schermen/schrijftoegang) zijn een LOS
 // veld naast rol hierboven -- rol behoudt zijn klinische betekenis
 // (zie sql/migrations/024_groepen.sql), 'groepen' in de POST-body
 // hieronder is puur het nieuwe permissiesysteem.
 require_once __DIR__ . '/../includes/groepen.php';
-// Migratie 036 (licentiemodel): 'licentie_koppelen' hieronder + de
+// 'licentie_koppelen' hieronder + de
 // licentiestatus die de GET-lijst per gebruiker meestuurt, zie
 // includes/license.php voor de volledige toelichting.
 require_once __DIR__ . '/../includes/license.php';
-// Migratie 039: registreerHernoeming() -- 'gebruiker_bijwerken' hieronder
+// RegistreerHernoeming() -- 'gebruiker_bijwerken' hieronder
 // roept dit aan bij een naamswijziging, zie includes/hernoemingen.php.
 require_once __DIR__ . '/../includes/hernoemingen.php';
 
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rol = $body['rol'];
             $isBeheerder = !empty($body['is_beheerder']);
             $actief = !empty($body['actief']);
-            // Op verzoek van Harm: een beheerder moet de taal van EEN ANDER
+            // : een beheerder moet de taal van EEN ANDER
             // account kunnen wijzigen vanuit dit overzicht -- voorheen kon
             // alleen de gebruiker zelf dit aanpassen (Sign out-menu, zie
             // api/mijn_taal.php). 'taal' is optioneel en blijft ongewijzigd
@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // frontend-aanroep zonder dit veld mag de taal niet resetten).
             $taal = in_array($body['taal'] ?? '', ['en', 'nl'], true) ? $body['taal'] : null;
 
-            // Migratie 039, op verzoek van Harm: naam/email zijn optioneel
+            // Naam/email zijn optioneel
             // -- ontbreken ze (oudere frontend-aanroep), dan blijven ze
             // ongewijzigd, net als taal hierboven. Leeg trimmen telt als
             // "niet meegegeven" i.p.v. een leeg veld op te slaan.
@@ -197,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!$check->fetch()) return ['success' => false, 'error' => 'Gebruiker niet gevonden'];
             }
 
-            // Migratie 039: pas NA een geslaagde UPDATE registreren, en
+            // Pas NA een geslaagde UPDATE registreren, en
             // alleen als de naam ook echt veranderd is (registreerHernoeming()
             // is zelf al een no-op bij gelijke namen, maar zo wordt de
             // lookup van $oudeNaam hierboven ook overgeslagen als er niets
@@ -206,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 registreerHernoeming('specialist', $oudeNaam, $naam);
             }
 
-            // Migratie 024: groepslidmaatschap in dezelfde actie
+            // Groepslidmaatschap in dezelfde actie
             // bijwerken -- 'groepen' is optioneel (array van groep-id's);
             // ontbreekt het veld helemaal (oudere frontend-aanroep), dan
             // blijft het bestaande lidmaatschap ongemoeid i.p.v. het leeg
@@ -219,7 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['success' => true];
         });
     } elseif ($actie === 'wachtwoord_resetten') {
-        // Op verzoek van Harm: een beheerder moet het wachtwoord van een
+        // : een beheerder moet het wachtwoord van een
         // ander account kunnen resetten (bijv. vergeten wachtwoord) --
         // er is geen "wachtwoord vergeten"-mailflow (bewust, zie
         // vendor-tools/README over hobby-schaal), dus dit is de enige weg.
@@ -245,13 +245,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return ['success' => true, 'message' => 'Wachtwoord gereset'];
         });
     } elseif ($actie === 'licentie_koppelen') {
-        // Migratie 036, op verzoek van Harm: een beheerder plakt hier de
+        // Een beheerder plakt hier de
         // activatiecode die per e-mail is ontvangen na aankoop (zie
         // vendor-tools/) en koppelt 'm aan een specifieke gebruiker --
         // zie includes/license.php::koppelLicentieCode() voor de
         // volledige (offline) verificatie.
         //
-        // Migratie 037, HERZIEN: naast de code wordt ook het besteladres
+        // Herzien: naast de code wordt ook het besteladres
         // (bevestigd_email) meegestuurd -- de beheerder typt dit zelf over
         // uit de aankoopmail, ter bevestiging dat deze code daadwerkelijk
         // uit die bestelling komt. Zie includes/license.php::
@@ -282,8 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             jsonResponse(['success' => false, 'error' => 'Naam, e-mail en een wachtwoord van minstens 8 tekens zijn verplicht']);
         }
 
-        // Migratie 044_licentie_registratie, op verzoek van Harm
-        // ("Licentiemodel: registratie blokkeren zonder geldige licentie"):
+        // Licentiemodel: registratie blokkeren zonder geldige licentie --
         // een nieuw account kan hier niet meer aangemaakt worden zonder
         // een geldige, nog niet-gekoppelde activatiecode + het bijbehorende
         // besteladres -- zie includes/license.php::
@@ -313,11 +312,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':is_beheerder' => $isBeheerder ? 1 : 0, ':taal' => $taal,
                 ]);
             $nieuwId = (int) $pdo->lastInsertId();
-            // Migratie 024: meteen bij aanmaken ook groepslidmaatschap
+            // Meteen bij aanmaken ook groepslidmaatschap
             // zetten, als er groepen zijn meegestuurd.
             if ($groepIds) setGebruikerGroepen($nieuwId, $groepIds, $beheerder['naam']);
 
-            // Migratie 044_licentie_registratie: de code hierboven is al
+            // De code hierboven is al
             // eenmaal voorgevalideerd, maar koppelLicentieCode() doet de
             // ECHTE (schrijvende) koppeling -- inclusief de dubbele-koppeling-
             // check op token_id, die nu met het net aangemaakte gebruiker-id
@@ -339,17 +338,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 } else {
     apiTry(function () {
         $rows = db()->query('SELECT id, naam, email, rol, is_beheerder, taal, foto, actief, laatst_ingelogd, aangemaakt_op, licentie_vrij FROM users ORDER BY naam')->fetchAll();
-        // Migratie 024: groepslidmaatschap per gebruiker meesturen, zodat
+        // Groepslidmaatschap per gebruiker meesturen, zodat
         // het Gebruikers-scherm meteen weet welke groep-checkboxes al aan
         // moeten staan bij het bewerken van een bestaand account.
         //
-        // Migratie 036: licentiestatus per gebruiker LIVE herverifieerd
+        // Licentiestatus per gebruiker LIVE herverifieerd
         // (niet de gecachete licentie_geblokkeerd-kolom uitgelezen) --
         // dit scherm is precies de plek waar een beheerder dit moet
         // kunnen zien, dus toont het altijd de actuele staat, inclusief
         // een net verlopen code die de betreffende gebruiker zelf nog
         // niet heeft "gemerkt" (bijv. nog ingelogde sessie).
-        // Migratie 037: hoeveel CRYPTOGRAFISCH geldige lokale gratis-
+        // Hoeveel CRYPTOGRAFISCH geldige lokale gratis-
         // tokens er momenteel bestaan (niet hetzelfde als het aantal
         // gebruikers met licentieStatus.vrij=true hieronder -- die is
         // altijd 0 of 1, want controleerLicentieGebruiker() past de
@@ -379,7 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'geldigTot' => $licentie['geldigTot'],
                 'reden' => $licentie['reden'],
             ];
-            // Migratie 037: installatiebreed feit, op elke rij meegestuurd
+            // Installatiebreed feit, op elke rij meegestuurd
             // (i.p.v. een apart top-level veld) omdat dit endpoint een
             // kale JSON-array teruggeeft, geen {data:[...]}-envelop --
             // renderGebruikers() (assets/js/app.js) leest 'm van de eerste

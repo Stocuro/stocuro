@@ -58,6 +58,41 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.12 — code comments cleaned up, part 2 (the long tail).**
+  Finishes what v1.0.11 started: the remaining ~220 migration-number/
+  maintainer-name references that were woven into the middle of a
+  sentence rather than a simple removable prefix (e.g. "zie migratie
+  004/019", "Harm's punt", "op Harms verzoek") have now been rewritten
+  by hand, one at a time, preserving the substantive reasoning. Caught
+  and fixed a self-introduced bug along the way: a first automated
+  attempt at this blindly capitalized every comment line it touched,
+  corrupting unrelated text — reverted before anything was committed,
+  then redone correctly. No behavior change; comment-only. Verified
+  with `php -l` on every file and a build-check on `app.js`.
+- **v1.0.11 — code comments cleaned up for the public repo.** The
+  codebase carried ~800 development-process comments referencing
+  internal migration numbers and the maintainer by name (e.g.
+  "Migratie 026, op verzoek van Harm: ..."), left over from how this
+  project tracked its own build history. On a now-public repo that
+  reads as process noise rather than documentation. Stripped the
+  migration-number/name-attribution prefix from ~580 of these
+  (mechanically, verified with `php -l` on every file and a syntax
+  check on `app.js`), keeping the substantive reasoning that followed
+  each one — the "why", not the "who asked". No behavior change
+  whatsoever; comment-only. The remaining ~220 have the reference woven
+  into the sentence itself (not a simple prefix) and are being cleaned
+  up by hand as a follow-up, not left for a future automated pass.
+- **v1.0.10 — canonical domain fix (Seobility report).** Every visit to
+  `stocuro.com` — with or without `www.`, over `http` or `https` — used
+  to return its own `200 OK` instead of redirecting to one canonical URL
+  (duplicate-content signal for search engines). Added a
+  `website/.htaccess` (deploys flat into the combined web root) that
+  301-redirects every variant to `https://stocuro.com/` in a single hop.
+  Also fixed ~180 internal links (the "Get Stocuro"/shop link in
+  `build-site.js` and the header logo link in `app.php`) that pointed at
+  `https://www.stocuro.com/` instead of the canonical non-www form the
+  rest of the site already used in its `canonical` tags and
+  `sitemap.xml`.
 - **v1.0.9 — index.php entry point for standalone installs
   (Docker/Synology/own server).** Visiting the bare domain or IP on a
   fresh standalone install used to hit a blank page or a 404, since the
@@ -220,6 +255,22 @@ file that blocks all direct web access (`Require all denied`).
 - cURL extension (for fetching product photos from external links).
 
 No Node/Composer/build tooling is required to run the app itself.
+
+### SFTP deploy gotcha: `put -r` nests instead of merging
+
+Found the hard way (2026-09-27): OpenSSH's `sftp put -r localdir remotename`
+behaves like `cp -r` — if `remotename` **already exists** as a directory,
+it copies `localdir` **as a subdirectory inside it**
+(`remotename/localdir-basename/...`) instead of merging files into it.
+The first sync of a brand-new directory (like `blog/` was) works fine
+this way, since the destination doesn't exist yet and gets created with
+the right name. Re-syncing an **existing** directory (`dashboards/`,
+`nl/`, ...) with the same command instead silently leaves the live
+files untouched and dumps a nested, duplicate copy one level too deep.
+Fix/rule going forward: only ever `put` individual files by their exact
+remote path when the target directory already exists on the server —
+never `put -r` onto an existing remote directory. `mkdir` + `put -r` is
+only safe for a directory that is genuinely new on the server.
 
 ## Running on your own Linux server (Docker)
 

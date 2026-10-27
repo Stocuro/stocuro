@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 036, op verzoek van Harm: gedeelde migratierunner, gehaald uit
+ * Gedeelde migratierunner, gehaald uit
  * sql/migrate.php (dat bestand roept nu gewoon voerMigratiesUit() aan)
  * zodat install.php (de browser-installer/updater, zie install.php in de
  * hoofdmap) en de command-line variant precies dezelfde logica gebruiken
@@ -64,7 +64,7 @@ function migratiesInWachtrij(): array {
  * einde van het eigen bestand, zie een willekeurig bestand in die map).
  * Idempotent: opnieuw aanroepen als alles al is uitgevoerd doet niets.
  *
- * Migratie 041, op verzoek van Harm ("tijdens Stocuro installeren zie ik
+ * ("tijdens Stocuro installeren zie ik
  * niet wat de status is van database bouwen") -- optionele $onLog-
  * callback, aangeroepen met elke logregel PRECIES op het moment dat hij
  * ontstaat (niet pas als de hele batch klaar is). install.php gebruikt

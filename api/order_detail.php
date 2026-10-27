@@ -1,7 +1,7 @@
 <?php
 /**
- * Detail/bewerking van één reguliere order (migratie 027, op verzoek van
- * Harm: orders getoond op Actiecentrum/Overzicht/Open Orders moeten
+ * Detail/bewerking van één reguliere order (orders getoond op
+ * Actiecentrum/Overzicht/Open Orders moeten
  * klikbaar zijn naar een detailpagina met bewerkmogelijkheid) -- zelfde
  * scherm-recht als Open Orders zelf, want dit IS onderdeel van dat
  * scherm, alleen dieper.

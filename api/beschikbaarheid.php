@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 030_groep_landingsscherm: samengesteld beschikbaarheids-
+ * Samengesteld beschikbaarheids-
  * overzicht (bedoeld als landingsscherm voor de artsen-groep). Alleen
  * lezen, zie includes/beschikbaarheid.php.
  */

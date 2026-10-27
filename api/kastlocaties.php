@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 029, op verzoek van Harm: suggestielijst voor het kastlocatie-
+ * Suggestielijst voor het kastlocatie-
  * dropdown-veld op Product Bewerken / Artikel Toevoegen (zie
  * includes/artikelen.php::getKastlocatieSuggesties()). Alleen-lezen, geen
  * eigen schrijf-actie -- nieuwe waardes ontstaan gewoon vanzelf zodra een

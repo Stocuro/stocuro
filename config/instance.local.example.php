@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 037, op verzoek van Harm: lokaal, per-installatie geheim,
+ * Lokaal, per-installatie geheim,
  * gebruikt om de "gratis gebruiker" van deze installatie een echt
  * cryptografisch token te geven (HMAC-SHA256) in plaats van een kaal
  * aan/uit-vinkje in de database (zie includes/license.php voor de

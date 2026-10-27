@@ -20,14 +20,14 @@ require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/ean.php';
 require_once __DIR__ . '/orders.php';
 require_once __DIR__ . '/locaties.php';
-// Migratie 025: audit-logging voor markeerBergingAlsBesteld() hieronder.
+// Audit-logging voor markeerBergingAlsBesteld() hieronder.
 require_once __DIR__ . '/audit.php';
-// Migratie 039: actueleNaam() -- transactieNettoPerLocatie()/voorraadLot()
+// ActueleNaam() -- transactieNettoPerLocatie()/voorraadLot()
 // hieronder groeperen per locatienaam, dus een oude naam moet eerst naar
 // zijn actuele naam opgelost worden, anders splitst een hernoemde locatie
 // in twee losse groepen. Zie includes/hernoemingen.php.
 require_once __DIR__ . '/hernoemingen.php';
-// Migratie 028: specLabels() hieronder is verplaatst van een hardcoded
+// SpecLabels() hieronder is verplaatst van een hardcoded
 // switch naar de database (categorieen/categorie_specs), beheerbaar via
 // Stamgegevens -- zie includes/categorieen.php.
 require_once __DIR__ . '/categorieen.php';
@@ -48,7 +48,7 @@ function artikelenMap(): array {
  * Min/max voor een artikel op een specifieke locatie. Poort van de
  * IF(locatie=...)-ketens in de oude Voorraad-Status-formules (kolom F/G).
  *
- * Migratie 031, op verzoek van Harm: kamers (elke locatie behalve
+ * Kamers (elke locatie behalve
  * 'berging') worden gegarandeerd dezelfde dag vanuit Storage tot hun
  * maximum bijgevuld -- een eigen reorder-minimum heeft daar dus nooit een
  * functie gehad en de kolommen (min_ik/min_hybok/min_kar,
@@ -63,7 +63,7 @@ function artikelenMap(): array {
 function artikelMinMax(array $artikel, string $locatie): array {
     $slot = locatieSlotVoorNaam($locatie);
     // null = geen van de vier vaste slots -> een door de gebruiker
-    // toegevoegde extra locatie (migratie 007), opgezocht in een aparte
+    // Toegevoegde extra locatie, opgezocht in een aparte
     // tabel i.p.v. een vaste kolom op artikelen.
     if ($slot === null) return artikelLocatieExtraMinMax($artikel['ean'], $locatie);
     return match ($slot) {
@@ -96,7 +96,7 @@ function artikelKastlocatie(array $artikel, string $locatie): string {
  * Categorie-specifieke specificaties uit artikelen.specs (JSON) als
  * label/value-paren voor weergave. Poort van getCategorieSpecs().
  *
- * Migratie 028, op verzoek van Harm: de categorie -> veld-mapping stond
+ * De categorie -> veld-mapping stond
  * hier tot dan toe hardcoded (een switch op substrings zoals 'stent',
  * 'ballon', ...). Dat is nu een database-tabel (categorieen/
  * categorie_specs, zie includes/categorieen.php) die via het nieuwe
@@ -153,7 +153,7 @@ function daysLeftUntil(?string $sqlDate): ?int {
  * includes/taken.php, zodat TRANSACTIETYPES_INKOMEND/_UITGAAND
  * (config/constants.php) de enige plek is waar bepaald wordt welk type
  * de voorraad ophoogt/verlaagt -- een nieuw transactietype toevoegen
- * (zoals 'Telling: overschot'/'Telling: tekort'/'Vervallen', migratie 008)
+ * (zoals 'Telling: overschot'/'Telling: tekort'/'Vervallen')
  * hoeft dan nergens anders meer aangepast te worden.
  */
 function sqlInList(array $waarden): string {
@@ -174,7 +174,7 @@ function transactieNettoPerLocatie(): array {
          FROM transactielog GROUP BY ean, locatie"
     )->fetchAll();
 
-    // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+    // (locatie-hernoemen cascade-bug):
     // GROUP BY hierboven groepeert op de RUWE, ten tijde van elke
     // transactie opgeslagen locatienaam -- na een rename (zie
     // includes/locaties.php::updateLocatieInstelling()/updateLocatieExtra())
@@ -193,7 +193,7 @@ function transactieNettoPerLocatie(): array {
 
 /**
  * Zelfde berekening als transactieNettoPerLocatie(), maar voor één EAN --
- * migratie 026, op verzoek van Harm: bij Verbruik Scannen moet het
+ * Bij Verbruik Scannen moet het
  * systeem kunnen zien of een product wel/niet voorraad heeft in de
  * gescande ruimte, zonder de hele artikelenlijst te hoeven doorrekenen
  * (dat gebeurt per scanregel, zie includes/transacties.php::
@@ -210,7 +210,7 @@ function huidigeVoorraadPerLocatie(string $ean): array {
     );
     $stmt->execute([':ean' => $ean]);
 
-    // Migratie 039: zelfde actueleNaam()-normalisatie/merge als
+    // Zelfde actueleNaam()-normalisatie/merge als
     // transactieNettoPerLocatie() hierboven, zelfde reden.
     $result = [];
     foreach ($stmt->fetchAll() as $r) {
@@ -239,9 +239,8 @@ function voorraadStatus(): array {
     // $ean terug, die via getBergingData()/getBoodschappenData() hieronder
     // uiteindelijk bij upsertOrder(string $ean, ...) terechtkomt -- met
     // declare(strict_types=1) een fatale TypeError ("must be of type
-    // string, int given") in plaats van een stille coercion. Bug gemeld
-    // door Harm: "Markeer als besteld" op Bestellijst Berging crashte
-    // hierdoor.
+    // string, int given") in plaats van een stille coercion. Gemelde bug:
+    // "Markeer als besteld" op Bestellijst Berging crashte hierdoor.
     foreach ($artikelen as $eanRaw => $artikel) {
         $ean = (string) $eanRaw;
         foreach (actieveLocatieNamen() as $locatie) {
@@ -251,10 +250,10 @@ function voorraadStatus(): array {
             // Skip alleen als min=0 EN max=0 EN huidig=0 (zelfde regel als getOverzichtData)
             if ($min === 0 && $max === 0 && $huidig === 0) continue;
 
-            // Migratie 052, op verzoek van Harm ("als een artikel beneden de
+            // ("als een artikel beneden de
             // voorraad vereiste ligt in een kamer t.o.v. wat er zou moeten
             // liggen, dan is dat Laag -- nu staat er soms OK"): sinds
-            // migratie 031 (zie artikelMinMax() hierboven) is $min voor elke
+            // (zie artikelMinMax() hierboven) is $min voor elke
             // kamer altijd 0 door constructie -- alleen Berging heeft een
             // echt ingesteld reorder-minimum. De oude regel hieronder
             // ("$huidig < $min") kon een kamer dus NOOIT als LAAG markeren,
@@ -291,11 +290,11 @@ function voorraadStatus(): array {
                 'besteltype' => $artikel['besteltype'],
                 'prijs' => $prijs,
                 'waarde' => $huidig * $prijs,
-                // Migratie 020: alleen gezet als dit artikel ook in een
+                // Alleen gezet als dit artikel ook in een
                 // doosverpakking geleverd wordt (zie rondAfOpDoos()) --
                 // anders null, wat rondAfOpDoos() als "geen doos" leest.
                 'eenhedenPerDoos' => !empty($artikel['eenheden_per_doos']) ? (int) $artikel['eenheden_per_doos'] : null,
-                // Migratie 025: meegeven zodat afgeleide bestel-adviesschermen
+                // Meegeven zodat afgeleide bestel-adviesschermen
                 // (getBergingData()/getBoodschappenData() hieronder,
                 // getMinMaxAdviesOverzicht() in includes/minmax.php) een
                 // niet-Actief artikel kunnen overslaan, zonder dat deze
@@ -323,7 +322,7 @@ function voorraadLot(): array {
                 SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_INKOMEND) . ") THEN hoeveelheid ELSE 0 END)
                 - SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_UITGAAND) . ") THEN hoeveelheid ELSE 0 END) AS huidig,
                 MAX(productnaam) AS product,
-                -- Migratie 035, op verzoek van Harm: representatieve ruwe
+                -- representatieve ruwe
                 -- GS1-scanstring voor dit lot, voor het 'Bewerken'-linkje
                 -- op de productdetailpagina (zie includes/lot_correcties.php).
                 -- Voorkeur voor de Ontvangst-regel (de oorspronkelijke
@@ -332,7 +331,7 @@ function voorraadLot(): array {
                 -- barcode als dit lot nooit als Ontvangst geboekt is
                 -- (bijv. alleen via Verplaatsing binnengekomen). Bewust twee
                 -- platte MAX()-kolommen i.p.v. één COALESCE(MAX(CASE...),
-                -- MAX(...))-expressie -- dat laatste bleek op Harms server een
+                -- MAX(...))-expressie -- dat laatste bleek op een productieserver een
                 -- HTTP 500 op o.a. api/product_list.php te veroorzaken (gemeld
                 -- na v1.58), vermoedelijk een ONLY_FULL_GROUP_BY-verschil
                 -- tussen MySQL/MariaDB-versies bij geneste aggregaten in
@@ -346,7 +345,7 @@ function voorraadLot(): array {
          HAVING huidig > 0"
     )->fetchAll();
 
-    // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+    // (locatie-hernoemen cascade-bug):
     // de GROUP BY hierboven groepeert nog op de RUWE locatienaam, dus een
     // lot dat deels onder de oude en deels onder de nieuwe naam van
     // dezelfde locatie is geboekt zou hier als twee losse rijen
@@ -392,7 +391,7 @@ function voorraadLot(): array {
             'huidig' => (int) $r['huidig'],
             'status' => $status,
             'daysLeft' => $daysLeft,
-            // Migratie 035: zie toelichting bij de query hierboven -- voorkeur
+            // Zie toelichting bij de query hierboven -- voorkeur
             // voor de Ontvangst-regel, anders eender welke andere regel met
             // een barcode.
             'gs1_raw' => $r['gs1_raw_ontvangst'] ?: $r['gs1_raw_fallback'],
@@ -424,7 +423,7 @@ function getOverzichtData(): array {
 
 /**
  * Rondt een benodigd aantal stuks naar boven af op een heel aantal dozen
- * (migratie 020, op verzoek van Harm: sommige producten worden per doos
+ * (sommige producten worden per doos
  * van bijv. 5 of 10 stuks bij de leverancier besteld, ook al wordt de
  * inhoud na ontvangst per los stuk verplaatst/verbruikt -- zie
  * includes/transacties.php::lookupArtikelen()). Puur een weergave-/
@@ -448,7 +447,7 @@ function rondAfOpDoos(int $stuksNodig, ?int $eenhedenPerDoos): array {
 
 // =====================================================================
 // DASHBOARD: BERGING / BESTELLIJST LOGISTIEK — poort van getBergingData().
-// Migratie 031, op verzoek van Harm: sinds kamers geen eigen minimum meer
+// Sinds kamers geen eigen minimum meer
 // hebben (ze worden gegarandeerd dezelfde dag tot hun maximum bijgevuld
 // vanuit Berging, zie includes/minmax.php en artikelMinMax() hierboven),
 // kan "is er ergens een tekort" niet langer over elke locatie heen
@@ -474,7 +473,7 @@ function rondAfOpDoos(int $stuksNodig, ?int $eenhedenPerDoos): array {
 // =====================================================================
 function getBergingData(): array {
     $artikelen = artikelenMap();
-    // Migratie 026, op verzoek van Harm: een artikel dat al in bestelling
+    // Een artikel dat al in bestelling
     // staat hoeft niet nogmaals in zijn volle behoefte getoond te worden
     // -- alleen het restant boven wat al onderweg is (bijv. omdat er
     // tijdens de wachttijd extra is verbruikt) is nog relevant.
@@ -503,7 +502,7 @@ function getBergingData(): array {
     $result = [];
     foreach ($statusRijen as $row) {
         if (locatieSlotVoorNaam($row['locatie']) !== 'berging') continue;
-        // Migratie 025, op verzoek van Harm: een niet-Actief artikel
+        // Een niet-Actief artikel
         // (Niet leverbaar / Niet meer in gebruik) hoort niet op de
         // bestellijst -- daar kun je toch niets mee bij Logistiek.
         if (($row['status'] ?? 'Actief') !== 'Actief') continue;
@@ -525,13 +524,13 @@ function getBergingData(): array {
 
         // Berging bestelt altijd bij de externe leverancier (zie
         // includes/minmax.php), dus 'nodig' wordt hier afgerond op hele
-        // dozen als dit artikel een doosverpakking heeft (migratie 020,
+        // dozen als dit artikel een doosverpakking heeft (zie
         // includes/voorraad.php::rondAfOpDoos()).
         $afgerond = rondAfOpDoos($stuksResterend, $row['eenhedenPerDoos'] ?? null);
         $result[] = [
             // 'huidig'/'max' zijn bewust de som over ALLE locaties (zie
             // toelichting hierboven), niet Bergings eigen fysieke
-            // voorraad/max -- op verzoek van Harm, zodat je in één oogopslag
+            // Voorraad/max -- zodat je in één oogopslag
             // ziet hoeveel er in het hele systeem aanwezig/maximaal is, niet
             // alleen wat er toevallig in Berging zelf staat.
             'ean' => $ean, 'naam' => $row['naam'], 'huidig' => $totaalHuidig,
@@ -540,7 +539,7 @@ function getBergingData(): array {
             'besteltype' => $row['besteltype'],
             'producent' => $artikel['producent'] ?? '',
             'artikelref' => $artikel['artikelref'] ?? '',
-            // Migratie 021, op verzoek van Harm: de Berging-bestellijst
+            // De Berging-bestellijst
             // toont voortaan een barcode van de interne logistiekcode
             // (voor een eigen schaplabel) i.p.v. de GS1-EAN -- die laatste
             // is de leverancierscode, niet iets wat op een intern
@@ -554,8 +553,8 @@ function getBergingData(): array {
 }
 
 /**
- * Markeert de huidige Berging-bestellijst als besteld (migratie 025, op
- * verzoek van Harm): één order per artikel via upsertOrder() (includes/
+ * Markeert de huidige Berging-bestellijst als besteld: één order per
+ * artikel via upsertOrder() (includes/
  * orders.php), kanaal 'Berging-bestellijst' zodat je in de order-
  * geschiedenis kunt zien dat dit via deze lijst liep. Zodra Logistiek
  * levert, komt het gewoon binnen via de normale Ontvangst-scan (FIFO,
@@ -566,7 +565,7 @@ function getBergingData(): array {
  * in assets/js/app.js) -- printen/bekijken mag geen bijwerkingen hebben,
  * je moet apart op "Markeer als besteld" klikken.
  *
- * Migratie 026: getBergingData() zelf trekt nu al af wat er al onderweg
+ * GetBergingData() zelf trekt nu al af wat er al onderweg
  * is (openOrderResterendPerEan(), includes/orders.php) -- 'nodig' hier is
  * dus altijd al het RESTANT, nooit meer de volledige (bruto) behoefte.
  * Een item met een openstaande order kan dus best in de lijst staan (als
@@ -603,7 +602,7 @@ function markeerBergingAlsBesteld(?string $gebruikerNaam = null): array {
 
 // =====================================================================
 // DASHBOARD: BIJVULLEN (voorheen "Boodschappenlijst") — poort van
-// getBoodschappenData(). Migratie 026 (op verzoek van Harm): dit scherm
+// GetBoodschappenData(). Dit scherm
 // heette Boodschappenlijst en toonde zowel interne bijvul-items
 // (Automatisch besteltype, vanuit Berging) als externe bestel-items
 // (Handmatig besteltype) door elkaar -- dat laatste dupliceerde het
@@ -634,7 +633,7 @@ function getBoodschappenData(): array {
     foreach ($status as $row) {
         if (!in_array($row['locatie'], $locatiesBestelling, true)) continue;
         if ($row['huidig'] >= $row['min']) continue;
-        // Migratie 025: zelfde uitsluiting als getBergingData() hierboven.
+        // Zelfde uitsluiting als getBergingData() hierboven.
         if (($row['status'] ?? 'Actief') !== 'Actief') continue;
         // Alleen de bijvul-kant (intern, vanuit Berging) -- Handmatig
         // (extern besteld) hoort bij getBestellersData(), niet hier.
@@ -726,7 +725,7 @@ function getLotTracking(): array {
 // heeft zowel voorraadStatus() als openOrderStatusMap() nodig, en
 // orders.php heeft voorraad.php niet nodig.
 //
-// Migratie 031, op verzoek van Harm: zelfde herziening als getBergingData()
+// Zelfde herziening als getBergingData()
 // hierboven, om dezelfde reden -- kamers hebben geen eigen minimum meer (ze
 // worden gegarandeerd dezelfde dag tot hun maximum bijgevuld vanuit
 // Berging), dus "per locatie onder minimum" bestaat daar niet meer. Voor
@@ -734,7 +733,7 @@ function getLotTracking(): array {
 // max > 0) is Bergings eigen rij dus de juiste plek om een reorder-drempel
 // te toetsen: "zit Berging zelf onder haar eigen minimum?"
 //
-// Migratie 032, op verzoek van Harm: veel Handmatig-artikelen liggen
+// Veel Handmatig-artikelen liggen
 // helemaal NIET in Berging (min/max daar bewust 0 -- het product wordt
 // rechtstreeks voor een kamer besteld, Berging is voor dit artikel geen
 // tussenstation). Voor die artikelen bestaat er geen "dagelijks bijvullen
@@ -748,7 +747,7 @@ function getLotTracking(): array {
 // =====================================================================
 function getBestellersData(): array {
     $artikelen = artikelenMap();
-    // Migratie 026, op verzoek van Harm: een product dat al (deels)
+    // Een product dat al (deels)
     // onderweg is hoeft niet nogmaals in zijn volle behoefte getoond te
     // worden, alleen het restant boven wat al onderweg is (bijv. extra
     // verbruik tijdens de wachttijd) is nog relevant.
@@ -772,7 +771,7 @@ function getBestellersData(): array {
 
     foreach (voorraadStatus() as $row) {
         if (!str_contains((string) $row['besteltype'], 'Handmatig')) continue;
-        // Migratie 025, zelfde uitsluiting als getBergingData()/
+        // Zelfde uitsluiting als getBergingData()/
         // getBoodschappenData().
         if (($row['status'] ?? 'Actief') !== 'Actief') continue;
 
@@ -820,16 +819,16 @@ function getBestellersData(): array {
 
     // Alleen tonen bij een echt tekort: Bergings eigen minimum (als Berging
     // voor dit artikel een voorraadpunt is) of anders een kamer onder haar
-    // eigen maximum (migratie 032) -- zonder dat is er niets te bestellen,
+    // Eigen maximum -- zonder dat is er niets te bestellen,
     // ook al is het systeembrede totaal toevallig niet 100% vol.
     $productMap = array_filter($productMap, fn($p) => !empty($heeftTekortPerEan[$p['ean']]));
 
-    // Afronden op hele dozen (migratie 020) gebeurt op het TOTAAL per
+    // Afronden op hele dozen gebeurt op het TOTAAL per
     // product, niet per locatie los -- anders zou de som van los
     // afgeronde per-locatie-aantallen hoger kunnen uitvallen dan nodig
     // (bijv. 3 + 3 stuks die allebei apart al naar een doos van 5 worden
     // afgerond, terwijl in totaal 6 stuks -- dus 2 dozen -- ook volstaat).
-    // Migratie 026: eerst het restant t.o.v. wat al onderweg is bepalen,
+    // Eerst het restant t.o.v. wat al onderweg is bepalen,
     // dán pas op hele dozen afronden.
     foreach ($productMap as $ean => &$product) {
         $product['totaalNodig'] = max(0, $product['totaalNodig']);

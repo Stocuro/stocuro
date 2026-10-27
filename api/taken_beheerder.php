@@ -1,6 +1,6 @@
 <?php
 /**
- * Beheerder-takenoverzicht (migratie 026): onbekende scans + onvolledige
+ * Beheerder-takenoverzicht: onbekende scans + onvolledige
  * productgegevens, beide afgeleid, zie includes/taken.php::getTakenBeheerder().
  * Alleen lezen -- "afronden" gebeurt op de Admin-schermen "Onbekende
  * Producten" resp. de productpagina zelf.

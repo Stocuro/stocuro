@@ -1,6 +1,6 @@
 <?php
 /**
- * Zelf-service taalvoorkeur (migratie 009): elke ingelogde gebruiker mag
+ * Zelf-service taalvoorkeur: elke ingelogde gebruiker mag
  * zijn eigen taal wijzigen. Vervangt de vroegere localStorage-toggle in
  * de ingelogde app -- zie assets/js/app.js.
  *

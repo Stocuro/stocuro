@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 026: product-drilldown achter één cel van het
+ * Product-drilldown achter één cel van het
  * Verbruikstrends-tabblad. Zie includes/dashboards.php::getVerbruiksTrendDetail()
  * voor de reeks/sub-parameters. Alleen lezen, zelfde toegang als het
  * trends-scherm zelf (api/trends.php).

@@ -9,7 +9,7 @@
 declare(strict_types=1);
 
 /**
- * Op verzoek van Harm, na een gemelde bug: een handmatig EAN-/doos-EAN-
+ * Na een gemelde bug: een handmatig EAN-/doos-EAN-
  * veld (naEan/naDoosEan op Artikel Toevoegen, en de gelijknamige velden op
  * het bewerkscherm) is bedoeld voor een KALE, 14-cijferige EAN -- maar een
  * barcodescanner onderscheidt geen velden. Komt er per ongeluk een

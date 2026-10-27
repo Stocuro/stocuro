@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 039, op verzoek van Harm: "Wanneer ik locaties hernoem dan
+ * "Wanneer ik locaties hernoem dan
  * wordt dit niet automatisch in de lots in stock en transactie historie
  * locaties aangepast."
  *

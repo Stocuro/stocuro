@@ -1,7 +1,7 @@
 <?php
 /**
- * Keuzelijst specialisten/laboranten. Sinds migratie 019 (rollenmodel-
- * herziening) is dit GEEN aparte tabel meer die los van een inlogaccount
+ * Keuzelijst specialisten/laboranten. Sinds de rollenmodel-herziening is
+ * dit GEEN aparte tabel meer die los van een inlogaccount
  * beheerd wordt -- elke specialist/laborant IS een gebruikersaccount
  * (rol 'specialist'/'laborant' op de users-tabel). Aanmaken, actief/
  * inactief zetten en het e-mailadres wijzigen gebeurt daarom voortaan

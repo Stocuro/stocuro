@@ -8,7 +8,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/api_helpers.php';
 require_once __DIR__ . '/../includes/artikelen.php';
-// Migratie 033, op verzoek van Harm: als dit nieuwe artikel een EAN
+// Als dit nieuwe artikel een EAN
 // heeft die eerder als "onbekend" in een eenmalige bestelling is
 // gescand, moet die alsnog als ontvangen geboekt worden -- zie
 // verwerkAchterstalligeEenmaligeBestellingOntvangsten() hieronder.
@@ -28,7 +28,7 @@ apiRequireScherm('artikel-toevoegen');
 $body = readJsonBody();
 apiTry(function () use ($body, $user) {
     $result = addArtikel($body, $user['naam']);
-    // Migratie 025, op verzoek van Harm: als dit nieuwe artikel specifiek
+    // Als dit nieuwe artikel specifiek
     // is aangemaakt als vervanger voor een ander (niet leverbaar)
     // artikel -- zie showArtikelToevoegen()/renderProductEdit() in
     // assets/js/app.js -- meteen na het aanmaken die koppeling leggen,
@@ -36,7 +36,7 @@ apiTry(function () use ($body, $user) {
     if ($result['success'] && !empty($body['vervangtVoorEan'])) {
         koppelAlsVervanger((string) $body['vervangtVoorEan'], $result['ean'], $user['naam']);
     }
-    // Migratie 033, op verzoek van Harm: los van waar dit artikel vandaan
+    // Los van waar dit artikel vandaan
     // komt, altijd checken of er eenmalige-bestelling-items op deze EAN
     // liggen te wachten op een artikel dat er nu is -- no-op als dat niet
     // het geval is.

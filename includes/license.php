@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 036, op verzoek van Harm: licentiemodel voor zelf-hostbare
+ * Licentiemodel voor zelf-hostbare
  * distributie aan andere afdelingen/ziekenhuizen. Kort samengevat:
  *
  *  - 1 gratis, vrije gebruiker per installatie -- altijd toegestaan, geen
@@ -12,10 +12,10 @@
  *  - Verificatie is volledig OFFLINE: nooit een serverconnectie nodig,
  *    ook niet bij het aanmaken/koppelen van een code.
  *
- * Migratie 037, op verzoek van Harm (herzien na live testen op zijn eigen
- * demo): het gratis-vinkje bleek met een simpele `UPDATE users SET
+ * Herzien na live testen op de eigen demo-omgeving: het gratis-vinkje
+ * bleek met een simpele `UPDATE users SET
  * licentie_vrij=1` op onbeperkt veel accounts te zetten -- users.licentie_vrij
- * was een kale, niet-geverifieerde boolean. Vanaf migratie 037 loopt de
+ * was een kale, niet-geverifieerde boolean. Sindsdien loopt de
  * "gratis gebruiker"-toekenning door HETZELFDE mechanisme als een echte
  * activatiecode (license_activations), alleen ondertekend met een LOKAAL,
  * per-installatie geheim (HMAC-SHA256, config/instance.local.php) in
@@ -36,7 +36,7 @@
  * verwerkt zitten, ondanks dat ze ter sprake kwamen:
  *  - Het versienummer (config/constants.php::APP_VERSION) staat wel
  *    (informatief, voor audit/debug) in de payload, maar NIET in de
- *    sleutel zelf -- anders zou een gewone update (Harm doet dit nu bij
+ *    sleutel zelf -- anders zou een gewone versiebump (die gebeurt bij
  *    ELKE wijziging, ook kleine) het bestaande, legitieme gratis-token
  *    van de eigen installatie ongeldig maken. Zodra de echte HMAC-check
  *    er staat, voegt versiebinding sowieso niets toe tegen iemand zonder
@@ -46,12 +46,12 @@
  *    overwogen): voegt geen echte cryptografische drempel toe, want de
  *    verificatielogica staat leesbaar in deze (niet source-encoded) PHP.
  *
- * Bewuste, op verzoek van Harm gemaakte scope-keuzes (hobbyproject, geen
+ * Bewuste, gemaakte scope-keuzes (hobbyproject, geen
  * volledig productbedrijf): geen ionCube/source-encoding, geen sluitende
  * bescherming tegen iemand met VOLLEDIGE serverToegang (bestanden +
  * database) die het lokale geheim uit config/instance.local.php leest en
  * de HMAC-berekening handmatig naleeft -- dat blijft de geaccepteerde
- * grens. Wat migratie 037 wel sluit: iemand met ALLEEN databasetoegang
+ * grens. Wat dit mechanisme wel sluit: iemand met ALLEEN databasetoegang
  * (geen bestandstoegang, dus het geheim niet kan lezen) kan nu geen
  * enkele extra gratis of geldige gebruiker meer fabriceren.
  */
@@ -83,7 +83,7 @@ function base64UrlDecode(string $data): ?string {
 }
 
 // -----------------------------------------------------------------------
-// Migratie 037: lokaal, per-installatie geheim (HMAC-sleutel voor het
+// Lokaal, per-installatie geheim (HMAC-sleutel voor het
 // gratis token). NOOIT in de zip, NOOIT in versiebeheer -- net als
 // config/database.local.php wordt dit bestand pas op de klantserver zelf
 // aangemaakt (zie zorgVoorInstantieGeheim() hieronder, aangeroepen vanuit
@@ -147,9 +147,9 @@ function zorgVoorInstantieGeheim(): string {
 /**
  * Verifieert een ECHTE, door de leverancier ondertekende activatiecode
  * (Ed25519, publieke sleutel in config/license.php). Vereist sinds
- * migratie 037 ook een 'email'-veld in de payload (zie vendor-tools/
- * licentie_generator_core.php) -- codes die vóór deze migratie zijn
- * uitgegeven (zonder e-mailveld) worden dus niet meer geaccepteerd; die
+ * kort ook een 'email'-veld in de payload (zie vendor-tools/
+ * licentie_generator_core.php) -- oudere codes die zonder dat veld zijn
+ * uitgegeven worden dus niet meer geaccepteerd; die
  * moeten opnieuw gegenereerd worden. Aanvaardbaar op dit moment (nog geen
  * echte klanten met eerder uitgegeven codes), en expliciet vermeld in de
  * changelog.
@@ -183,11 +183,11 @@ function verifieerVendorToken(string $token): array {
     if (!is_array($payload) || empty($payload['id']) || empty($payload['expires']) || empty($payload['issued'])) {
         return ['geldig' => false, 'reden' => 'Code-inhoud onvolledig.', 'payload' => null];
     }
-    // Migratie 037: e-mailbinding -- zie koppelLicentieCode() voor de
+    // E-mailbinding -- zie koppelLicentieCode() voor de
     // controle bij koppelen, en controleerLicentieGebruiker() voor de
     // continue herverificatie bij elke periodieke check.
     if (empty($payload['email'])) {
-        return ['geldig' => false, 'reden' => 'Deze code is uitgegeven vóór de e-mailbinding (migratie 037) en is niet meer geldig -- vraag een nieuwe code aan.', 'payload' => null];
+        return ['geldig' => false, 'reden' => 'Deze code is uitgegeven vóór de e-mailbinding en is niet meer geldig -- vraag een nieuwe code aan.', 'payload' => null];
     }
 
     return ['geldig' => true, 'reden' => null, 'payload' => $payload];
@@ -238,7 +238,7 @@ function verifieerLokaalToken(string $token): array {
 }
 
 /**
- * Migratie 037: EEN verificatiepad voor elke aanroeper (koppelLicentieCode(),
+ * EEN verificatiepad voor elke aanroeper (koppelLicentieCode(),
  * controleerLicentieGebruiker()) -- kijkt naar het (nog niet vertrouwde)
  * 'type'-veld in de payload om te bepalen welk cryptografisch pad erbij
  * hoort, en laat DAT pad de daadwerkelijke, harde verificatie doen. Puur
@@ -295,12 +295,12 @@ function maakLokaalVrijToken(int $gebruikerId): string {
  * (expliciete melding, geen dubbele rij); bij een ANDERE gebruiker wordt
  * het geweigerd.
  *
- * Migratie 037: alleen ECHTE vendor-codes (type 'extra_user') kunnen hier
+ * Alleen ECHTE vendor-codes (type 'extra_user') kunnen hier
  * gekoppeld worden -- een vrij_lokaal-token hoort hier nooit binnen te
  * komen (die maakt install.php zelf aan), dus wordt hard geweigerd, al
  * kan niemand er toch een geldige vervalsen zonder het lokale geheim.
  *
- * Migratie 037, HERZIEN op verzoek van Harm (na live gebruik): de
+ * Herzien na live gebruik: de
  * e-mailbinding vergelijkt NIET (meer) met het e-mailadres van het
  * account waaraan gekoppeld wordt -- dat brak het normale aankooppatroon
  * (meerdere accounts in 1 WooCommerce-bestelling onder 1 besteladres,
@@ -325,7 +325,7 @@ function koppelLicentieCode(string $tokenRaw, int $gebruikerId, string $bevestig
         return ['success' => false, 'error' => 'Dit tokentype kan niet via "Code koppelen" gekoppeld worden.'];
     }
 
-    // Migratie 037 (herzien): bevestiging van het BESTELADRES, niet van
+    // Bevestiging van het BESTELADRES, niet van
     // het e-mailadres van het doelaccount. Case-insensitief/getrimd.
     $codeEmail = strtolower(trim((string) $payload['email']));
     $ingevoerd = strtolower(trim($bevestigdEmail));
@@ -370,7 +370,7 @@ function koppelLicentieCode(string $tokenRaw, int $gebruikerId, string $bevestig
 }
 
 /**
- * Migratie 044_licentie_registratie, op verzoek van Harm ("Licentiemodel:
+ * ("Licentiemodel:
  * registratie blokkeren zonder geldige licentie"): valideert een
  * activatiecode + bevestigd besteladres VOORDAT er een nieuw account wordt
  * aangemaakt (api/gebruikers.php, de 'aanmaken'-actie) -- dezelfde checks
@@ -381,8 +381,8 @@ function koppelLicentieCode(string $tokenRaw, int $gebruikerId, string $bevestig
  * database staat, i.p.v. het gat dat hiervoor bestond: een compleet
  * onbeperkt aan te maken account zonder ENIGE licentiecontrole, dat er
  * dan wel staat maar nooit kan inloggen (zie controleerLicentieGebruiker()
- * hieronder) -- Harm wilde die "dode accounts"-mogelijkheid dichten, niet
- * alleen de login zelf blokkeren.
+ * hieronder) -- een bewuste keuze om die "dode accounts"-mogelijkheid
+ * te dichten, niet alleen de login zelf te blokkeren.
  *
  * Na deze validatie roept api/gebruikers.php nog steeds koppelLicentieCode()
  * aan (met het echte, dan bekende gebruiker-id) om de daadwerkelijke
@@ -423,13 +423,13 @@ function valideerActivatiecodeVoorRegistratie(string $tokenRaw, string $bevestig
 }
 
 /**
- * Migratie 037: bepaalt of $gebruikerId de RECHTMATIGE ene gratis
+ * Bepaalt of $gebruikerId de RECHTMATIGE ene gratis
  * gebruiker van deze installatie is -- niet zomaar "heeft een geldig
  * vrij_lokaal-token", want een direct in de database bijgezette extra
  * rij (die zonder het lokale geheim toch nooit een kloppende HMAC zou
  * hebben, maar defense-in-depth kost hier bijna niets) telt alleen mee
  * als het de rij met het LAAGSTE gebonden_gebruiker_id is. Gebruikt de
- * nieuwe type-kolom (migratie 037) om niet elke rij te hoeven decoderen
+ * Nieuwe type-kolom om niet elke rij te hoeven decoderen
  * -- alleen de kandidaat-rij wordt daadwerkelijk cryptografisch
  * geverifieerd.
  */
@@ -448,7 +448,7 @@ function isRechtmatigeVrijeGebruiker(int $gebruikerId): bool {
  * licentie pas zichtbaar bij de volgende keer dat iemand een account
  * aanmaakt/bewerkt.
  *
- * Migratie 037: leunt niet meer op users.licentie_vrij (kale boolean) --
+ * Leunt niet meer op users.licentie_vrij (kale boolean) --
  * kijkt naar de daadwerkelijk gekoppelde license_activations-rij, ongeacht
  * of die een echte code of het lokale gratis-token is, en verifieert 'm
  * ELKE keer opnieuw (handtekening/HMAC + voor vendor-codes ook de
@@ -501,7 +501,7 @@ function controleerLicentieGebruiker(int $gebruikerId): array {
         }
         $vrijCache = 1;
     } else {
-        // Migratie 037, HERZIEN: de e-mailbinding wordt alleen nog EENMALIG
+        // Herzien: de e-mailbinding wordt alleen nog EENMALIG
         // bevestigd bij het koppelen (zie koppelLicentieCode()) -- niet meer
         // doorlopend herverifieerd tegen het (huidige) e-mailadres van dit
         // account. Reden: 1 WooCommerce-bestelling kan meerdere accounts
@@ -537,7 +537,7 @@ function markeerLicentieGecontroleerd(): void {
 }
 
 /**
- * Migratie 037: telt hoeveel accounts MOMENTEEL als geldig gratis
+ * Telt hoeveel accounts MOMENTEEL als geldig gratis
  * doorkomen (dus na de "laagste id wint"-regel in
  * isRechtmatigeVrijeGebruiker() zou dit altijd 0 of 1 moeten zijn via de
  * normale applicatiepaden). >1 kan in theorie alleen als iemand met het

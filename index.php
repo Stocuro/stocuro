@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 042, op verzoek van Harm: eenvoudige "waar moet ik heen"-router
+ * Eenvoudige "waar moet ik heen"-router
  * voor STANDALONE installaties (Docker/Synology/eigen Linux-server) die
  * verder niets anders in dezelfde webroot hebben staan. Zonder dit
  * bestand kwam iemand die net het ZIP-bestand had uitgepakt en de kale

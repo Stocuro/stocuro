@@ -1,7 +1,7 @@
 <?php
 /**
- * Configureerbare locatienamen (migratie 005) + onbeperkt aantal extra
- * locaties (migratie 007). Stocuro is generiek bedoeld -- niet elke
+ * Configureerbare locatienamen + onbeperkt aantal extra
+ * Locaties. Stocuro is generiek bedoeld -- niet elke
  * gebruiker heeft een "Interventiekamer" of "Hybride OK" -- dus de vier
  * vaste locatie-"slots" (ik/hybok/kar/berging) zijn herbenoembaar, en
  * daarnaast kunnen er willekeurig veel extra locaties worden toegevoegd
@@ -69,7 +69,7 @@ function actieveLocatieNamenBestelling(): array {
 }
 
 // ---------------------------------------------------------------------
-// Extra locaties (migratie 007) -- onbeperkt aantal, naast de vier vaste
+// Extra locaties -- onbeperkt aantal, naast de vier vaste
 // slots hierboven.
 // ---------------------------------------------------------------------
 function getLocatiesExtra(): array {
@@ -114,7 +114,7 @@ function updateLocatieExtra(int $id, string $naam, bool $actief, ?string $gebrui
     $naam = trim($naam);
     if ($naam === '') return ['success' => false, 'error' => 'Naam is verplicht'];
 
-    // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+    // (locatie-hernoemen cascade-bug):
     // oude naam opzoeken VOORDAT die overschreven wordt, zodat de
     // hernoeming geregistreerd kan worden -- zie includes/hernoemingen.php.
     $stmtOud = db()->prepare('SELECT naam FROM locaties_extra WHERE id = :id');
@@ -148,7 +148,7 @@ function updateLocatieExtra(int $id, string $naam, bool $actief, ?string $gebrui
  * dit wordt aangeroepen vanuit artikelMinMax() binnen een dubbele lus
  * over elk artikel x elke actieve locatie (voorraadStatus()).
  *
- * Migratie 031, op verzoek van Harm: extra locaties gedragen zich altijd
+ * Extra locaties gedragen zich altijd
  * als een kamer (nooit als aanvulbron, zie de bestandskop hierboven) en
  * worden dus ook gegarandeerd dezelfde dag tot hun maximum bijgevuld --
  * hetzelfde argument als bij de vier vaste slots (zie artikelMinMax() in
@@ -214,7 +214,7 @@ function getArtikelLocatieExtraOverzicht(string $ean): array {
     return $result;
 }
 
-// Migratie 031, op verzoek van Harm: geen $min-parameter meer -- extra
+// Geen $min-parameter meer -- extra
 // locaties gedragen zich als een kamer (zie artikelLocatieExtraMinMax()
 // hierboven), min_aantal is verwijderd uit artikel_locatie_extra.
 function setArtikelLocatieExtra(string $ean, int $locatieExtraId, int $max, ?string $kastlocatie): void {
@@ -262,7 +262,7 @@ function locatieNaamVoorSlot(string $slot): ?string {
 }
 
 /**
- * Migratie 043, op verzoek van Harm ("het is niet heel waarschijnlijk dat
+ * ("het is niet heel waarschijnlijk dat
  * ik de hele berging in 1 keer ga scannen"): distincte kastlocatie-
  * waarden binnen ÉÉN specifieke locatie -- in tegenstelling tot
  * getKastlocatieSuggesties() (includes/artikelen.php), die een globale
@@ -315,7 +315,7 @@ function updateLocatieInstelling(string $slot, string $naam, bool $actief, ?stri
         return ['success' => false, 'error' => 'Onbekende locatie-slot'];
     }
 
-    // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+    // (locatie-hernoemen cascade-bug):
     // oude naam opzoeken VOORDAT die overschreven wordt, zie
     // includes/hernoemingen.php.
     $oudeNaam = locatieNaamVoorSlot($slot);

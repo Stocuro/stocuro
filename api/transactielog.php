@@ -10,12 +10,12 @@
  * 7-dagen-grens server-side af, per regel, dus ook een handmatige
  * aanroep buiten de UI om kan geen oudere historie wijzigen.
  *
- * Op verzoek van Harm werkt dit voortaan altijd op de hele scanactie
+ * Werkt dit voortaan altijd op de hele scanactie
  * (alle regels die in één indiening zijn ontstaan), niet meer op één
  * losse regel: een Verplaatsing heeft zo z'n uit- en in-boeking samen
  * terug te draaien/aan te passen, en een Verbruik-scan met bijv. 14
  * gescande barcodes is in één keer te corrigeren i.p.v. 14 losse
- * correcties. batch_id is ofwel een echte batch_id (migratie 014), ofwel
+ * Correcties. batch_id is ofwel een echte batch_id, ofwel
  * 'row-<id>' voor een rij van vóór die migratie (zie
  * getRecenteTransactiesGegroepeerd()) -- in dat geval bestaat de "batch"
  * gewoon uit die ene rij, dus dezelfde acties werken ook op oude data.

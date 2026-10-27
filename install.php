@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 036, op verzoek van Harm: browser-installatiewizard, zodat een
+ * Browser-installatiewizard, zodat een
  * klant het gedistribueerde ZIP-bestand kan uitpakken op de eigen server
  * en zonder command-line-toegang (FTP/cPanel volstaat) een werkende
  * installatie krijgt. Geen internetverbinding nodig -- alles hieronder
@@ -25,7 +25,7 @@
  *      sql/migrations/*.sql-bestanden uit, zonder opnieuw naar
  *      databasegegevens te vragen of een account aan te maken).
  *
- * Op verzoek van Harm (keep it simple): platte HTML-formulieren met een
+ * (keep it simple): platte HTML-formulieren met een
  * volledige pagina-herlaad per stap, geen JavaScript nodig om te kunnen
  * installeren -- robuuster voor een wizard die draait vóórdat er ook maar
  * iets anders werkt.
@@ -34,7 +34,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/installer.php';
-// Migratie 037: maakLokaalVrijToken()/zorgVoorInstantieGeheim()/
+// MaakLokaalVrijToken()/zorgVoorInstantieGeheim()/
 // telAantalGeldigeVrijeTokens() -- zie includes/license.php voor de
 // volledige toelichting op het HMAC-gebaseerde gratis-token.
 require_once __DIR__ . '/includes/license.php';
@@ -162,7 +162,7 @@ if (!$dbWerkt) {
 // Fase B: verbinding werkt -> migraties uitvoeren (idempotent, dus altijd
 // veilig om gewoon opnieuw aan te roepen).
 //
-// Migratie 041, op verzoek van Harm ("tijdens Stocuro installeren zie ik
+// ("tijdens Stocuro installeren zie ik
 // niet wat de status is van database bouwen") -- staat er daadwerkelijk
 // iets te doen, dan tonen we een live-bijwerkende voortgangspagina (elke
 // regel wordt geflusht naar de browser zodra hij ontstaat, via
@@ -246,9 +246,9 @@ if ($aantalGebruikers === 0) {
         } elseif (!$akkoordVoorwaarden) {
             $formFout = 'U dient akkoord te gaan met de Algemene Voorwaarden om de installatie te voltooien.';
         } else {
-            // Migratie 019: is_beheerder=1 -- er moet altijd minstens één
+            // Is_beheerder=1 -- er moet altijd minstens één
             // beheerder-account zijn om verder iets te kunnen instellen.
-            // Migratie 037: licentie_vrij hieronder is alleen nog de
+            // Licentie_vrij hieronder is alleen nog de
             // leesbare CACHE-kolom (start op 0, wordt na het aanmaken van
             // het echte token vlak hieronder op 1 gezet) -- de bron van
             // waarheid is vanaf nu de license_activations-rij, niet meer
@@ -263,7 +263,7 @@ if ($aantalGebruikers === 0) {
             ]);
             $nieuwId = (int) $pdo->lastInsertId();
 
-            // Migratie 037: het ENE gratis token van deze installatie --
+            // Het ENE gratis token van deze installatie --
             // een echt HMAC-ondertekend token (includes/license.php::
             // maakLokaalVrijToken()), geen kale boolean meer.
             $token = maakLokaalVrijToken($nieuwId);
@@ -323,7 +323,7 @@ if ($aantalGebruikers === 0) {
 //   2. een bestaande, PRE-licentiemodel installatie (van vóór migratie
 //      036) is voor het eerst geüpgraded: nog geen enkel geldig
 //      vrij_lokaal-token, en zonder ingrijpen zou NIEMAND meer kunnen
-//      inloggen. Migratie 037 herziet dit verder: de kandidaat krijgt nu
+//      inloggen. Dit wordt hier verder herzien: de kandidaat krijgt nu
 //      een ECHT HMAC-token (niet meer alleen een kale licentie_vrij=1),
 //      en als een EERDERE (migratie-036-only) upgrade al een kale
 //      licentie_vrij=1 had gezet, wordt die persoon met voorrang gekozen
@@ -364,7 +364,7 @@ if ($aantalGeldigeVrij === 0) {
         $grandfatherMelding = '<p style="margin:20px 0;padding:12px;background:#fff3cd;border-radius:6px;">'
             . 'Upgrade herkend: <strong>' . h($kandidaat['naam'])
             . '</strong> (' . h($kandidaat['email']) . ') is zojuist ingesteld als de vrije, gratis gebruiker van '
-            . 'deze installatie, nu met een echt lokaal ondertekend token (migratie 037) in plaats van alleen een '
+            . 'deze installatie, nu met een echt lokaal ondertekend token in plaats van alleen een '
             . 'vinkje. Overige bestaande accounts hebben, net als bij een nieuwe installatie, een eigen '
             . 'activatiecode nodig om te kunnen blijven inloggen (Beheer → Gebruikers → code koppelen).</p>';
     }

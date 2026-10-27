@@ -17,22 +17,22 @@ require_once __DIR__ . '/orders.php';
 require_once __DIR__ . '/audit.php';
 require_once __DIR__ . '/producenten.php';
 require_once __DIR__ . '/upload.php';
-// Migratie 037, op verzoek van Harm: markeerOnbekendeScanVerwerkt() in
+// MarkeerOnbekendeScanVerwerkt() in
 // updateArtikelVeld() hieronder -- zodra een tijdelijk aangemaakt
 // artikel (zie maakArtikelenVoorOnbekendeRegels() in transacties.php)
 // daadwerkelijk bewerkt wordt, verdwijnt het van "Onbekende Producten".
 require_once __DIR__ . '/onbekende_scans.php';
 
 // Algemene, bewerkbare velden op de detailpagina. Poort van ARTIKEL_EDIT_FIELDS.
-// Migratie 028, op verzoek van Harm: 'foto_link' (Drive-link/directe URL)
+// 'foto_link' (Drive-link/directe URL)
 // hier weggehaald -- alles loopt nu via de foto-upload (foto_data/
-// foto_mime, migratie 023), dus een los invulbaar linkveld is verwarrend
+// foto_mime), dus een los invulbaar linkveld is verwarrend
 // naast die upload-knop. Bestaande artikelen die nog een foto_link hebben
-// (van vóór migratie 023) blijven intact in de database en werken nog
+// van vóór deze upload-functie blijven intact in de database en werken nog
 // gewoon als fallback in getProductDetail()/getFotoDataUri() -- dit
 // verwijdert alleen de mogelijkheid om het veld handmatig te BEWERKEN.
 //
-// Op verzoek van Harm ("ik wil daadwerkelijk alles kunnen
+// ("ik wil daadwerkelijk alles kunnen
 // bewerken"): categorie, gs1_raw (de ruwe GS1-scan/"barcode") en de drie
 // kastlocatie-velden (locatie_ik/_hybok/_berging) waren eerder bewust
 // uitgesloten van dit bewerkscherm -- die uitsluiting is nu losgelaten.
@@ -52,8 +52,8 @@ require_once __DIR__ . '/onbekende_scans.php';
 // bewerkscherm i.p.v. het generieke commonFields-mechanisme hier.
 /**
  * Alle al bestaande, niet-lege kastlocatie-waardes (schapaanduiding
- * binnen een kamer, bv. "Plank A3") -- op verzoek van Harm: dit blijft
- * bewust vrije tekst (geen aparte master-tabel, zie migratie 029), maar
+ * binnen een kamer, bv. "Plank A3") -- dit blijft
+ * bewust vrije tekst (geen aparte master-tabel), maar
  * de UI biedt 'm nu als dropdown-met-"nieuwe toevoegen" aan (zelfde
  * patroon als het Producent-veld), zodat bestaande schapaanduidingen
  * hergebruikt worden i.p.v. steeds opnieuw net iets anders getypt te
@@ -84,14 +84,14 @@ function getKastlocatieSuggesties(): array {
 
 const ARTIKEL_EDIT_FIELDS = [
     'productnaam' => 'Productnaam',
-    // Op verzoek van Harm: vrij bewerkbaar, puur referentie -- lookupArtikelen()
+    // : vrij bewerkbaar, puur referentie -- lookupArtikelen()
     // (includes/transacties.php) matcht scans op ean/doos_ean/
     // logistiek_code, NOOIT op gs1_raw, dus wijzigen hiervan heeft geen
     // invloed op het herkennen van toekomstige scans.
     'gs1_raw' => 'GS1-barcode (ruwe scan)',
     'categorie' => 'Categorie',
     'besteltype' => 'Besteltype',
-    // Migratie 031, op verzoek van Harm: kamers (IK/Hybride OK/Kar) hebben
+    // Kamers (IK/Hybride OK/Kar) hebben
     // geen minimum-kolom meer -- ze worden gegarandeerd dezelfde dag tot
     // hun maximum bijgevuld vanuit Berging, dus een reorder-minimum heeft
     // daar nooit een functie gehad. Alleen Berging (de enige locatie die op
@@ -100,18 +100,18 @@ const ARTIKEL_EDIT_FIELDS = [
     'max_hybok' => 'Max Hybride OK',
     'max_kar' => 'Max Kar',
     'min_berging' => 'Min Berging', 'max_berging' => 'Max Berging',
-    // Op verzoek van Harm: kastlocatie (schapaanduiding) per kamer -- eerder alleen
+    // : kastlocatie (schapaanduiding) per kamer -- eerder alleen
     // in te vullen via het migratiescript, nooit handmatig op dit scherm.
     'locatie_ik' => 'Kastlocatie', 'locatie_hybok' => 'Kastlocatie', 'locatie_berging' => 'Kastlocatie',
     'artikelref' => 'Artikelnummer', 'producent' => 'Producent', 'prijs' => 'Prijs per stuk (EUR)',
-    // Migratie 021, op verzoek van Harm: interne code die het ziekenhuis
+    // Interne code die het ziekenhuis
     // zelf toekent (bijv. voor een eigen geprint schaplabel), volledig
     // handmatig -- géén automatische generatie. Losstaand van artikelref
     // hierboven (dat is het nummer van de FABRIKANT). Wordt als derde
     // fallback herkend bij het scannen, zie includes/transacties.php::
     // lookupArtikelen().
     'logistiek_code' => 'Interne logistiekcode (optioneel, voor een eigen schaplabel)',
-    // Migratie 020, op verzoek van Harm: sommige producten (voerdraden,
+    // Sommige producten (voerdraden,
     // sheaths, katheters, PICC-lijnen) worden per stuk verbruikt/
     // verplaatst maar door de leverancier per doos geleverd, met een
     // eigen doos-EAN naast het stuk-EAN. Beide leeg laten = geen
@@ -183,7 +183,7 @@ function productZoekenStatusRang(string $status): int {
 }
 
 /**
- * Migratie 031_product_zoeken, op verzoek van Harm: Product Zoeken toonde
+ * Product Zoeken toonde
  * alleen EAN + naam -- geen voorraad, geen bestelstatus, geen categorie/
  * vervaldatum/waarde/producent, dus je moest voor die info altijd doorklikken
  * naar de productdetailpagina. Nu bevat elke rij dat direct, samengesteld uit
@@ -235,7 +235,7 @@ function getProductList(): array {
             'naam' => $artikel['productnaam'],
             'categorie' => $artikel['categorie'] ?: '',
             'producent' => $artikel['producent'] ?: '',
-            // Migratie 025: levensstatus van het artikel zelf (Actief/Niet
+            // Levensstatus van het artikel zelf (Actief/Niet
             // leverbaar/Niet meer in gebruik) -- puur informatief, deze
             // lijst blijft altijd alle artikelen tonen.
             'status' => $artikel['status'] ?? 'Actief',
@@ -246,10 +246,8 @@ function getProductList(): array {
             'locaties' => $agg['locaties'],
             'orderStatus' => $agg['orderStatus'],
             'eerstvolgendeVervaldatum' => $eerstvolgendeVervaldatum[$ean]['weergave'] ?? null,
-            // Migratie 040_productfotos_uitbreiden, op verzoek van Harm
-            // ("productfoto's uitbreiden waar mogelijk"): Product Zoeken
-            // toont voortaan ook een duimnagelfoto per rij, zelfde
-            // foto_data/foto_mime-encoding (migratie 023) als de
+            // Product Zoeken toont voortaan ook een duimnagelfoto per
+            // rij, zelfde foto_data/foto_mime-encoding als de
             // productdetailpagina. artikelenMap() haalt de hele artikelen-
             // rij al op (SELECT *), dus geen extra query nodig.
             'foto' => !empty($artikel['foto_data'])
@@ -273,7 +271,7 @@ function getArtikelEditData(string $ean): array {
         $commonFields[] = ['key' => $key, 'label' => $label, 'value' => $artikel[$key] ?? ''];
     }
 
-    // Extra (door de gebruiker toegevoegde) locaties, migratie 007: zelfde
+    // Extra (door de gebruiker toegevoegde) locaties, zelfde
     // generieke commonFields-mechanisme als hierboven, met een
     // gesynthetiseerde sleutel extra_max_{id}. updateArtikelVeld() herkent
     // dat patroon en routeert naar artikel_locatie_extra i.p.v. een kolom
@@ -281,7 +279,7 @@ function getArtikelEditData(string $ean): array {
     // hoeft het bewerk-formulier zelf (renderProductEdit in app.js) niets
     // te weten van extra locaties -- het rendert gewoon elk veld dat hier
     // in commonFields staat.
-    // Migratie 031, op verzoek van Harm: geen extra_min_{id} meer -- extra
+    // Geen extra_min_{id} meer -- extra
     // locaties gedragen zich als een kamer (zie includes/locaties.php),
     // dus alleen nog een maximum, geen minimum.
     foreach (getArtikelLocatieExtraOverzicht($artikel['ean']) as $loc) {
@@ -294,7 +292,7 @@ function getArtikelEditData(string $ean): array {
         $specFields[] = ['key' => $key, 'label' => $label, 'value' => $specs[$key] ?? ''];
     }
 
-    // Migratie 025, op verzoek van Harm: status ('Actief'/'Niet leverbaar'/
+    // Status ('Actief'/'Niet leverbaar'/
     // 'Niet meer in gebruik') + optionele vervanger-koppeling, alleen
     // betekenisvol bij 'Niet leverbaar'. mogelijkeVervangers is de lijst
     // waaruit renderProductEdit() de vervanger-select vult -- zichzelf en
@@ -328,7 +326,7 @@ function getArtikelEditData(string $ean): array {
         'vervangendArtikelNaam' => $vervangendArtikelNaam,
         'vervangendArtikelEan' => $vervangendArtikelEan,
         'mogelijkeVervangers' => $mogelijkeVervangers,
-        // Migratie 023: in-database productfoto, apart van de
+        // In-database productfoto, apart van de
         // foto_link-tekstveld in commonFields hierboven -- de frontend
         // toont dit als voorbeeld met een eigen upload/verwijder-knop
         // (zelfde patroon als users/producent_contacten, maar dan
@@ -342,7 +340,7 @@ function getArtikelEditData(string $ean): array {
 const ARTIKEL_STATUSSEN = ['Actief', 'Niet leverbaar', 'Niet meer in gebruik'];
 
 /**
- * Wijzigt de status van een artikel (migratie 025, op verzoek van Harm),
+ * Wijzigt de status van een artikel,
  * met optionele vervanger-koppeling. vervangendArtikelId wordt alleen
  * bewaard als de nieuwe status 'Niet leverbaar' is -- bij elke andere
  * status wordt het veld hard teruggezet naar NULL, zodat een oude
@@ -418,8 +416,9 @@ const ARTIKEL_EAN_CASCADE_TABELLEN = [
 ];
 
 /**
- * Wijzigt de EAN van een bestaand artikel (migratie 029, op verzoek van
- * Harm: "ik wil daadwerkelijk alles kunnen bewerken, ook EAN/barcode").
+ * Wijzigt de EAN van een bestaand artikel -- bewust mogelijk gemaakt
+ * zodat ook EAN/barcode volledig bewerkbaar is, niet alleen de overige
+ * productvelden.
  *
  * Dit is BEWUST geen gewoon veld in ARTIKEL_EDIT_FIELDS/updateArtikelVeld()
  * hierboven: de EAN is niet alleen een kolom op artikelen, het is ook de
@@ -488,14 +487,13 @@ function wijzigArtikelEan(string $huidigeEan, string $nieuweEanRuw, ?string $geb
 }
 
 /**
- * Slaat een productfoto rechtstreeks in de database op (migratie 023, op
- * uitdrukkelijk verzoek van Harm: "deze foto moet gewoon in de database
- * worden opgeslagen" -- een bewust ander patroon dan de op-schijf-opslag
- * voor gebruikers/producent-contactpersonen, zie includes/upload.php).
- * Hergebruikt decodeFotoDataUrl() voor dezelfde MIME/echte-afbeelding-
- * validatie als die op-schijf-route -- maar met PRODUCT_FOTO_MAX_BYTES
- * i.p.v. de kleinere avatar-grens (FOTO_MAX_BYTES), op uitdrukkelijk
- * verzoek van Harm: productfoto's mogen geen kunstmatige maximale
+ * Slaat een productfoto rechtstreeks in de database op -- bewust een
+ * ander patroon dan de op-schijf-opslag voor gebruikers/producent-
+ * contactpersonen (zie includes/upload.php): deze foto hoort gewoon in
+ * de database opgeslagen te worden. Hergebruikt decodeFotoDataUrl() voor
+ * dezelfde MIME/echte-afbeelding-validatie als die op-schijf-route --
+ * maar met PRODUCT_FOTO_MAX_BYTES i.p.v. de kleinere avatar-grens
+ * (FOTO_MAX_BYTES): productfoto's mogen geen kunstmatige maximale
  * grootte hebben (zie includes/upload.php).
  */
 function uploadArtikelFoto(string $ean, string $dataUrl, ?string $gebruikerNaam = null): array {
@@ -522,7 +520,7 @@ function uploadArtikelFoto(string $ean, string $dataUrl, ?string $gebruikerNaam 
     }
 }
 
-/** Verwijdert de in-database productfoto (migratie 023). Laat foto_link ongemoeid. */
+/** Verwijdert de in-database productfoto. Laat foto_link ongemoeid. */
 function verwijderArtikelFoto(string $ean, ?string $gebruikerNaam = null): array {
     try {
         $eanNorm = normalizeEAN($ean);
@@ -569,13 +567,13 @@ function updateArtikelVeld(string $ean, array $updates, ?string $gebruikerNaam =
         $specsChanged = false;
         $written = 0;
         // locatieExtraId => max -- verzameld tijdens de lus, pas na de lus
-        // in artikel_locatie_extra weggeschreven. Migratie 031, op verzoek
-        // van Harm: geen 'min' meer -- extra locaties gedragen zich als een
-        // kamer (zie includes/locaties.php), alleen nog een maximum.
+        // in artikel_locatie_extra weggeschreven. Geen 'min' meer -- extra
+        // locaties gedragen zich als een kamer (zie includes/locaties.php),
+        // alleen nog een maximum.
         $extraLocatieUpdates = [];
 
         foreach ($updates as $key => $value) {
-            // doos_ean (migratie 020) moet op dezelfde manier genormaliseerd
+            // Doos_ean moet op dezelfde manier genormaliseerd
             // worden als artikelen.ean zelf (zie ean.php), anders matcht een
             // gescande doos-barcode 'm straks niet in lookupArtikelen().
             // Leeg = geen doosverpakking (kolom terug naar NULL).
@@ -630,14 +628,14 @@ function updateArtikelVeld(string $ean, array $updates, ?string $gebruikerNaam =
             logAudit($gebruikerNaam, 'product_bewerkt', 'artikel', $eanNorm, implode(',', array_keys($updates)));
         }
 
-        // Bugfix, op verzoek van Harm: zelfde "direct in Producenten-lijst"
+        // Bugfix: zelfde "direct in Producenten-lijst"
         // fix als addArtikel() hierboven, nu ook voor het bewerkscherm --
         // zie includes/producenten.php::vindOfMaakProducent().
         if (array_key_exists('producent', $updates)) {
             vindOfMaakProducent($updates['producent'], $gebruikerNaam);
         }
 
-        // Migratie 037, op verzoek van Harm: dit artikel kan een tijdelijk
+        // Dit artikel kan een tijdelijk
         // aangemaakt product zijn (zie maakArtikelenVoorOnbekendeRegels()
         // in includes/transacties.php, aangemaakt met de omschrijving die
         // een laborant tijdens het scannen invulde) -- een beheerder die
@@ -654,8 +652,7 @@ function updateArtikelVeld(string $ean, array $updates, ?string $gebruikerNaam =
 }
 
 /**
- * Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
- * ("Productpagina: grafiek historisch verbruik"): verbruik (transactietype
+ * Productpagina: grafiek historisch verbruik. Verbruik (transactietype
  * 'Verbruik') van dit ene EAN, gegroepeerd per kalendermaand -- zelfde
  * PHP-side DateTime->format('Y-m')-bucketing als getVerbruiksTrends()
  * (includes/dashboards.php, de bron van het bestaande "Verbruik & Trends"-
@@ -709,7 +706,7 @@ function getProductDetail(string $ean): array {
     $prijs = (float) $artikel['prijs'];
     $orderStatusMap = openOrderStatusMap();
 
-    // Migratie 025, op verzoek van Harm: status + vervanger-info voor de
+    // Status + vervanger-info voor de
     // banner bovenaan de productpagina (zie renderProductDetail() in
     // assets/js/app.js). De vervanger wordt hier alleen als naam+EAN
     // (voor de doorklik-link) meegegeven -- het BEWERKEN van de status/
@@ -732,22 +729,21 @@ function getProductDetail(string $ean): array {
         'status' => $artikel['status'] ?? 'Actief',
         'vervangendArtikelNaam' => $vervangendArtikelNaam,
         'vervangendArtikelEan' => $vervangendArtikelEan,
-        // Migratie 020: alleen gezet als dit product ook per doos wordt
+        // Alleen gezet als dit product ook per doos wordt
         // geleverd, zie ARTIKEL_EDIT_FIELDS hierboven.
         'doosEan' => $artikel['doos_ean'] ?? null,
         'eenhedenPerDoos' => !empty($artikel['eenheden_per_doos']) ? (int) $artikel['eenheden_per_doos'] : null,
-        // Migratie 023: als er een in-database opgeslagen foto is (op
-        // uitdrukkelijk verzoek van Harm, i.p.v. alleen een link), krijgt
-        // die voorrang boven foto_link. foto_link blijft de fallback voor
-        // producten die alleen nog een Drive-link hebben.
+        // Als er een in-database opgeslagen foto is (niet alleen een
+        // link), krijgt die voorrang boven foto_link. foto_link blijft
+        // de fallback voor producten die alleen nog een Drive-link hebben.
         'foto' => !empty($artikel['foto_data'])
             ? 'data:' . ($artikel['foto_mime'] ?: 'image/jpeg') . ';base64,' . base64_encode($artikel['foto_data'])
             : getFotoDataUri($artikel['foto_link']),
         'categorie' => $artikel['categorie'] ?? '',
         'besteltype' => $artikel['besteltype'],
         'producent' => $artikel['producent'] ?? '',
-        // vindProducentVoorNaam() (includes/producenten.php, migratie 012):
-        // koppelt op naam (case-insensitief) aan een producent met
+        // vindProducentVoorNaam() (includes/producenten.php): koppelt op
+        // naam (case-insensitief) aan een producent met
         // contactgegevens, als die er is -- artikelen.producent zelf blijft
         // gewoon vrije tekst, dit is puur een optionele verrijking voor de
         // "contactgegevens bekijken"-link op de productpagina.
@@ -766,7 +762,7 @@ function getProductDetail(string $ean): array {
         'bestelhistorie' => [],
     ];
 
-    // Migratie 026, op verzoek van Harm: het Min/Max Advies-overzicht zelf
+    // Het Min/Max Advies-overzicht zelf
     // verbergt no-op- en recent genegeerde voorstellen (beheersbaarheid),
     // maar hier op de productdetailpagina wil hij het voorstel per locatie
     // ALTIJD blijven zien, ongeacht dat -- vandaar $inclusiefAlles=true.
@@ -784,7 +780,7 @@ function getProductDetail(string $ean): array {
             'locatie' => $row['locatie'], 'huidig' => $row['huidig'], 'min' => $row['min'],
             'max' => $row['max'], 'status' => $row['voorraadStatus'],
             'kastlocatie' => $row['kastlocatie'], 'waarde' => $row['waarde'],
-            // Migratie 031, op verzoek van Harm: kamers hebben geen eigen
+            // Kamers hebben geen eigen
             // minimum meer (altijd 0, geen aparte kolom) -- de frontend
             // gebruikt deze vlag om 'min'/'adviesMin' voor kamers als "n.v.t."
             // te tonen i.p.v. een misleidende 0.
@@ -802,7 +798,7 @@ function getProductDetail(string $ean): array {
         $result['loten'][] = [
             'lot' => $lot['lot'], 'vervaldatum' => $lot['vervaldatum'], 'locatie' => $lot['locatie'],
             'huidig' => $lot['huidig'], 'status' => $lot['status'],
-            // Migratie 035, op verzoek van Harm: barcode zichtbaar maken +
+            // Barcode zichtbaar maken +
             // exacte (SQL-vorm) vervaldatum voor het "Bewerken"-formulier
             // op de productdetailpagina (zie includes/lot_correcties.php
             // en renderProductDetail() in assets/js/app.js).
@@ -811,7 +807,7 @@ function getProductDetail(string $ean): array {
         ];
     }
 
-    // Migratie 043_loten_herindelen, op verzoek van Harm ("loten op
+    // ("loten op
     // voorraad herindelen per lot"): voorraadLot() heeft zelf GEEN
     // ORDER BY (zie de toelichting daar -- puur een GROUP BY-aggregatie),
     // dus als hetzelfde lotnummer op meerdere locaties tegelijk voorkomt
@@ -827,12 +823,11 @@ function getProductDetail(string $ean): array {
         return strnatcasecmp((string) $a['locatie'], (string) $b['locatie']);
     });
 
-    // aangemaakt_door (migratie 010): naam van de ingelogde gebruiker die
+    // Aangemaakt_door: naam van de ingelogde gebruiker die
     // de scan deed -- apart van 'specialist' (voor wie de procedure was),
-    // zie includes/transacties.php::verwerkScan(). Op verzoek van Harm nu
+    // Zie includes/transacties.php::verwerkScan(). nu
     // ook zichtbaar op de productpagina, niet alleen in Recent Transactions.
-    // Migratie 042_transactiehistorie_scanmoment, op verzoek van Harm
-    // ("transactiehistorie groeperen per scanmoment"): stond hier voorheen
+    // Transactiehistorie groeperen per scanmoment: stond hier voorheen
     // als platte lijst van losse transactielog-regels -- een scan die
     // meerdere lots in één actie boekte (bijv. Verbruik of Verplaatsing van
     // 3 verschillende batchcodes tegelijk) toonde dus 3 losse rijen voor
@@ -842,7 +837,7 @@ function getProductDetail(string $ean): array {
     // getRecenteTransactiesGegroepeerd() (Recente Transacties).
     $result['transacties'] = getTransactieHistorieVoorEanGeclusterd($eanNorm, 20);
 
-    // Op verzoek van Harm: totalen per specialist, niet meer uitgesplitst
+    // : totalen per specialist, niet meer uitgesplitst
     // per procedure (dat uitgesplitste overzicht staat al op het
     // Verbruik per Procedure-dashboard; hier is juist "hoeveel heeft deze
     // specialist in totaal van dit product verbruikt" de vraag).
@@ -853,7 +848,7 @@ function getProductDetail(string $ean): array {
          ORDER BY total DESC"
     );
     $stmt->execute([':ean' => $eanNorm]);
-    // Migratie 039, op verzoek van Harm (voorbereiding gebruikersnaam
+    // (voorbereiding gebruikersnaam
     // bewerkbaar maken, zie includes/hernoemingen.php): de GROUP BY
     // hierboven groepeert nog op de RUWE, ten tijde van elke transactie
     // opgeslagen specialistnaam -- na een naamswijziging zou dit overzicht
@@ -870,13 +865,12 @@ function getProductDetail(string $ean): array {
         $result['verbruik_stats'][] = ['specialist' => $naam, 'total' => $total];
     }
 
-    // Migratie 044_productpagina_verbruiksgrafiek, op verzoek van Harm
-    // ("Productpagina: grafiek historisch verbruik"): maandelijks verbruik
-    // van dit ene product, voor de nieuwe grafiek op de productdetailpagina
+    // Maandelijks verbruik van dit ene product, voor de grafiek op de
+    // productdetailpagina
     // -- zie getProductVerbruikPerMaand() hieronder.
     $result['verbruikPerMaand'] = getProductVerbruikPerMaand($eanNorm);
 
-    // Bestelhistorie (op verzoek van Harm): ALLE orders ooit voor dit EAN,
+    // Bestelhistorie : ALLE orders ooit voor dit EAN,
     // niet alleen de openstaande (zoals includes/orders.php::getOpenOrders()
     // dat voor het Open Orders-dashboard doet) -- hier is juist de
     // volledige geschiedenis nuttig, inclusief al lang geleden volledig
@@ -887,7 +881,7 @@ function getProductDetail(string $ean): array {
         $besteld = (int) $o['hoeveelheid_besteld'];
         $ontvangen = (int) $o['hoeveelheid_ontvangen'];
         $result['bestelhistorie'][] = [
-            // Op verzoek van Harm: id meesturen zodat elke rij op de
+            // : id meesturen zodat elke rij op de
             // productpagina doorklikbaar is naar de bestaande order-
             // detailpagina (showOrderDetail(), zie assets/js/app.js) --
             // voorheen alleen platte tekst, dus geen manier om de volledige
@@ -914,13 +908,14 @@ function getProductDetail(string $ean): array {
  * voor EAN) OF ean rechtstreeks, plus optioneel de overige
  * ARTIKEL_EDIT_FIELDS-sleutels en categorie-specifieke specs-sleutels.
  *
- * Bugfix op verzoek van Harm: GS1 AI(240) ("interne artikelreferentie")
+ * Bugfix: GS1 AI(240) ("interne artikelreferentie")
  * werd hier eerder automatisch overgenomen in artikelref ("Artikelnummer"),
  * en had daarbij zelfs voorrang boven een handmatig ingevuld artikelref.
- * Dat klopt niet met hoe Harm dit veld gebruikt: het is bij hem geen
- * fabrikantcode uit de barcode, maar een eigen nummer dat hij zelf
- * toekent/invult, dus mag nooit automatisch (of stilzwijgend overschreven)
- * uit een scan komen. parseGS1Raw() blijft AI(240) nog steeds parsen (voor
+ * Dat klopt niet met hoe dit veld in de praktijk gebruikt wordt: het is
+ * geen fabrikantcode uit de barcode, maar een eigen nummer dat de
+ * gebruiker zelf toekent/invult, dus mag nooit automatisch (of
+ * stilzwijgend overschreven) uit een scan komen. parseGS1Raw() blijft
+ * AI(240) nog steeds parsen (voor
  * eventueel toekomstig gebruik elders), maar de waarde wordt hier niet meer
  * gebruikt voor artikelref.
  */
@@ -946,12 +941,12 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
         if (isset($data[$key]) && $data[$key] !== '') $specs[$key] = $data[$key];
     }
 
-    // Doosverpakking (migratie 020, optioneel): alleen invullen als dit
+    // Doosverpakking (optioneel): alleen invullen als dit
     // product ook per doos geleverd wordt -- zie ARTIKEL_EDIT_FIELDS
     // hierboven voor de volledige toelichting. doos_ean genormaliseerd op
     // dezelfde manier als het stuk-EAN zelf; eenheden_per_doos < 2 telt
     // als "geen doosverpakking" (NULL).
-    // Migratie 026 (op verzoek van Harm): de doosverpakking is ook meestal
+    // De doosverpakking is ook meestal
     // een GS1-barcode -- dus mag ook via een eigen GS1-scan (doos_gs1_raw)
     // worden ingevoerd, met dezelfde GS1-voorrang-boven-handmatig-EAN-
     // logica als het stuk-EAN hierboven. Geen van beide dwingt de ander
@@ -968,11 +963,11 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
     }
     $eenhedenPerDoos = (!empty($data['eenheden_per_doos']) && (int) $data['eenheden_per_doos'] >= 2)
         ? (int) $data['eenheden_per_doos'] : null;
-    // Migratie 021: handmatige interne code, geen normalisatie (vrije tekst).
+    // Handmatige interne code, geen normalisatie (vrije tekst).
     $logistiekCode = !empty($data['logistiek_code']) ? trim((string) $data['logistiek_code']) : null;
 
     try {
-        // Migratie 031, op verzoek van Harm: min_ik/min_hybok/min_kar
+        // Min_ik/min_hybok/min_kar
         // bestaan niet meer (kamers hebben geen eigen minimum meer, zie
         // artikelMinMax() in includes/voorraad.php) -- alleen min_berging
         // blijft een echt reorder-minimum.
@@ -1006,7 +1001,7 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
             logAudit($gebruikerNaam, 'product_toegevoegd', 'artikel', $ean, "naam=$productnaam");
         }
 
-        // Bugfix, op verzoek van Harm: een nieuw getypte producentnaam
+        // Bugfix: een nieuw getypte producentnaam
         // (Artikel Toevoegen -> Producent -> "+ Nieuwe producent
         // toevoegen...") moet direct in de Producenten-lijst verschijnen,
         // niet pas de eerstvolgende keer dat iemand toevallig hetzelfde

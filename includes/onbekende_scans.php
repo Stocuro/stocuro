@@ -1,6 +1,6 @@
 <?php
 /**
- * Beheer van onbekende_scans (migratie 022): het scherm "Onbekende
+ * Beheer van onbekende_scans: het scherm "Onbekende
  * Producten" onder Admin. De ruwe rijen worden weggeschreven door
  * loggeOnbekendeScans() in includes/transacties.php, hier alleen de
  * leeskant (gegroepeerd per EAN, voor het overzicht) en het afronden
@@ -18,7 +18,7 @@ require_once __DIR__ . '/../config/database.php';
  * Per groep: alle omschrijvingen (nieuwste eerst, voor context), het
  * aantal keer gezien, en de locaties waar het is opgedoken.
  *
- * Migratie 037, op verzoek van Harm: sinds
+ * Sinds
  * maakArtikelenVoorOnbekendeRegels() (includes/transacties.php) bestaat
  * er voor zo'n regel vrijwel altijd al een echt artikel (met de
  * omschrijving als tijdelijke naam) -- 'heeftArtikel' laat de frontend

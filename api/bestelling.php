@@ -6,7 +6,7 @@
  * endpoint voor allebei (migratieplan hoofdstuk 6).
  * Verwacht JSON-body: { ean, aantal, kanaal, opmerking? }
  *
- * Migratie 033, op verzoek van Harm ("een bestelling die wordt geplaatst
+ * ("een bestelling die wordt geplaatst
  * krijgt ook altijd de koppeling van degene die besteld"): besteller is
  * niet langer een vrij, door de client meegestuurd tekstveld -- net als
  * addEenmaligeBestelling() al deed, is dit altijd de ingelogde gebruiker

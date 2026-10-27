@@ -1,6 +1,6 @@
 <?php
 /**
- * Leaderboard-statistieken (migratie 010): meeste scans per gebruiker,
+ * Leaderboard-statistieken: meeste scans per gebruiker,
  * meeste procedures per specialist/type, optioneel gefilterd op één
  * procedure_type. Alleen lezen, iedereen ingelogd mag dit opvragen --
  * geen gevoelige data (geen patiëntnummers e.d.), puur tellingen.
@@ -8,7 +8,7 @@
  * GET -> { periode?: 'week'|'maand'|'kwartaal'|'jaar'|'totaal' (default 'maand'),
  *          procedure_type?: string }
  *
- * Migratie 032_picc_rotatie, op verzoek van Harm: ?actie=picc_rotatie geeft
+ * ?actie=picc_rotatie geeft
  * i.p.v. de periodetelling hierboven de rotatievolgorde terug ("wie is aan
  * de beurt") -- zelfde scherm-recht ('leaderboard'), want het is dezelfde
  * onderliggende transactielog-data, alleen anders gesorteerd. Zie

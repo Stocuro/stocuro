@@ -4,7 +4,7 @@
  * Bevat een persoonsgegeven (patientnummer) -- apiRequireLogin() is
  * hier bewust geen "kan later", zie migratieplan hoofdstuk 8.
  *
- * Gast-modus (op verzoek van Harm): GET werkt ook zonder in te loggen
+ * Gast-modus : GET werkt ook zonder in te loggen
  * (net als elk ander leesendpoint, zie apiRequireLogin() in
  * includes/api_helpers.php), zodat Open Orders en het One-off Order-
  * overzicht ook voor een gast zichtbaar zijn. Maar patientnummer blijft
@@ -20,11 +20,11 @@
  * GET  ?mijn=1  -> voor elke ingelogde gebruiker met het
  *                  'mijn-bestellingen'-scherm-recht -- de eigen aanvragen
  *                  (besteller = ingelogde gebruiker OF specialist =
- *                  ingelogde gebruiker, migratie 044) voor de Home-widget
- *                  "Mijn Bestellingen". Migratie 033 beperkte dit ooit tot
- *                  besteller-only; migratie 044, op verzoek van Harm
- *                  ("alle bestellingen VOOR en DOOR de persoon die is
- *                  ingelogd"), voegt specialist er weer bij -- zie
+ *                  ingelogde gebruiker) voor de Home-widget
+ *                  "Mijn Bestellingen". Dit beperkte zich ooit tot
+ *                  Besteller-only; later verbreed naar
+ *                  "alle bestellingen VOOR en DOOR de persoon die is
+ *                  ingelogd", dus specialist telt er ook weer bij -- zie
  *                  includes/eenmalige_bestellingen.php::
  *                  getEigenEenmaligeBestellingen().
  * GET  (anders) -> laatste 200 aanvragen, alle statussen
@@ -32,9 +32,9 @@
  *      gs1_raw?, omschrijvingen?, procedure_type?, specialist?, besteller?,
  *      opmerking?, status } -> volledige bewerking vanaf de detailpagina,
  *      inclusief status (Aangevraagd/Besteld/Ontvangen/Gebruikt/
- *      Retourneren, migratie 013) -- geen apart status-only endpoint meer,
+ *      Retourneren) -- geen apart status-only endpoint meer,
  *      zie includes/eenmalige_bestellingen.php::updateEenmaligeBestelling().
- *      Migratie 032, op verzoek van Harm: gs1_raw wordt itemized verwerkt
+ *      Gs1_raw wordt itemized verwerkt
  *      (elke gescande regel een eigen EAN/lot/vervaldatum, i.p.v.
  *      samengevoegd) -- bevat gs1_raw regels met een onbekende EAN zonder
  *      omschrijving, dan slaat deze aanroep NIETS op (ook de andere
@@ -72,11 +72,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         apiTry(fn() => addEenmaligeBestelling($body, $user['naam']));
     }
 } else {
-    // Migratie 024: dit bestand bedient drie schermen (Eenmalige
+    // Dit bestand bedient drie schermen (Eenmalige
     // Bestelling zelf, Open Orders en Mijn Bestellingen), dus welk
     // scherm-recht nodig is hangt af van de branch, niet van het bestand.
     if (($_GET['mijn'] ?? '') === '1') {
-        // Migratie 033, op verzoek van Harm: niet langer beperkt tot een
+        // Niet langer beperkt tot een
         // specialist/laborant-account -- getEigenEenmaligeBestellingen()
         // matcht nu op besteller (wie de aanvraag plaatste), niet meer op
         // specialist (voor wie hij klinisch is), dus is dit voor elke

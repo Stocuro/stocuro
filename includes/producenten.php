@@ -1,11 +1,11 @@
 <?php
 /**
  * Producenten: contactgegevens (website, algemeen e-mailadres/telefoon,
- * onbeperkt aantal contactpersonen) per leverancier/fabrikant -- op
- * verzoek van Harm, om snel een contactpersoon te kunnen vinden bij een
- * product zonder dat los op te hoeven zoeken.
+ * onbeperkt aantal contactpersonen) per leverancier/fabrikant -- om snel
+ * een contactpersoon te kunnen vinden bij een product zonder dat los op
+ * te hoeven zoeken.
  *
- * BEWUSTE KEUZE (zie ook migratie 012): artikelen.producent blijft een
+ * BEWUSTE KEUZE: artikelen.producent blijft een
  * vrij tekstveld, geen FK. Deze tabel wordt puur op NAAM (case-
  * insensitief, getrimd) gekoppeld aan die tekst, via
  * vindProducentVoorNaam() -- gebruikt door
@@ -73,7 +73,7 @@ function getProducentDetail(int $id): array {
     $p = $stmt->fetch();
     if (!$p) return ['error' => 'Producent niet gevonden'];
 
-    // Migratie 029, op verzoek van Harm: opmerking (vrij tekstveld) erbij --
+    // Opmerking (vrij tekstveld) erbij --
     // was er al op producent-niveau, ontbrak nog per contactpersoon zelf.
     $stmt = db()->prepare('SELECT id, naam, functie, telefoon, email, foto, opmerking FROM producent_contacten WHERE producent_id = :id ORDER BY naam');
     $stmt->execute([':id' => $id]);
@@ -111,7 +111,7 @@ function vindProducentVoorNaam(?string $naam): ?array {
 }
 
 /**
- * Bugfix, op verzoek van Harm: "Bij het aanmaken van een nieuwe producent,
+ * Bugfix: "Bij het aanmaken van een nieuwe producent,
  * dan moet deze direct worden opgenomen in producenten." Vóór deze fix
  * werd een via Artikel Toevoegen/bewerken getypte "nieuwe producent"-naam
  * ALLEEN op artikelen.producent (vrije tekst) weggeschreven -- de
@@ -192,9 +192,9 @@ function updateProducent(int $id, array $data, ?string $gebruikerNaam = null): a
 }
 
 function deleteProducent(int $id, ?string $gebruikerNaam = null): array {
-    // ON DELETE CASCADE (migratie 012) ruimt producent_contacten voor deze
+    // ON DELETE CASCADE ruimt producent_contacten voor deze
     // producent automatisch mee op in de database -- maar de bijbehorende
-    // foto-bestanden (migratie 015) staan op schijf, niet in de database,
+    // Foto-bestanden staan op schijf, niet in de database,
     // dus die worden hier expliciet opgeruimd vóórdat de rijen verdwijnen
     // (anders blijven het wees-bestanden onder uploads/producenten/).
     // artikelen.producent is losse tekst en wordt hier bewust niet
@@ -214,7 +214,7 @@ function deleteProducent(int $id, ?string $gebruikerNaam = null): array {
 }
 
 /**
- * $data['foto'] (optioneel, migratie 015): een data-URL uit de
+ * $data['foto'] (optioneel): een data-URL uit de
  * bestandskiezer in de frontend, zie includes/upload.php. Weglaten of
  * leeg laten betekent gewoon "geen foto bij aanmaken", geen fout.
  */
@@ -239,7 +239,7 @@ function addProducentContact(int $producentId, array $data, ?string $gebruikerNa
         ':telefoon' => trim($data['telefoon'] ?? '') ?: null,
         ':email' => trim($data['email'] ?? '') ?: null,
         ':foto' => $foto,
-        // Migratie 029, op verzoek van Harm: vrij notitieveld per contactpersoon.
+        // Vrij notitieveld per contactpersoon.
         ':opmerking' => trim($data['opmerking'] ?? '') ?: null,
     ]);
     $id = (int) db()->lastInsertId();

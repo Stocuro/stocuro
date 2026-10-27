@@ -3,26 +3,26 @@
  * Vaste waarden die in meerdere includes/api-bestanden terugkomen.
  *
  * Locatienamen staan hier NIET meer (voorheen LOCATIES/LOCATIES_BESTELLING) --
- * die zijn sinds migratie 005 instelbaar via de database, zie
+ * die zijn instelbaar via de database, zie
  * includes/locaties.php (actieveLocatieNamen()/actieveLocatieNamenBestelling()).
  */
 
 declare(strict_types=1);
 
-// Migratie 037, op verzoek van Harm: puur informatief label (audit/debug),
+// Puur informatief label (audit/debug),
 // meegestuurd in elk nieuw licentietoken (includes/license.php) zodat je
 // achteraf kunt zien onder welke versie een token is uitgegeven. Telt
 // BEWUST niet mee in de HMAC-sleutel zelf -- dat zou bij elke versiebump
-// (en Harm doet die voortaan bij elke wijziging, ook kleine) het bestaande
+// (en die worden voortaan bij elke wijziging opgehoogd, ook kleine) het bestaande
 // gratis-token van de eigen installatie ongeldig maken.
 //
-// Migratie 054, op verzoek van Harm ("dit is dan officieel mijn eerste
+// ("dit is dan officieel mijn eerste
 // release"): versienummering reset naar 1.0.0 als markering van de eerste
 // officiële, live release. Alle eerdere 1.x/2.x-nummers in README.md ##
 // Features zijn de ontwikkelgeschiedenis van vóór deze release. Vanaf nu
 // zijn nieuwe versies kleine, doorlopende aanpassingen (patch/minor-bumps
 // op 1.0.0), zie README.md.
-const APP_VERSION = '1.0.9';
+const APP_VERSION = '1.0.12';
 
 const TRANSACTIETYPES_INKOMEND = ['Ontvangst', 'Verplaatsing in', 'Telling: overschot'];
 const TRANSACTIETYPES_UITGAAND = ['Verbruik', 'Verplaatsing uit', 'Retournering', 'Telling: tekort', 'Vervallen'];
@@ -35,7 +35,7 @@ const ORDER_STATUS_OPEN = ['In bestelling', 'Gedeeltelijk ontvangen'];
 const TELLING_INTERVAL_MAANDEN = 3;
 
 // -----------------------------------------------------------------------
-// Min/Max Advies (migratie 011, includes/minmax.php): instelbare knoppen
+// Min/Max Advies (zie includes/minmax.php): instelbare knoppen
 // voor de vuistregel-berekening. Zie includes/minmax.php voor de volledige
 // toelichting op de formule zelf.
 // -----------------------------------------------------------------------
@@ -70,7 +70,7 @@ const MINMAX_MIN_WEKEN_HISTORIE = 8;
 // Hoe ver terug verbruiksdata wordt meegenomen voor het advies.
 const MINMAX_LOOKBACK_WEKEN = 52;
 
-// Migratie 026, op verzoek van Harm: hoe lang een genegeerd advies
+// Hoe lang een genegeerd advies
 // (ean+locatie) verborgen blijft op het Min/Max Advies-overzicht voordat
 // het daar -- als het dan nog steeds geldt -- opnieuw wordt aangeboden.
 // Alleen dit overzichtsscherm respecteert dit; de productdetailpagina
@@ -79,7 +79,7 @@ const MINMAX_LOOKBACK_WEKEN = 52;
 // includes/artikelen.php::getProductDetail()).
 const MINMAX_NEGEER_MAANDEN = 3;
 
-// Migratie 030_groep_landingsscherm, op verzoek van Harm: "recent verbruik"
+// "recent verbruik"
 // op het nieuwe Beschikbaarheid-scherm (includes/beschikbaarheid.php) --
 // hoeveel dagen terug meetellen. 90 dagen (~1 kwartaal) geeft een arts een
 // representatief beeld zonder dat een lang-vervlogen piek het beeld

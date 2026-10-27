@@ -7,8 +7,8 @@
  * afboeken via het verbruikformulier met reden 'vervaldatum bereikt',
  * zie api/scan_verbruik.php) -- niet door iets expliciet aan te vinken.
  *
- * Migratie 026 (op verzoek van Harm): dit was één scherm "Tasks" met alle
- * vier onderdelen door elkaar. Harm's punt: Onbekende scans en Onvolledige
+ * Dit was één scherm "Tasks" met alle
+ * vier onderdelen door elkaar. Kernpunt: Onbekende scans en Onvolledige
  * productgegevens zijn taken voor een BEHEERDER (databeheer: ontbrekend
  * artikel aanmaken, ontbrekende productvelden aanvullen), terwijl
  * Voorraadtelling verschuldigd en Over de vervaldatum taken voor een
@@ -20,14 +20,14 @@
  * 1. Kastcontrole (LABORANT): elke actieve locatie hoort periodiek (om de
  *    TELLING_INTERVAL_MAANDEN maanden, config/constants.php) fysiek
  *    geteld te worden. locatie_instellingen/locaties_extra houden
- *    laatst_geteld_op bij (migratie 008); een locatie zonder telling
+ *    Laatst_geteld_op bij; een locatie zonder telling
  *    binnen dat interval verschijnt hier als open taak.
  * 2. Vervallen voorraad (LABORANT): lots die al over de vervaldatum zijn
  *    EN nog voorraad hebben (afgeleid uit transactielog, dezelfde
  *    optelling als voorraadLot() in voorraad.php) -- een seintje om die
  *    fysiek te gaan scannen en af te boeken, geen handeling die hier zelf
  *    gebeurt.
- * 3. Onbekende scans (BEHEERDER, migratie 022): barcodes die tijdens een
+ * 3. Onbekende scans (BEHEERDER): barcodes die tijdens een
  *    scan niet herkend werden, met een omschrijving van de scanner --
  *    "afronden" gebeurt door het artikel aan te maken op het Admin-scherm
  *    "Onbekende Producten", zie includes/onbekende_scans.php.
@@ -36,7 +36,7 @@
  *    houdbaarheidsdata, prijs, categorie, doosverpakking-inconsistentie)
  *    -- "afronden" gebeurt door het veld op de productpagina aan te
  *    vullen, zie includes/compleetheid.php.
- * 5. Ontbrekende batchgegevens (LABORANT): op verzoek van Harm na een
+ * 5. Ontbrekende batchgegevens (LABORANT): 
  *    gemeld praktijkprobleem (geen eigen schema-migratie nodig -- puur een
  *    extra afgeleide query op de bestaande transactielog-kolommen). Een
  *    doos die alleen op de GTIN-barcode is ontvangen (de batch-/
@@ -125,7 +125,7 @@ function getVervallenProductenTaken(): array {
 /**
  * EAN+locatie-combinaties die nog voorraad hebben, maar waarvan GEEN
  * enkele scan tot nu toe een lot- of vervaldatum heeft vastgelegd (beide
- * NULL) -- op verzoek van Harm: een doos die alleen op de
+ * NULL) -- : een doos die alleen op de
  * GTIN-barcode is binnengeboekt (batch-/vervaldatumcode gemist of
  * bewust overgeslagen via de scanhulp, zie assets/js/app.js) levert
  * voorraad op zonder dat er ooit een lot/vervaldatum bekend is geworden.
@@ -180,7 +180,7 @@ function getTakenLaborant(): array {
 /**
  * Beheerder-dashboard: databeheer (onbekende barcodes, onvolledige
  * productgegevens, ontbrekende batch-/vervaldatumgegevens).
- * Migratie 031, op verzoek van Harm: "ontbrekende batch-/vervaldatumgegevens"
+ * "ontbrekende batch-/vervaldatumgegevens"
  * stond eerder bij Laborant-taken, maar is een databeheerkwestie (iemand
  * heeft ooit een doos gescand zonder lot/vervaldatum mee te scannen) --
  * geen fysiek vloerwerk zoals de rest van dat dashboard, dus verplaatst

@@ -6,7 +6,7 @@
  * als de andere dashboards (trends.php e.d.) -- geen rolbeperking buiten
  * ingelogd zijn.
  *
- * Migratie 026: ?periode=... (1m/3m/6m/1j/2j/totaal, zie
+ * ?periode=... (1m/3m/6m/1j/2j/totaal, zie
  * AFBOEKINGEN_PERIODES) filtert op tijdstempel -- ontbreekt de parameter,
  * dan blijft het gedrag zoals voorheen (volledige historie).
  */

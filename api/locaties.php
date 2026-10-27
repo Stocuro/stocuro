@@ -1,7 +1,7 @@
 <?php
 /**
- * Locatie-instellingen: de vier vaste slots (migratie 005) + een
- * onbeperkt aantal extra locaties (migratie 007). Iedereen ingelogd mag
+ * Locatie-instellingen: de vier vaste slots + een onbeperkt aantal extra
+ * locaties. Iedereen ingelogd mag
  * de lijst opvragen (nodig voor scanformulieren); alleen beheerder mag
  * namen wijzigen, een locatie uitzetten of een nieuwe toevoegen.
  *

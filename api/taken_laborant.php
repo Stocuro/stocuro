@@ -1,7 +1,7 @@
 <?php
 /**
- * Laborant-takenoverzicht (migratie 026, later uitgebreid op verzoek van
- * Harm met een derde categorie -- geen eigen schema-migratie nodig, puur
+ * Laborant-takenoverzicht (later uitgebreid met een derde categorie --
+ * geen eigen schema-migratie nodig, puur
  * een extra afgeleide query): kastcontrole + vervallen voorraad +
  * ontbrekende batchgegevens, alle drie afgeleid, zie
  * includes/taken.php::getTakenLaborant(). Alleen lezen

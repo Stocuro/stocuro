@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../includes/api_helpers.php';
 require_once __DIR__ . '/../includes/artikelen.php';
-// Migratie 035, op verzoek van Harm: lot_corrigeren hieronder heeft zowel
+// Lot_corrigeren hieronder heeft zowel
 // corrigeerLot() (includes/lot_correcties.php) als logTransactieWijziging()
 // (includes/transacties.php, wordt daarbinnen aangeroepen) nodig -- geen
 // van beide komt automatisch mee via artikelen.php hierboven.
@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     apiRequireWriteAccess();
     $body = readJsonBody();
     $ean = $body['ean'] ?? '';
-    // Migratie 023: foto_bijwerken/foto_verwijderen zijn evengoed het
+    // Foto_bijwerken/foto_verwijderen zijn evengoed het
     // bewerken van dit artikel als de reguliere veldenupdate hieronder,
     // dus bewust hetzelfde apiRequireWriteAccess()-niveau -- geen apart
     // beheerdersrecht, in tegenstelling tot de foto-acties op
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($actie === 'foto_verwijderen') {
         apiTry(fn() => verwijderArtikelFoto($ean, $user['naam']));
     } elseif ($actie === 'status_bijwerken') {
-        // Migratie 025, op verzoek van Harm: status ('Actief'/'Niet
+        // Status ('Actief'/'Niet
         // leverbaar'/'Niet meer in gebruik') + optionele vervanger-
         // koppeling naar een BESTAAND artikel. Het "nieuw artikel
         // aanmaken als vervanger"-pad loopt niet hierlangs -- dat gaat via
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $vervangendArtikelId = !empty($body['vervangend_artikel_id']) ? (int) $body['vervangend_artikel_id'] : null;
         apiTry(fn() => setArtikelStatus($ean, (string) ($body['status'] ?? 'Actief'), $vervangendArtikelId, $user['naam']));
     } elseif ($actie === 'lot_corrigeren') {
-        // Migratie 035, op verzoek van Harm: lot/vervaldatum van een
+        // Lot/vervaldatum van een
         // specifiek, mogelijk verkeerd geparst lot rechtzetten -- zie
         // includes/lot_correcties.php::corrigeerLot() voor waarom dit
         // bewust een aparte, niet aan de 7-dagen-grens gebonden actie is.
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user['naam']
         ));
     } elseif ($actie === 'ean_wijzigen') {
-        // Op verzoek van Harm: EAN is bewust géén gewoon veld
+        // : EAN is bewust géén gewoon veld
         // in de generieke 'updates'-route hieronder -- zie de toelichting bij
         // wijzigArtikelEan()/ARTIKEL_EAN_CASCADE_TABELLEN in
         // includes/artikelen.php voor waarom dat een aparte, transactionele

@@ -3,7 +3,7 @@
  * Verplaatsadvies: signaleert voorraad die op de HUIDIGE locatie dreigt
  * te vervallen omdat die locatie het product te langzaam verbruikt, en
  * beveelt de locatie aan waar hetzelfde product sneller wordt verbruikt
- * (dus waarschijnlijker op tijd wordt opgemaakt) -- op verzoek van Harm,
+ * (dus waarschijnlijker op tijd wordt opgemaakt) -- 
  * expliciet gekozen basis "overdatum-risico -> snellere locatie
  * (aanbevolen)" i.p.v. bijvoorbeeld een min/max-tekort op de doellocatie.
  *
@@ -36,7 +36,7 @@
  * klik kunt overnemen.
  *
  * 'Berging' (het hoofdmagazijn) komt NOOIT in aanmerking als aanbevolen
- * DOELlocatie -- op verzoek van Harm: Berging is de locatie waar alles
+ * DOELlocatie -- : Berging is de locatie waar alles
  * juist VANDAAN moet worden verbruikt (de kamers vullen zich intern bij
  * vanuit Berging), niet een plek om naartoe te verplaatsen. Bovendien is
  * Berging's gemeten "verbruik" (Verbruik + Verplaatsing uit, zie

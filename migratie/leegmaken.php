@@ -74,12 +74,12 @@ $ookGebruikers = in_array('--met-gebruikers', $args, true) || ($_GET['met_gebrui
 
 // Geen enkele van deze tabellen heeft een FOREIGN KEY naar een andere
 // tabel in deze lijst behalve artikel_locatie_extra -> locaties_extra
-// (migratie 007) en producent_contacten -> producenten (migratie 012) --
+// En producent_contacten -> producenten --
 // FOREIGN_KEY_CHECKS uitzetten voorkomt dat de volgorde hieronder
 // daarvoor zou moeten uitmaken.
 $tabellen = [
     'transactielog_wijzigingen', 'transactielog',
-    // Migratie 035: hoort bij specifieke (nu verdwijnende) scans -- zie
+    // Hoort bij specifieke (nu verdwijnende) scans -- zie
     // toelichting in leegmaken.sql.
     'gs1_correcties',
     'orders', 'eenmalige_bestellingen',

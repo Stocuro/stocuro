@@ -12,14 +12,14 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/ean.php';
 require_once __DIR__ . '/audit.php';
 require_once __DIR__ . '/gs1_parser.php';
-// Migratie 032, op verzoek van Harm: het itemized-GS1-scannen hieronder
+// Het itemized-GS1-scannen hieronder
 // (verwerkEenmaligeBestellingGs1Regels()) hergebruikt bewust dezelfde
 // bekend/onbekend-splitsing en two-phase onbekende-scan-afhandeling als
 // Ontvangst/Verbruik/Verplaatsing (splitsBekendOnbekend()/
 // ontbrekendeOmschrijvingen()/loggeOnbekendeScans()/lookupArtikelen()),
 // i.p.v. dat opnieuw uit te vinden.
 require_once __DIR__ . '/transacties.php';
-// Migratie 033, op verzoek van Harm: de "echte" Ontvangst-boeking
+// De "echte" Ontvangst-boeking
 // hieronder (verwerkEenmaligeBestellingGs1Regels()) moet altijd op de
 // Berging-locatie geboekt worden -- locatieNaamVoorSlot() zoekt de
 // huidige (herbenoembare) naam van die vaste locatie-slot op.
@@ -27,7 +27,7 @@ require_once __DIR__ . '/locaties.php';
 
 /**
  * Leest een optioneel gescand GS1-barcode-blok ('gs1_raw' in $data) en
- * zet die om naar ean/lot/vervaldatum/aantal -- op verzoek van Harm: bij
+ * Zet die om naar ean/lot/vervaldatum/aantal -- : bij
  * het AANMAKEN van een eenmalige bestelling is het product er nog niet,
  * dus wordt hier nog helemaal niets gescand (gs1_raw blijft leeg, dan
  * komt deze functie niet verder dan de lege fallback hieronder). Pas
@@ -41,20 +41,20 @@ require_once __DIR__ . '/locaties.php';
  * wordt overschreven met leeg bij een bewerking die niet over de
  * barcode zelf gaat (zie updateEenmaligeBestelling()).
  *
- * 'aantal' (nieuw, op verzoek van Harm): het aantal ontvangen stuks
+ * 'aantal' (nieuw, ): het aantal ontvangen stuks
  * wordt NIET meer los ingetypt, maar afgeleid uit het aantal gescande
  * GS1-regels zelf (één regel = één stuk) -- null wanneer er geen nieuwe
  * scan is meegestuurd, zodat de aanroeper weet dat de bestaande
  * hoeveelheid (de oorspronkelijk aangevraagde) ongemoeid moet blijven.
  *
- * Meerdere regels (migratie 018): bij een grotere hoeveelheid komt een
+ * Meerdere regels: bij een grotere hoeveelheid komt een
  * bestelling vaak in meerdere dozen/lots tegelijk binnen, dus mag
  * gs1_raw -- net als bij Ontvangst/Verbruik/Verplaatsing -- meerdere
  * barcodes bevatten (één per regel, zelfde preg_split-conventie als
  * includes/transacties.php). Het EAN komt van de eerste regel die er één
  * oplevert (één bestelling is één product, dus dat zou toch overal
  * hetzelfde EAN moeten zijn). Lotnummers worden allemaal verzameld en
- * kommagescheiden opgeslagen (lot is nu VARCHAR(255), zie migratie 018)
+ * kommagescheiden opgeslagen (lot is nu VARCHAR(255))
  * -- vervaldatum blijft een enkele DATE-kolom, dus daar wordt de
  * VROEGSTE van alle gescande regels in bewaard: dat is de datum die er
  * het meest toe doet om te weten (het eerste risico), niet een lijst.
@@ -72,7 +72,7 @@ function gs1VoorEenmaligeBestelling(array $data): array {
             if ($line === '') continue;
 
             $parsed = parseGS1Raw($line);
-            // Migratie 035: zelfde correctietoepassing als
+            // Zelfde correctietoepassing als
             // splitsBekendOnbekend() (includes/transacties.php) -- deze
             // functie is los daarvan een eigen parseGS1Raw()-aanroep,
             // zie de toelichting bovenaan dit bestand.
@@ -104,7 +104,7 @@ function gs1VoorEenmaligeBestelling(array $data): array {
 }
 
 // =====================================================================
-// EENMALIGE_BESTELLING_ITEMS (migratie 032), op verzoek van Harm: EAN,
+// EENMALIGE_BESTELLING_ITEMS: EAN,
 // Lot en Vervaldatum werden hierboven (gs1VoorEenmaligeBestelling())
 // samengevoegd tot ÉÉN rij, terwijl een eenmalige bestelling best uit
 // meerdere VERSCHILLENDE producten kan bestaan -- dat liet de gegevens
@@ -134,7 +134,7 @@ function getEenmaligeBestellingItems(int $bestellingId): array {
         return [
             'id' => (int) $r['id'], 'ean' => $r['ean'], 'productnaam' => $r['productnaam'],
             'lot' => $r['lot'], 'vervaldatum' => $r['vervaldatum'], 'onbekend' => (bool) $r['onbekend'],
-            // Migratie 033, op verzoek van Harm: lifecycle van dit item --
+            // Lifecycle van dit item --
             // 'ontvangen' (standaard) / 'verbruikt' / 'retour', bijgewerkt
             // door koppelScanAanEenmaligeBestellingItems() (includes/
             // transacties.php) zodra een latere Verbruik- of Retour-scan op
@@ -193,7 +193,7 @@ function herbereekenEenmaligeBestellingRollup(int $bestellingId): void {
  * wel-herkende regels) en komt de aanroeper terug met welke regels dat
  * nog missen.
  *
- * Migratie 033, op verzoek van Harm: "het is namelijk ingescand en dan
+ * "het is namelijk ingescand en dan
  * weten we dat het op voorraad is" -- een HERKENDE regel boekt hier niet
  * meer alleen een itemrij, maar ook een echte Ontvangst-transactie in
  * het normale voorraadsysteem (transactielog, via insertTransactieRegel()
@@ -266,7 +266,7 @@ function verwerkEenmaligeBestellingGs1Regels(int $bestellingId, string $gs1RawBl
 }
 
 /**
- * Migratie 033, op verzoek van Harm: tegenhanger van de "onbekend"-tak
+ * Tegenhanger van de "onbekend"-tak
  * hierboven. Zodra een beheerder alsnog een artikel aanmaakt voor een
  * EAN die eerder als onbekend in een (of meerdere) eenmalige
  * bestelling(en) was gescand -- zie showArtikelToevoegen()/
@@ -281,7 +281,7 @@ function verwerkEenmaligeBestellingGs1Regels(int $bestellingId, string $gs1RawBl
  * enkele openstaande regel voor deze EAN bestaat, gebeurt er simpelweg
  * niets.
  *
- * Migratie 041, op verzoek van Harm: "koppel besteltype Eenmalig sowieso
+ * "koppel besteltype Eenmalig sowieso
  * aan producten die worden gescand/aangemaakt binnen Eenmalige
  * bestellingen". Als deze functie hieronder openstaande regels vindt,
  * bestaat dit artikel per definitie ALLEEN omdat het ooit binnen een
@@ -342,7 +342,7 @@ function addEenmaligeBestelling(array $data, ?string $gebruikerNaam = null): arr
     if ($patientnummer === '') return ['success' => false, 'error' => 'Patiëntnummer is verplicht'];
     if ($omschrijving === '') return ['success' => false, 'error' => 'Artikelomschrijving is verplicht'];
 
-    // Licentiecontrole (op verzoek van Harm, "Licentiemodel: geen naam-
+    // Licentiecontrole ("Licentiemodel: geen naam-
     // registratie zonder licentie"): een eenmalige bestelling mag niet op
     // naam van een specialist/laborant zonder geldige licentie gezet
     // worden -- zelfde redenering en cache-kolom als bij
@@ -374,8 +374,8 @@ function addEenmaligeBestelling(array $data, ?string $gebruikerNaam = null): arr
         ':ean' => $gs1['ean'], ':lot' => $gs1['lot'], ':vervaldatum' => $gs1['vervaldatum'],
         ':hoeveelheid' => $hoeveelheid,
         ':procedure' => $data['procedure_type'] ?? null, ':specialist' => $data['specialist'] ?? null,
-        // Besteller is altijd de ingelogde gebruiker (op verzoek van
-        // Harm) -- niet een vrij, door de client meegestuurd tekstveld.
+        // Besteller is altijd de ingelogde gebruiker -- niet een vrij,
+        // door de client meegestuurd tekstveld.
         // $gebruikerNaam komt van apiRequireWriteAccess() in
         // api/eenmalige_bestelling.php, dus is er in de praktijk altijd;
         // de $data-terugval is alleen voor eventuele directe aanroepen
@@ -425,7 +425,7 @@ function getEenmaligeBestellingen(): array {
 /**
  * Eén eenmalige bestelling, met alle velden (incl. opmerking) -- voor de
  * detailpagina die je bereikt door in Open Orders op een regel te
- * klikken. Op verzoek van Harm: niet meer inline de status wijzigen
+ * Klikken. : niet meer inline de status wijzigen
  * vanuit het overzicht zelf, maar eerst doorklikken naar de volledige
  * inhoud (ook de opmerkingen, die nergens in het overzicht zelf pasten)
  * en van daaruit bewerken.
@@ -438,9 +438,9 @@ function getEenmaligeBestellingDetail(int $id): array {
 
     $result = eenmaligeBestellingNaarArray($r);
 
-    // Contactadres voor de "Mail specialist"-knop (migratie 016, sinds
-    // migratie 019 opgezocht in 'users' i.p.v. de opgeheven
-    // 'specialisten'-tabel -- elke specialist/laborant IS nu een account
+    // Contactadres voor de "Mail specialist"-knop, opgezocht in 'users'
+    // i.p.v. de opgeheven 'specialisten'-tabel -- elke specialist/
+    // laborant IS nu een account
     // met een echt inlog-e-mailadres, dus is dit vrijwel altijd gevuld,
     // in plaats van het vroegere losse, vaak lege contactveld). Opgezocht
     // via de naam (geen FK, zie de toelichting bovenin dit bestand), en
@@ -456,7 +456,7 @@ function getEenmaligeBestellingDetail(int $id): array {
         $result['specialistEmail'] = $email !== false && $email !== null && $email !== '' ? $email : null;
     }
 
-    // Migratie 032, op verzoek van Harm: itemlijst (per gescande GS1-regel
+    // Itemlijst (per gescande GS1-regel
     // een eigen EAN/product/lot/vervaldatum) voor de bewerkpagina, naast
     // de vlakke ean/lot/vervaldatum-samenvatting die hierboven al in
     // $result zit (blijft bestaan voor andere weergaven, zie
@@ -472,18 +472,18 @@ function getEenmaligeBestellingDetail(int $id): array {
  * exact dezelfde regel als "Volledig ontvangen" die een reguliere order
  * daar al uit laat verdwijnen (includes/orders.php::openOrderStatusMap()).
  * 'Gebruikt' = het artikel is in de procedure gebruikt (succesvol
- * afgerond); 'Retourneren' (migratie 013) = het artikel is NIET gebruikt
+ * Afgerond); 'Retourneren' = het artikel is NIET gebruikt
  * en gaat terug (ook afgerond, alleen niet als verbruik).
  */
 const EENMALIGE_BESTELLING_AFGEROND = ['Gebruikt', 'Retourneren'];
 const EENMALIGE_BESTELLING_STATUSSEN = ['Aangevraagd', 'Besteld', 'Ontvangen', 'Gebruikt', 'Retourneren'];
 
 /**
- * Volledige bewerking (op verzoek van Harm: niet alleen de status, maar
+ * Volledige bewerking (niet alleen de status, maar
  * "de eigenschappen" wijzigen vanaf de detailpagina) -- alle velden
  * inclusief status in één keer, geen los status-only endpoint meer.
  *
- * Migratie 032, op verzoek van Harm: gs1VoorEenmaligeBestelling() (die
+ * Gs1VoorEenmaligeBestelling() (die
  * alles samenvoegde tot één ean/lot/vervaldatum) wordt hier niet meer
  * gebruikt -- een nieuwe scan (gs1_raw) wordt nu, VÓÓR er iets anders op
  * deze rij wordt opgeslagen, itemized verwerkt door
@@ -514,7 +514,7 @@ function updateEenmaligeBestelling(int $id, array $data, ?string $gebruikerNaam 
         }
     }
 
-    // Licentiecontrole (op verzoek van Harm), zelfde als addEenmaligeBestelling()
+    // Licentiecontrole, zelfde als addEenmaligeBestelling()
     // hierboven -- maar hier alleen afdwingen als het specialist-veld
     // daadwerkelijk WIJZIGT naar een andere naam zonder geldige licentie.
     // Een bestaande, al langer toegewezen specialist die inmiddels
@@ -562,7 +562,7 @@ function updateEenmaligeBestelling(int $id, array $data, ?string $gebruikerNaam 
  * Eenmalige bestellingen die nog "open" staan (niet Gebruikt/Retourneren),
  * met dagenOpen erbij -- voor het Open Orders-overzicht, naast (niet
  * i.p.v.) de reguliere orders uit includes/orders.php::getOpenOrders().
- * Op verzoek van Harm: eenmalige bestellingen waren nergens in een
+ * : eenmalige bestellingen waren nergens in een
  * overzicht met statusbeheer zichtbaar, alleen in een platte, alleen-
  * lezen lijst binnen het aanvraagformulier zelf.
  */
@@ -586,18 +586,17 @@ function getOpenEenmaligeBestellingen(): array {
 }
 
 /**
- * Eigen eenmalige bestellingen (migratie 019, herzien in migratie 033, nu
- * weer verbreed in migratie 044 op verzoek van Harm: "de widget Mijn
- * Bestellingen moet alle bestellingen VOOR en DOOR de persoon die is
- * ingelogd laten zien"). Matcht dus weer op BEIDE rollen: BESTELLER (wie
- * de aanvraag heeft geplaatst) EN specialist (voor wie de aanvraag
- * klinisch is) -- migratie 033 liet specialist expres vallen omdat de
- * volledige Bestellingen-tabel/'mijn'-filterchip (bestellingenNormaliseer()
- * in assets/js/app.js) toen bewust naar besteller-only ging, maar dat is
- * een ander scherm met een andere, expliciet gekozen betekenis van "van
- * mij" -- deze functie hier voedt uitsluitend de Home-widget, en Harm wil
- * daar zowel zijn eigen aanvragen als de aanvragen die klinisch voor hem
- * bestemd zijn in terugzien. Besteller/specialist kunnen dus onafhankelijk
+ * Eigen eenmalige bestellingen: "de widget Mijn Bestellingen moet alle
+ * bestellingen VOOR en DOOR de persoon die is ingelogd laten zien".
+ * Matcht dus op BEIDE rollen: BESTELLER (wie de aanvraag heeft geplaatst)
+ * EN specialist (voor wie de aanvraag klinisch is) -- dat is bewust
+ * breder dan de volledige Bestellingen-tabel/'mijn'-filterchip
+ * (bestellingenNormaliseer() in assets/js/app.js), die juist naar
+ * besteller-only gaat, maar dat is een ander scherm met een andere,
+ * expliciet gekozen betekenis van "van mij" -- deze functie hier voedt
+ * uitsluitend de Home-widget, die zowel de eigen aanvragen als de
+ * aanvragen die klinisch voor de ingelogde gebruiker bestemd zijn moet
+ * tonen. Besteller/specialist kunnen dus onafhankelijk
  * van elkaar matchen (OR, geen AND) en een rij die op allebei matcht
  * (besteller = specialist = deze gebruiker) komt vanzelfsprekend maar
  * één keer terug (geen UNION met dubbele rijen, gewoon één WHERE-conditie).

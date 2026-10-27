@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/auth.php';
 
 /**
- * Gast-modus (op verzoek van Harm): een bezoeker die niet is ingelogd
+ * Gast-modus : een bezoeker die niet is ingelogd
  * krijgt hier geen redirect meer naar login.php, maar een synthetische
  * gast-gebruiker (currentUserOfGast(), includes/auth.php) -- alle
  * dashboards/formulieren/beheerschermen blijven bekijkbaar zonder
@@ -14,14 +14,14 @@ require_once __DIR__ . '/includes/auth.php';
  */
 $user = currentUserOfGast();
 $isGast = $user['rol'] === ROL_GAST;
-// Migratie 024: welke schermen deze gebruiker mag zien, één keer per
+// Welke schermen deze gebruiker mag zien, één keer per
 // paginalaad berekend en meegestuurd in CURRENT_USER hieronder -- de
 // frontend (showHome() in assets/js/app.js) filtert het menu hierop i.p.v.
 // op losse rol-checks. Live berekend (niet in de sessie gecachet), zodat
 // een rechten-wijziging door een beheerder meteen ingaat bij de
 // eerstvolgende paginalaad, zonder opnieuw te hoeven inloggen.
 $user['schermen'] = gebruikerSchermen($user['id'], (bool) $user['is_beheerder'], $isGast);
-// Migratie 030_groep_landingsscherm, op verzoek van Harm: welk scherm deze
+// Welk scherm deze
 // gebruiker direct na inloggen moet zien i.p.v. altijd de volledige
 // menupagina -- alleen gezet als al zijn/haar groepen het daar
 // ondubbelzinnig over eens zijn (zie gebruikerLandingScherm()). null
@@ -42,8 +42,8 @@ $user['landingScherm'] = gebruikerLandingScherm($user['id'], (bool) $user['is_be
 <body>
   <div class="header">
     <div class="header-bar">
-      <h1><a href="https://www.stocuro.com/" target="_blank" rel="noopener" class="header-logo-link">📊 Stocuro</a></h1>
-      <!-- Migratie 054, op verzoek van Harm ("release nummer terug zien in
+      <h1><a href="https://stocuro.com/" target="_blank" rel="noopener" class="header-logo-link">📊 Stocuro</a></h1>
+      <!-- ("release nummer terug zien in
            de bovenbalk"): APP_VERSION (config/constants.php) is al het
            bestaande, centrale versielabel -- hier puur zichtbaar gemaakt
            naast het logo, geen nieuwe bron van waarheid. -->
@@ -58,8 +58,7 @@ $user['landingScherm'] = gebruikerLandingScherm($user['id'], (bool) $user['is_be
             <span class="logout-link" id="logoutLink" data-gast="1"><span data-i18n="loginLink">Log in</span></span>
           </span>
         <?php else: ?>
-          <!-- Migratie 044_licentie_registratie, op verzoek van Harm
-               ("profielpagina"): de naam is nu een apart klikbaar element
+          <!-- "Profielpagina": de naam is nu een apart klikbaar element
                (-> showProfiel(), assets/js/app.js) i.p.v. onderdeel van de
                ene logout-span hieronder -- klikken op de naam zelf logt dus
                niet meer uit, alleen "Sign out" doet dat nog. Beide spans
@@ -83,7 +82,7 @@ $user['landingScherm'] = gebruikerLandingScherm($user['id'], (bool) $user['is_be
     </div>
   <?php endif; ?>
   <!--
-    Migratie 030_groep_landingsscherm, op verzoek van Harm: "Mobiel/Tablet
+    "Mobiel/Tablet
     is niet van toepassing, alles gebeurt vanaf een computer" -- daarom
     een vaste desktop-zijbalk i.p.v. bv. een mobiele onderbalk. #content
     blijft het enige element dat alle render*()-functies in assets/js/

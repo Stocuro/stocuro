@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 026/028, op verzoek van Harm: beheerde categorielijst +
+ * Beheerde categorielijst +
  * categorie-specifieke eigenschappen (bijv. Ballon -> diameter/lengte/
  * compatibel voerdraad, Stent -> diameter/lengte/schacht/...). Vervangt de
  * eerder hardcoded categorielijst (assets/js/app.js, Artikel Toevoegen) en
@@ -36,13 +36,13 @@ function getCategorieenMetSpecs(): array {
         ];
     }
 
-    // Op verzoek van Harm: "Bij nieuwe producten alle eigenschappen als
+    // : "Bij nieuwe producten alle eigenschappen als
     // dropdown aanbieden voor uniformiteit, met de optie een nieuwe aan
     // te maken" -- elke eigenschap krijgt hier de lijst van al gebruikte
     // waarden mee (afgeleid uit artikelen.specs, zie specWaardenPerCategorie()
     // hieronder), zodat Artikel Toevoegen/bewerken die als <select> kunnen
     // tonen -- zelfde dropdown-met-"__nieuw__"-patroon als Producent en
-    // Kastlocatie (migratie 026/029), i.p.v. een los tekstveld per product
+    // Kastlocatie, i.p.v. een los tekstveld per product
     // waar iedereen zijn eigen spelling/notatie in typt (bijv. "6mm" naast
     // "6 mm" naast "6.0mm" voor wat feitelijk dezelfde diameter is).
     $waardenPerCat = specWaardenPerCategorie();

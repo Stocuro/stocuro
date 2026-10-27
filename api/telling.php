@@ -7,7 +7,7 @@
  * gast-modus, ook geen gast -- zie apiRequireWriteAccess()).
  *
  * GET  -> { locatie } (querystring)               systeemaantallen voor die locatie
- * GET  -> { locatie, actie: 'kastlocaties' }       Migratie 043: kastlocatie-keuzelijst
+ * GET  -> { locatie, actie: 'kastlocaties' }       kastlocatie-keuzelijst
  *                                                  voor die locatie (zie
  *                                                  kastlocatiesVoorLocatie() in
  *                                                  includes/locaties.php) -- zelfde
@@ -16,7 +16,7 @@
  *                                                  (getPiccRotatie).
  * POST -> { locatie, gs1_raw, kastlocatie? }       verwerkt de telling, boekt
  *                                                  afwijkingen. kastlocatie
- *                                                  (migratie 043, optioneel): beperkt
+ *                                                  (optioneel): beperkt
  *                                                  de telling tot één kast binnen de
  *                                                  locatie -- zie verwerkTelling().
  */
@@ -25,7 +25,7 @@ require_once __DIR__ . '/../includes/api_helpers.php';
 require_once __DIR__ . '/../includes/telling.php';
 
 $user = apiRequireLogin();
-// Migratie 026: kastcontrole is het Laborant-taken-dashboard, niet het
+// Kastcontrole is het Laborant-taken-dashboard, niet het
 // Beheerder-taken-dashboard (zie includes/schermen.php).
 apiRequireScherm('taken-laborant');
 
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = readJsonBody();
     $locatie = (string) ($body['locatie'] ?? '');
     $gs1Raw = (string) ($body['gs1_raw'] ?? '');
-    // Migratie 043: leeg/ontbrekend blijft null (= volledige locatie),
+    // Leeg/ontbrekend blijft null (= volledige locatie),
     // verwerkTelling() normaliseert dit verder zelf ook nog eens.
     $kastlocatie = isset($body['kastlocatie']) && trim((string) $body['kastlocatie']) !== ''
         ? (string) $body['kastlocatie'] : null;

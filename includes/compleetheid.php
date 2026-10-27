@@ -1,7 +1,7 @@
 <?php
 /**
- * Compleetheidscheck productgegevens (takenlijst-item, op verzoek van
- * Harm): welke artikelen missen essentiële informatie? Geen aparte
+ * Compleetheidscheck productgegevens (takenlijst-item): welke artikelen
+ * missen essentiële informatie? Geen aparte
  * tabel/vlaggen -- net als de rest van includes/taken.php wordt dit
  * live afgeleid uit de bestaande artikelen-/transactielog-data, dus er
  * is niets om handmatig bij te houden of te laten verlopen.
@@ -24,7 +24,7 @@
  *                       stilzwijgend (geen fout, gewoon een 0 in elk totaal).
  *   - categorie       : onzichtbaar in categorie-gebaseerde schermen.
  *   - doosInconsistent: alleen doos_ean OF alleen eenheden_per_doos
- *                       ingevuld (migratie 020) -- dan werkt de
+ *                       Ingevuld -- dan werkt de
  *                       doosherkenning bij het scannen stil niet zoals
  *                       bedoeld.
  */
@@ -43,7 +43,7 @@ function eansMetHoudbaarheidData(): array {
 
 /**
  * Per ean: max-status en kastlocatie-status op actieve extra locaties
- * (migratie 007). Migratie 031, op verzoek van Harm: extra locaties hebben
+ *. extra locaties hebben
  * geen minimum-kolom meer (ze gedragen zich als een kamer, zie
  * includes/locaties.php) -- "compleet" betekent hier dus alleen nog een
  * ingesteld maximum.
@@ -73,7 +73,7 @@ function artikelLocatieExtraCompleetheid(): array {
  *         categorie, doosInconsistent.
  */
 function getOnvolledigeProducten(): array {
-    // Migratie 031, op verzoek van Harm: min_ik/min_hybok/min_kar bestaan
+    // Min_ik/min_hybok/min_kar bestaan
     // niet meer (kamers hebben geen eigen minimum meer) -- "minMax"
     // hieronder checkt voor kamers dus alleen nog max, en voor Berging
     // (die wél een echt reorder-minimum heeft) blijft min meetellen.
@@ -94,10 +94,10 @@ function getOnvolledigeProducten(): array {
 
         if (trim((string) ($a['producent'] ?? '')) === '') $ontbrekend[] = 'producent';
 
-        // Bugfix (op verzoek van Harm): controleerde voorheen alleen
-        // foto_link (de oude, verwijderde Drive-link-invoer, zie migratie
-        // 023/taak #258). Sinds de fotoUpload naar foto_data (MEDIUMBLOB,
-        // migratie 023) is verhuisd, staat foto_link bij nieuw/bewerkte
+        // Bugfix: controleerde voorheen alleen
+        // foto_link (de oude, verwijderde Drive-link-invoer, zie taak
+        // #258). Sinds de fotoUpload naar foto_data (MEDIUMBLOB)
+        // is verhuisd, staat foto_link bij nieuw/bewerkte
         // producten altijd leeg -- ook als er wel degelijk een foto is
         // geupload. Daardoor werd elk product met alleen een foto_data
         // ten onrechte als "foto ontbreekt" op de Takenlijst gezet. Nu

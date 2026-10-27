@@ -15,7 +15,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/ean.php';
 require_once __DIR__ . '/logging.php';
 require_once __DIR__ . '/audit.php';
-// Migratie 039: actueleNaam() -- getTransactiesRondOrder() hieronder toont
+// ActueleNaam() -- getTransactiesRondOrder() hieronder toont
 // transactielog.locatie, die na een locatie-hernoeming nog de oude naam kan
 // bevatten. Zie includes/hernoemingen.php voor de achtergrond.
 require_once __DIR__ . '/hernoemingen.php';
@@ -31,7 +31,7 @@ function orderStatus(int $besteld, int $ontvangen): string {
 }
 
 /**
- * Handmatig of Automatisch besteld -- op verzoek van Harm (Bestellingen-
+ * Handmatig of Automatisch besteld -- (Bestellingen-
  * overzicht moet dit per order duidelijk tonen). 'kanaal' is de enige
  * betrouwbare, al bestaande plek om dit aan af te lezen: de literal
  * 'Berging-bestellijst' wordt UITSLUITEND gezet door
@@ -71,8 +71,8 @@ function openOrderStatusMap(): array {
 
 /**
  * EAN -> som van (besteld - ontvangen) over openstaande orders (In
- * bestelling / Gedeeltelijk ontvangen). Migratie 026, op verzoek van
- * Harm: de bestel-adviesschermen (Berging-bestellijst, Te bestellen
+ * bestelling / Gedeeltelijk ontvangen). De bestel-adviesschermen
+ * (Berging-bestellijst, Te bestellen
  * Handmatig) mogen een artikel dat al (deels) onderweg is niet nogmaals
  * in zijn volle behoefte voorstellen -- maar als er tijdens de wachttijd
  * op die levering méér is verbruikt dan er onderweg is, moet dat verschil
@@ -102,7 +102,7 @@ function openOrderResterendPerEan(): array {
  * door het handmatige-bestelling-formulier, en door
  * markeerBergingAlsBesteld() (includes/voorraad.php).
  *
- * Op verzoek van Harm (na een gemelde bug): dit voegt NIET meer samen met
+ * (na een gemelde bug): dit voegt NIET meer samen met
  * een eventuele al openstaande order voor hetzelfde EAN. Elke aanroep
  * maakt altijd een eigen, nieuwe rij aan met zijn eigen tijdstempel,
  * aantal, besteller, kanaal en opmerking -- zo blijft precies zichtbaar
@@ -187,7 +187,7 @@ function updateOrdersWithFIFO(string $ean, int $hoeveelheid): int {
             // bruikbaar (die verandert ook bij bijv. upsertOrder() als er
             // extra wordt bijbesteld op een al openstaande order).
             //
-            // Migratie 029, op verzoek van Harm: eerst_ontvangen_op ernaast --
+            // Eerst_ontvangen_op ernaast --
             // bij een order die in meerdere deelleveringen binnenkomt bleef
             // tot nu toe alleen het LAATSTE ontvangstmoment bewaard, dus ging
             // het moment van de EERSTE deellevering verloren zodra een tweede
@@ -229,7 +229,7 @@ function getOpenOrders(): array {
         $dagenOpen = (int) $today->diff($besteldOp)->format('%a');
 
         $result[] = [
-            // Migratie 027: 'id' toegevoegd (op verzoek van Harm: orders
+            // 'id' toegevoegd (orders
             // moeten klikbaar worden naar een detail-/bewerkpagina, zie
             // getOrderDetail()/updateOrder() hieronder) -- voorheen gaf
             // deze functie geen id terug, want er was nog geen detailpagina
@@ -239,7 +239,7 @@ function getOpenOrders(): array {
             'datum' => $besteldOp->format('d-m-Y H:i'),
             'besteld' => $besteld, 'ontvangen' => $ontvangen, 'nog' => $besteld - $ontvangen,
             'status' => $status, 'besteller' => $r['besteller'] ?: '', 'kanaal' => $r['kanaal'] ?: '',
-            // Op verzoek van Harm: per order duidelijk Handmatig/Automatisch
+            // : per order duidelijk Handmatig/Automatisch
             // tonen in het Bestellingen-overzicht, zie bestelMethode() hierboven.
             'besteltype' => bestelMethode($r['kanaal']),
             'opmerking' => $r['opmerking'] ?: '', 'dagenOpen' => $dagenOpen,
@@ -251,7 +251,7 @@ function getOpenOrders(): array {
 }
 
 /**
- * Migratie 045, op verzoek van Harm ("ik zie niet op het homescherm al
+ * ("ik zie niet op het homescherm al
  * mijn bestellingen terug"): de Home-widget "Mijn Bestellingen" toonde tot
  * nu toe UITSLUITEND eenmalige (patiëntgebonden) bestellingen (zie
  * getEigenEenmaligeBestellingen(), includes/eenmalige_bestellingen.php) --
@@ -273,7 +273,7 @@ function getEigenOpenOrders(string $eigenNaam): array {
 }
 
 /**
- * Eén order-rij met alle velden -- migratie 027, op verzoek van Harm:
+ * Eén order-rij met alle velden -- 
  * orders (Actiecentrum, Overzicht, Open Orders) moeten klikbaar worden
  * naar een detailweergave met bewerkmogelijkheid, net zoals eenmalige
  * bestellingen die al hebben (zie includes/eenmalige_bestellingen.php).
@@ -294,14 +294,14 @@ function getOrderDetail(int $id): array {
         'besteld' => $besteld, 'ontvangen' => $ontvangen, 'nog' => $besteld - $ontvangen,
         'status' => orderStatus($besteld, $ontvangen),
         'besteller' => $r['besteller'] ?: '', 'kanaal' => $r['kanaal'] ?: '', 'opmerking' => $r['opmerking'] ?: '',
-        // Op verzoek van Harm, zie bestelMethode() hierboven.
+        // Zie bestelMethode() hierboven.
         'besteltype' => bestelMethode($r['kanaal']),
         'laatstOntvangenOp' => $r['laatst_ontvangen_op'] ?? null,
-        // Migratie 029, op verzoek van Harm: eerst_ontvangen_op ernaast op
+        // Eerst_ontvangen_op ernaast op
         // het detailscherm, zie de toelichting bij updateOrdersWithFIFO()
         // hierboven voor waarom dit een apart veld is naast laatstOntvangenOp.
         'eerstOntvangenOp' => $r['eerst_ontvangen_op'] ?? null,
-        // Op verzoek van Harm: "alle transacties rondom deze order" op de
+        // : "alle transacties rondom deze order" op de
         // detailpagina. transactielog heeft GEEN order_id-koppeling (een
         // Ontvangst-scan wordt via updateOrdersWithFIFO() over meerdere
         // gelijktijdig openstaande orders voor hetzelfde EAN kunnen
@@ -313,7 +313,7 @@ function getOrderDetail(int $id): array {
         // orders voor hetzelfde product kunnen transacties dus in de
         // vensters van meer dan één order verschijnen -- zie ook de hint
         // hierover in de frontend (renderOrderDetail()).
-        // Migratie 041_order_detail_ontvangst_clusteren: geclusterde variant
+        // Geclusterde variant
         // i.p.v. de platte lijst (zie getTransactiesRondOrderGeclusterd()
         // hieronder).
         'transacties' => getTransactiesRondOrderGeclusterd($r['ean'], $r['tijdstempel'], $r['laatst_ontvangen_op'] ?? null),
@@ -343,7 +343,7 @@ function getTransactiesRondOrder(string $ean, string $besteldOp, ?string $eindeV
     foreach ($stmt->fetchAll() as $t) {
         $result[] = [
             'timestamp' => $t['tijdstempel'], 'batchId' => $t['batch_id'], 'lot' => $t['lot'], 'vervaldatum' => $t['vervaldatum'],
-            // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+            // (locatie-hernoemen cascade-bug):
             // ruwe locatienaam ten tijde van transactie -> huidige naam.
             'locatie' => actueleNaam('locatie', $t['locatie']), 'type' => $t['transactietype'], 'hoeveelheid' => (int) $t['hoeveelheid'],
             'specialist' => $t['specialist'], 'procedure' => $t['procedure_type'], 'opmerking' => $t['opmerking'],
@@ -354,7 +354,7 @@ function getTransactiesRondOrder(string $ean, string $besteldOp, ?string $eindeV
 }
 
 /**
- * Migratie 041_order_detail_ontvangst_clusteren, op verzoek van Harm:
+ * 
  * "ontvangst-transacties clusteren" -- een order die met meerdere lots in
  * één scanactie is ontvangen (bijv. 3 verschillende batchcodes van
  * dezelfde levering) toonde hier voorheen 3 losse "Ontvangst"-rijen,
@@ -364,8 +364,8 @@ function getTransactiesRondOrder(string $ean, string $besteldOp, ?string $eindeV
  * dezelfde batch_id tot één samengevatte regel (som van hoeveelheid, de
  * losse lots blijven opvraagbaar via 'regels' voor de "bekijk
  * lots"-uitklapper op de detailpagina, zelfde idee als
- * getRecenteTransactiesGegroepeerd()). Rijen van vóór migratie 014 hebben
- * geen batch_id (NULL) en blijven daarom, net als elk ander
+ * getRecenteTransactiesGegroepeerd()). Oudere rijen van vóór dit veld
+ * bestond hebben geen batch_id (NULL) en blijven daarom, net als elk ander
  * transactietype (Verbruik/Verplaatsing/Retournering/Telling), gewoon een
  * eigen ongeclusterde regel.
  */
@@ -399,7 +399,7 @@ function getTransactiesRondOrderGeclusterd(string $ean, string $besteldOp, ?stri
 
 /**
  * Meest recente order voor een EAN die nog niet volledig ontvangen is --
- * migratie 027, gebruikt om vanuit een kaal EAN (bijv. de orderstatus-
+ * gebruikt om vanuit een kaal EAN (bijv. de orderstatus-
  * badge op Overzicht, die alleen een EAN kent, geen order-id) toch naar
  * de juiste detailpagina te kunnen linken. Null als er geen open order
  * voor dit EAN is (bijv. de order is inmiddels volledig ontvangen, of
@@ -419,7 +419,7 @@ function getOpenOrderIdVoorEan(string $ean): ?int {
 }
 
 /**
- * Volledige bewerking van een order (migratie 027, op verzoek van Harm:
+ * Volledige bewerking van een order (
  * "kan ik de inhoud zien en eventueel bewerken") -- zelfde "hele rij
  * opnieuw versturen"-conventie als updateEenmaligeBestelling(). Bewust
  * GEEN validatie dat ontvangen <= besteld (een beheerder corrigeert hier

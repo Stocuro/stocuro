@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 030_groep_landingsscherm, op verzoek van Harm: een arts die
+ * Een arts die
  * tussen twee procedures snel wil weten "wat is er, hoeveel, waar, wat is
  * de status, en wat is het verbruik" moest daarvoor tot nu toe door
  * minstens drie schermen heen (Voorraad, Vervaldatums, Verbruik & Trends).

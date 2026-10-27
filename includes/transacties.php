@@ -19,21 +19,21 @@ require_once __DIR__ . '/ean.php';
 require_once __DIR__ . '/gs1_parser.php';
 require_once __DIR__ . '/logging.php';
 require_once __DIR__ . '/orders.php';
-// Migratie 026: huidigeVoorraadPerLocatie() voor de "slimme ruimte"-
+// HuidigeVoorraadPerLocatie() voor de "slimme ruimte"-
 // omleiding bij Verbruik hieronder.
 require_once __DIR__ . '/voorraad.php';
-// Migratie 034, op verzoek van Harm: locatieNaamVoorSlot('berging') voor
+// LocatieNaamVoorSlot('berging') voor
 // de "algemene voorraad"-omleiding bij Retourneren hieronder.
 require_once __DIR__ . '/locaties.php';
-// Migratie 037, op verzoek van Harm: addArtikel() voor
+// AddArtikel() voor
 // maakArtikelenVoorOnbekendeRegels() hieronder.
 require_once __DIR__ . '/artikelen.php';
-// Migratie 035, op verzoek van Harm: pasGs1CorrectieToe() in
+// PasGs1CorrectieToe() in
 // splitsBekendOnbekend() hieronder.
 require_once __DIR__ . '/lot_correcties.php';
 
 /**
- * $ean kan het stuk-EAN, het (migratie 020) doos-EAN, OF (migratie 021)
+ * $ean kan het stuk-EAN, het doos-EAN, OF
  * de handmatige interne logistiek_code van een artikel zijn -- sommige
  * producten (bijv. voerdraden, PICC-lijnen) hebben zowel een stuk- als
  * een doos-barcode, en een product kan daarnaast nog een eigen geprint
@@ -63,7 +63,7 @@ function lookupArtikelen(string $ean): ?array {
         return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => 1];
     }
 
-    // Niet gevonden als stuk-EAN -- proberen als doos-EAN (migratie 020).
+    // Niet gevonden als stuk-EAN -- proberen als doos-EAN.
     $stmt = db()->prepare('SELECT ean, productnaam, prijs, eenheden_per_doos FROM artikelen WHERE doos_ean = :ean');
     $stmt->execute([':ean' => $eanNorm]);
     $row = $stmt->fetch();
@@ -75,7 +75,7 @@ function lookupArtikelen(string $ean): ?array {
     }
 
     // Ook niet als doos-EAN -- proberen als interne logistiek_code
-    // (migratie 021). Geen normalizeEAN(): exacte, getrimde tekstmatch.
+    //. Geen normalizeEAN(): exacte, getrimde tekstmatch.
     $codeTrimmed = trim($ean);
     if ($codeTrimmed !== '') {
         $stmt = db()->prepare('SELECT ean, productnaam, prijs FROM artikelen WHERE logistiek_code = :code');
@@ -91,12 +91,12 @@ function lookupArtikelen(string $ean): ?array {
 }
 
 // =====================================================================
-// ONBEKENDE SCANS (migratie 022, op verzoek van Harm): een barcode die
+// ONBEKENDE SCANS : een barcode die
 // bij geen van de drie paden in lookupArtikelen() een match oplevert,
 // werd voorheen stilzwijgend in de tijdelijke $fouten-array van die ene
 // aanroep gezet -- de scanner zag "regel overgeslagen" en daarna was de
 // informatie weg, geen enkele beheerder kreeg dit ooit te zien. Nieuwe
-// gedrag, bewust BLOKKEREND (op verzoek van Harm): een indiening met
+// Gedrag, bewust BLOKKEREND : een indiening met
 // onbekende regels wordt pas verwerkt als er per onbekende regel een
 // korte omschrijving is meegegeven ("wat voor product is dit?"). Zonder
 // omschrijving wordt er NIETS geboekt (ook niet de wel-herkende regels
@@ -111,7 +111,7 @@ function lookupArtikelen(string $ean): ?array {
  * Splitst een blok scanregels in bekende (klaar om te boeken) en
  * onbekende artikelen. Bewust ná parseGS1Raw() óók de RUWE regel zelf
  * proberen als lookupArtikelen()-zoekterm wanneer er geen GS1-GTIN uit
- * te halen viel: een geprint logistiek_code-label (migratie 021) is geen
+ * Te halen viel: een geprint logistiek_code-label is geen
  * GS1-128-barcode maar gewone tekst, en zou anders nooit bij
  * lookupArtikelen() aankomen.
  *
@@ -126,7 +126,7 @@ function splitsBekendOnbekend(array $lines): array {
         if ($line === '') continue;
 
         $parsed = parseGS1Raw($line);
-        // Migratie 035, op verzoek van Harm: als deze exacte barcode al
+        // Als deze exacte barcode al
         // eens handmatig gecorrigeerd is (zie includes/lot_correcties.php),
         // gebruik dan meteen de gecorrigeerde lot/vervaldatum i.p.v.
         // opnieuw de (bekend foute) parse van parseGS1Raw() hierboven.
@@ -187,7 +187,7 @@ function loggeOnbekendeScans(array $onbekend, array $omschrijvingen, ?string $lo
 }
 
 /**
- * Migratie 037, op verzoek van Harm: "ik wil dat dit product direct wordt
+ * "ik wil dat dit product direct wordt
  * aangemaakt met de tijdelijke naam die de laborant op dat moment
  * invult. Het systeem kan dan namelijk direct met dit product gaan
  * werken en tonen." Voorheen bleef een onbekende regel, ook ná het
@@ -263,7 +263,7 @@ function maakArtikelenVoorOnbekendeRegels(array $onbekend, array $omschrijvingen
 }
 
 /**
- * Migratie 033, op verzoek van Harm: "de hele registratie rondom
+ * "de hele registratie rondom
  * eenmalige bestellingen ook rond maken" -- zodra iemand later een
  * eerder ontvangen eenmalige-bestelling-item gewoon via het BESTAANDE
  * Verbruik- of Verplaatsing+Retouren-scherm scant (géén nieuw veld, géén
@@ -279,7 +279,7 @@ function maakArtikelenVoorOnbekendeRegels(array $onbekend, array $omschrijvingen
  *
  * $bekendeItems heeft dezelfde vorm als splitsBekendOnbekend()['bekend']
  * hierboven, MAAR dan met een extra sleutel 'transactielog_id' per regel
- * (migratie 040) -- het id van de transactielog-rij die deze specifieke
+ * -- het id van de transactielog-rij die deze specifieke
  * scanregel heeft geboekt (zie verwerkScan()/retournering() hieronder).
  * $nieuweStatus is 'verbruikt' (vanuit verwerkScan() bij transactietype
  * 'Verbruik') of 'retour' (vanuit retournering()).
@@ -318,7 +318,7 @@ function koppelScanAanEenmaligeBestellingItems(array $bekendeItems, string $nieu
 }
 
 /**
- * Migratie 034, op verzoek van Harm: "de hele registratie ook rond" --
+ * "de hele registratie ook rond" --
  * na het bijwerken van een enkel item hierboven, zodra GEEN item van die
  * eenmalige bestelling meer op 'ontvangen' staat (alles is inmiddels
  * verbruikt of geretourneerd), mag de bestelling zelf ook als afgerond
@@ -347,7 +347,7 @@ function herbereekenEenmaligeBestellingStatusNaScan(int $bestellingId): void {
 
 /**
  * Genereert een nieuwe batch_id: één willekeurige hex-string per
- * ingediende scanactie (migratie 014), zodat alle regels die uit die ene
+ * Ingediende scanactie, zodat alle regels die uit die ene
  * indiening voortkomen (elke gescande barcode bij Ontvangst/Verbruik/
  * Vervallen Afboeken/Retournering, of het uit+in-paar per gescand
  * artikel bij Verplaatsing) achteraf als één geheel herkend en
@@ -360,7 +360,7 @@ function nieuweBatchId(): string {
 
 /**
  * $prijsOpMoment: de artikelprijs op het moment van deze transactie,
- * vastgelegd als onveranderlijke snapshot (zie migratie 003). Rapportages
+ * vastgelegd als onveranderlijke snapshot. Rapportages
  * over verbruik in het verleden moeten deze kolom gebruiken, niet de
  * (mogelijk inmiddels gewijzigde) actuele artikelen.prijs.
  */
@@ -379,21 +379,21 @@ function insertTransactieRegel(
         ':specialist' => $specialist, ':procedure' => $procedureType, ':door' => $aangemaaktDoor, ':opmerking' => $opmerking,
         ':gs1raw' => $gs1Raw, ':naam' => $productnaam,
     ]);
-    // Migratie 040: het teruggegeven id wordt gebruikt om (bij Verbruik/
+    // Het teruggegeven id wordt gebruikt om (bij Verbruik/
     // Retournering) de koppeling met een eenmalige-bestelling-item vast te
     // leggen -- zie koppelScanAanEenmaligeBestellingItems() hieronder.
     return (int) db()->lastInsertId();
 }
 
 /**
- * Migratie 046, op verzoek van Harm: "een voorraad van -1 kan niet. Stel
+ * "een voorraad van -1 kan niet. Stel
  * dit punt bereik je toch dan heeft dit te maken met een telfout in de
  * voorraad. Blijf dan gewoon op 0 maar registreer wel dat het product
  * verbruikt is." Roep dit aan VLAK NA elke uitgaande boeking (Verbruik,
  * Vervallen, Verplaatsing uit, Retournering) die de berekende voorraad
  * van een (ean, locatie) negatief zou kunnen laten worden -- de scan zelf
  * is dan al onvoorwaardelijk geboekt (nooit geweigerd/geblokkeerd, dat is
- * precies wat Harm hier expliciet niet wil), dit controleert alleen wat
+ * hier expliciet niet gewenst), dit controleert alleen wat
  * de RESULTERENDE voorraad nu is.
  *
  * Boekt zo nodig een compenserende correctie van hetzelfde transactietype
@@ -448,7 +448,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
     $gebruikerNaam = $extra['gebruikerNaam'] ?? null;
     $omschrijvingen = $extra['omschrijvingen'] ?? [];
 
-    // PICC-regel (migratie 019, op verzoek van Harm): de ingelogde
+    // PICC-regel : de ingelogde
     // gebruiker die dit formulier indient is NIET per se degene die de
     // procedure heeft uitgevoerd -- dat is losstaand het 'specialist'-veld
     // hierboven (wie de procedure heeft gedaan). Een Laborant mag alleen
@@ -480,7 +480,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
         }
     }
 
-    // Licentiecontrole (op verzoek van Harm, "Licentiemodel: geen naam-
+    // Licentiecontrole ("Licentiemodel: geen naam-
     // registratie zonder licentie"): materiaalverbruik mag niet op naam
     // van een specialist/laborant geboekt worden als dat account geen
     // geldige licentie heeft -- anders blijft die persoon onzichtbaar in
@@ -504,7 +504,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
     $lines = preg_split('/\r?\n/', trim($gs1RawBlock, "\" \t\n\r\0\x0B"));
     $split = splitsBekendOnbekend($lines);
 
-    // Blokkerend (migratie 022, op verzoek van Harm): pas boeken als elke
+    // Blokkerend : pas boeken als elke
     // onbekende regel een omschrijving heeft. Anders niets verwerken en
     // teruggeven welke regels dat nog missen.
     $ontbrekend = ontbrekendeOmschrijvingen($split['onbekend'], $omschrijvingen);
@@ -512,7 +512,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
         return ['success' => false, 'onbekend' => true, 'onbekendeRegels' => $ontbrekend, 'verwerkt' => 0];
     }
 
-    // Migratie 037, op verzoek van Harm: elke onbekende regel heeft nu een
+    // Elke onbekende regel heeft nu een
     // omschrijving -- maak er meteen een echt artikel van (zie
     // maakArtikelenVoorOnbekendeRegels() hierboven) zodat het in DEZE
     // indiening al meeboekt, i.p.v. pas na een latere handmatige
@@ -524,13 +524,13 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
 
     $verwerkt = 0;
     $omgeleid = [];
-    $verwerkteItems = []; // migratie 040: $item + transactielog_id per regel
+    $verwerkteItems = []; // $item + transactielog_id per regel
     foreach ($split['bekend'] as $item) {
         $parsed = $item['parsed'];
         $artikel = $item['artikel'];
         $line = $item['line'];
 
-        // Migratie 026 (op verzoek van Harm): "slimme ruimte" bij
+        // "Slimme ruimte" bij
         // Verbruik Scannen. Sommige producten horen niet thuis in de
         // gescande ruimte zelf -- bijv. een uniek, eenmalig besteld
         // artikel dat rechtstreeks in Berging of op een kar staat, in
@@ -567,7 +567,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
             $regelOpmerking = trim($opmerking !== '' ? "$opmerking $notitie" : $notitie);
         }
 
-        // $artikel['hoeveelheid'] (migratie 020): 1 bij een los stuk-EAN,
+        // $artikel['hoeveelheid']: 1 bij een los stuk-EAN,
         // of eenheden_per_doos bij een herkende doos-EAN -- zie
         // lookupArtikelen(). Eén gescande barcode kan dus meerdere stuks
         // tegelijk boeken.
@@ -580,7 +580,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
         if ($transactieType === 'Ontvangst') {
             updateOrdersWithFIFO($artikel['ean'], $artikel['hoeveelheid']);
         } elseif ($transactieType === 'Verbruik' || $transactieType === 'Vervallen') {
-            // Migratie 046: zie voorkomNegatieveVoorraad() hierboven --
+            // Zie voorkomNegatieveVoorraad() hierboven --
             // de scan is hierboven al onvoorwaardelijk geboekt, dit
             // corrigeert alleen de resulterende voorraad als die door
             // deze boeking onder 0 zou zijn gezakt.
@@ -592,24 +592,24 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
 
     loggeOnbekendeScans($split['onbekend'], $omschrijvingen, $locatie, $transactieType, $gebruikerNaam);
 
-    // Migratie 033, op verzoek van Harm: alleen bij Verbruik (niet bij
+    // Alleen bij Verbruik (niet bij
     // Ontvangst of Vervallen) matchen tegen openstaande eenmalige-
     // bestelling-items -- zie koppelScanAanEenmaligeBestellingItems()
-    // hierboven. $verwerkteItems (i.p.v. $split['bekend'], migratie 040)
+    // hierboven. $verwerkteItems (i.p.v. $split['bekend'])
     // draagt per regel het bijbehorende transactielog_id mee.
     if ($transactieType === 'Verbruik') {
         koppelScanAanEenmaligeBestellingItems($verwerkteItems, 'verbruikt', $gebruikerNaam);
     }
 
     return [
-        // Migratie 037: 'overgeslagen'/'fouten' tellen alleen nog regels
+        // 'overgeslagen'/'fouten' tellen alleen nog regels
         // die ook na maakArtikelenVoorOnbekendeRegels() niet verwerkt
         // konden worden (in de praktijk vrijwel altijd 0) -- alle overige
         // onbekende regels zijn hierboven al meegeboekt als nieuw
         // aangemaakt artikel.
         'success' => true, 'verwerkt' => $verwerkt, 'overgeslagen' => count($aangemaakt['nogOnbekend']),
         'fouten' => array_column($aangemaakt['nogOnbekend'], 'line'),
-        // Migratie 026: welke regels (indien van toepassing) automatisch
+        // Welke regels (indien van toepassing) automatisch
         // naar een andere ruimte zijn omgeleid -- de frontend toont dit
         // als een informatieve melding na het indienen.
         'omgeleid' => $omgeleid,
@@ -624,16 +624,16 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
 // begrensd tot de laatste TRANSACTIELOG_BEWERKBAAR_DAGEN dagen, zowel in
 // de lijst zelf als (nogmaals, server-side) bij elke bewerk/verwijder-
 // aanroep. Elke wijziging wordt vóór het doorvoeren gelogd in
-// transactielog_wijzigingen -- zie migratie 006 voor de afweging waarom
-// dit een audit-tabel is i.p.v. een "verwijderd_op"-vlag op transactielog
-// zelf.
+// transactielog_wijzigingen, als audit-tabel i.p.v. een "verwijderd_op"-
+// vlag op transactielog zelf -- zo blijft de oorspronkelijke rij intact
+// en is elke wijziging los terug te vinden.
 // =====================================================================
 const TRANSACTIELOG_BEWERKBAAR_DAGEN = 7;
 
 /**
  * Zelfde ruwe rijen als voorheen getRecenteTransacties(), maar gegroepeerd
- * per scanactie (batch_id, of -- rijen van vóór migratie 014 -- de rij
- * zelf) i.p.v. platte, losse regels. Op verzoek van Harm: een foutieve
+ * per scanactie (batch_id, of -- voor oudere rijen zonder batch_id -- de
+ * rij zelf) i.p.v. platte, losse regels: een foutieve
  * actie (bijv. 20 gescande barcodes in één Verbruik-indiening, of een
  * Verplaatsing met een uit- én in-boeking) moet in het scherm als één
  * geheel getoond en gecorrigeerd kunnen worden, niet regel voor regel.
@@ -691,7 +691,7 @@ function getRecenteTransactiesGegroepeerd(): array {
             $groepen[$key]['bewerkt_door'] = $rij['bewerkt_door'];
         }
 
-        // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+        // (locatie-hernoemen cascade-bug):
         // actueleNaam() vertaalt de op transactiemoment opgeslagen naam
         // naar de huidige naam, puur voor weergave -- dit is geen
         // aggregatie/GROUP BY zoals in includes/voorraad.php, dus hier is
@@ -724,10 +724,9 @@ function getRecenteTransactiesGegroepeerd(): array {
 }
 
 /**
- * Migratie 042_transactiehistorie_scanmoment, op verzoek van Harm
- * ("transactiehistorie groeperen per scanmoment"): zelfde groepeer-
- * aanpak als getRecenteTransactiesGegroepeerd() hierboven (batch_id, of
- * 'row-<id>' voor data van vóór migratie 014), maar dan geschikt voor de
+ * Transactiehistorie groeperen per scanmoment: zelfde groepeer-aanpak
+ * als getRecenteTransactiesGegroepeerd() hierboven (batch_id, of
+ * 'row-<id>' voor oudere data zonder batch_id), maar dan geschikt voor de
  * "Transactiehistorie"-tabel op de productdetailpagina -- die is altijd
  * al voor ÉÉN ean, dus geen productnaam/bewerkbaar-vlag nodig (bewerken
  * gebeurt daar toch niet, alleen bekijken). $limit telt RUWE regels (zoals
@@ -767,7 +766,7 @@ function getTransactieHistorieVoorEanGeclusterd(string $ean, int $limit = 20): a
             $volgorde[] = $key;
         }
 
-        // Migratie 039, op verzoek van Harm (locatie-hernoemen cascade-bug):
+        // (locatie-hernoemen cascade-bug):
         // zie zelfde toelichting bij getRecenteTransactiesGegroepeerd()
         // hierboven -- pure weergave-relabeling, geen aggregatie hier.
         $locatie = actueleNaam('locatie', $rij['locatie']);
@@ -864,7 +863,7 @@ function bewerkTransactieRegel(int $id, array $updates, string $gebruikerNaam): 
 }
 
 /**
- * Migratie 040, op verzoek van Harm ("Recent Transactions... dit moet wel
+ * ("Recent Transactions... dit moet wel
  * de juiste effecten uitvoeren in bijvoorbeeld de voorraden. Gaat dit wel
  * goed?" -> "ja graag, alles moet wel kloppen natuurlijk"): draait de
  * koppeling van koppelScanAanEenmaligeBestellingItems() terug zodra de
@@ -928,7 +927,7 @@ function verwijderTransactieRegel(int $id, string $gebruikerNaam): array {
  * Alle rijen die tot dezelfde scanactie behoren, oplopend op id (dus in
  * de volgorde waarin ze oorspronkelijk zijn ingevoegd -- voor een
  * Verplaatsing dus per gescand artikel steeds eerst de uit-, dan de
- * in-regel). $batchKey is ofwel een echte batch_id (migratie 014), ofwel
+ * In-regel). $batchKey is ofwel een echte batch_id, ofwel
  * 'row-<id>' voor een rij van vóór die migratie (zie
  * getRecenteTransactiesGegroepeerd()) -- in dat laatste geval bestaat de
  * "batch" uit precies die ene rij.
@@ -945,8 +944,8 @@ function vindTransactieRegelsVoorBatch(string $batchKey): array {
 }
 
 /**
- * Bewerkt in één keer alle regels van één scanactie -- op verzoek van
- * Harm: bijv. een hele Verbruik-indiening met 14 gescande barcodes had
+ * Bewerkt in één keer alle regels van één scanactie: bijv. een hele
+ * Verbruik-indiening met 14 gescande barcodes had
  * de verkeerde locatie, en die moet in één actie recht te zetten zijn,
  * niet 14 keer los.
  *
@@ -997,7 +996,7 @@ function bewerkTransactieBatch(string $batchKey, array $updates, string $gebruik
 
 /**
  * Verwijdert in één keer alle regels van één scanactie -- de "hele actie
- * ongedaan maken" die Harm vroeg voor bijv. een foutieve Verplaatsing
+ * ongedaan maken" die nodig is voor bijv. een foutieve Verplaatsing
  * (uit- én in-boeking samen terugdraaien) of Verbruik-scan (alle
  * gescande producten in die ene indiening samen). Zelfde
  * alles-of-niets-transactie als bewerkTransactieBatch().
@@ -1041,7 +1040,7 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
         return ['success' => false, 'onbekend' => true, 'onbekendeRegels' => $ontbrekend, 'verwerkt' => 0];
     }
 
-    // Migratie 037: zie toelichting in verwerkScan() hierboven.
+    // Zie toelichting in verwerkScan() hierboven.
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
@@ -1055,14 +1054,14 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
         $opmerkingUit = "Verplaatst naar $naarLocatie - $reden. $opmerking";
         $opmerkingIn = "Verplaatst van $vanLocatie - $reden. $opmerking";
 
-        // $artikel['hoeveelheid'] (migratie 020): dekt zowel een hele,
+        // $artikel['hoeveelheid']: dekt zowel een hele,
         // ongeopende doos die in één keer verplaatst wordt (scan de
         // doos-EAN, hoeveelheid = eenheden_per_doos) als losse, al
         // uitgepakte stuks die één voor één gescand worden (elke regel
         // hoeveelheid 1) -- zie lookupArtikelen().
         insertTransactieRegel($tijdstempel, $artikel['ean'], $parsed['lot'], $vervaldatumSql, $vanLocatie, 'Verplaatsing uit', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingUit, $line, $artikel['naam'], $gebruikerNaam, $batchId);
         insertTransactieRegel($tijdstempel, $artikel['ean'], $parsed['lot'], $vervaldatumSql, $naarLocatie, 'Verplaatsing in', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingIn, $line, $artikel['naam'], $gebruikerNaam, $batchId);
-        // Migratie 046: zie voorkomNegatieveVoorraad() -- alleen de 'uit'-
+        // Zie voorkomNegatieveVoorraad() -- alleen de 'uit'-
         // kant (vanLocatie) kan door deze boeking negatief worden, de
         // 'in'-kant (naarLocatie) krijgt er juist voorraad bij.
         voorkomNegatieveVoorraad($artikel['ean'], $vanLocatie, $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
@@ -1079,14 +1078,14 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
  * Retournering: één transactieregel per gescand artikel. Poort van
  * handleRetournering().
  *
- * Migratie 034, op verzoek van Harm: "slimme ruimte"-omleiding, zelfde
- * gedachte als bij Verbruik Scannen (migratie 026) maar dan specifiek
+ * "slimme ruimte"-omleiding, zelfde
+ * Gedachte als bij Verbruik Scannen maar dan specifiek
  * gericht op de ALGEMENE voorraad (Berging) in plaats van "precies één
  * andere ruimte": staat het gescande product niet in de gekozen
  * 'van'-locatie, maar wel in Berging, dan wordt de retour daar
  * automatisch vandaan geboekt. Dat is het meest voorkomende geval --
  * retourmateriaal van bijv. een eenmalige bestelling ligt vaak al in
- * Berging (zie de echte Ontvangst-boeking daarvandaan, migratie 033),
+ * Berging (zie de echte Ontvangst-boeking daarvandaan),
  * niet in de kliniekruimte die hier toevallig geselecteerd is.
  */
 function retournering(string $gs1RawBlock, string $vanLocatie, string $redenRetour, string $opmerking, ?string $gebruikerNaam = null, array $omschrijvingen = []): array {
@@ -1100,14 +1099,14 @@ function retournering(string $gs1RawBlock, string $vanLocatie, string $redenReto
         return ['success' => false, 'onbekend' => true, 'onbekendeRegels' => $ontbrekend, 'verwerkt' => 0];
     }
 
-    // Migratie 037: zie toelichting in verwerkScan() hierboven.
+    // Zie toelichting in verwerkScan() hierboven.
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
     $bergingNaam = locatieNaamVoorSlot('berging');
     $verwerkt = 0;
     $omgeleid = [];
-    $verwerkteItems = []; // migratie 040: $item + transactielog_id per regel
+    $verwerkteItems = []; // $item + transactielog_id per regel
     foreach ($split['bekend'] as $item) {
         $parsed = $item['parsed'];
         $artikel = $item['artikel'];
@@ -1133,18 +1132,18 @@ function retournering(string $gs1RawBlock, string $vanLocatie, string $redenReto
             'Retournering', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $regelOpmerking, $line, $artikel['naam'], $gebruikerNaam, $batchId
         );
         $verwerkteItems[] = $item + ['transactielog_id' => $transactielogId];
-        // Migratie 046: zie voorkomNegatieveVoorraad() hierboven.
+        // Zie voorkomNegatieveVoorraad() hierboven.
         voorkomNegatieveVoorraad($artikel['ean'], $effectieveLocatie, $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
         $verwerkt++;
     }
 
     loggeOnbekendeScans($split['onbekend'], $omschrijvingen, $vanLocatie, 'Retournering', $gebruikerNaam);
 
-    // Migratie 033, op verzoek van Harm: dit scherm ("Verplaatsing +
+    // Dit scherm ("Verplaatsing +
     // Retouren") is precies waarmee eerder ontvangen eenmalige-
     // bestelling-items alsnog als geretourneerd herkend worden -- zie
     // koppelScanAanEenmaligeBestellingItems() hierboven. $verwerkteItems
-    // (i.p.v. $split['bekend'], migratie 040) draagt per regel het
+    // (i.p.v. $split['bekend']) draagt per regel het
     // bijbehorende transactielog_id mee.
     koppelScanAanEenmaligeBestellingItems($verwerkteItems, 'retour', $gebruikerNaam);
 

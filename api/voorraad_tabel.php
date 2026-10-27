@@ -1,6 +1,6 @@
 <?php
 /**
- * Migratie 031_voorraad_tabel: de samengevoegde Voorraad-megatabel, zie
+ * De samengevoegde Voorraad-megatabel, zie
  * includes/voorraad_tabel.php voor de volledige toelichting. Alleen lezen.
  * Hergebruikt het bestaande 'overzicht'-schermrecht -- er komt geen nieuw
  * apart schermrecht bij voor deze pagina, hij vervangt gewoon de

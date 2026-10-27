@@ -20,7 +20,7 @@
  * betekent dat afwezigheid in de scan net zo veel informatie is als een
  * scan zelf.
  *
- * Migratie 040 (bugfix, op verzoek van Harm): dit boekte voorheen de
+ * Dit boekte voorheen de
  * afwijking op EAN-niveau, met lot/vervaldatum op NULL. Dat klopte qua
  * TOTAAL voor die EAN+locatie (voorraadStatus() sommeert toch over alle
  * lots), maar liet de oorspronkelijke lot/vervaldatum-rij zelf onaangeroerd
@@ -51,7 +51,7 @@ require_once __DIR__ . '/gs1_parser.php';
  * horen (min/max>0) of al voorraad hebben, zoals voorraadStatus() ze
  * meeneemt.
  *
- * Migratie 043, op verzoek van Harm ("per kast per locatie, niet de hele
+ * ("per kast per locatie, niet de hele
  * Berging in 1 keer"): optioneel ook filteren op kastlocatie -- STRIKT op
  * exacte match (artikelKastlocatie() in voorraad.php), een artikel zonder
  * geregistreerde kastlocatie telt hier NIET mee als "hoort in deze kast",
@@ -75,13 +75,13 @@ function getTellingArtikelen(string $locatie, ?string $kastlocatie = null): arra
 }
 
 /**
- * Migratie 040 (bugfix, op verzoek van Harm): systeemvoorraad per
+ * Systeemvoorraad per
  * ean+lot+vervaldatum voor één locatie -- hetzelfde brondata als
  * voorraadLot() (voorraad.php), alleen gefilterd op deze locatie. Nodig
  * omdat verwerkTelling() hieronder tekorten/overschotten voortaan PER LOT
  * boekt in plaats van alleen op EAN-niveau (zie toelichting daar).
  *
- * Migratie 043: zelfde optionele, strikte kastlocatie-filter als
+ * Zelfde optionele, strikte kastlocatie-filter als
  * getTellingArtikelen() hierboven -- zie die toelichting.
  */
 function getTellingLotArtikelen(string $locatie, ?string $kastlocatie = null): array {
@@ -107,18 +107,18 @@ function tellingLotSleutel(string $ean, ?string $lot, ?string $vervaldatumSql): 
  * $gs1RawBlock: meerdere GS1-regels, gescheiden door newlines -- één regel
  * per fysiek geteld exemplaar (dus een product met 5 stuks aanwezig komt
  * 5x voor, net als bij verwerkScan()), TENZIJ een regel een doos-EAN is
- * (migratie 020): dan telt die ene regel voor eenheden_per_doos stuks
+ *: dan telt die ene regel voor eenheden_per_doos stuks
  * (lookupArtikelen() geeft de multiplier terug) -- een ongeopende doos die
  * tijdens de telling wordt aangetroffen hoeft dus niet uitgepakt te worden
  * om 'm mee te tellen.
  *
- * $omschrijvingen (migratie 022): map van getrimde ruwe regel ->
+ * $omschrijvingen: map van getrimde ruwe regel ->
  * omschrijving, voor onbekende barcodes -- zie splitsBekendOnbekend()/
  * ontbrekendeOmschrijvingen()/loggeOnbekendeScans() in transacties.php.
  * Bewust blokkerend: zonder omschrijving wordt de hele telling niet
  * verwerkt (geen half bijgewerkte kastcontrole).
  *
- * $kastlocatie (migratie 043, op verzoek van Harm: "het is niet heel
+ * $kastlocatie ("het is niet heel
  * waarschijnlijk dat ik de hele berging in 1 keer ga scannen -- dus per
  * kast per locatie"): optioneel, alleen gezet bij de vrijwillige
  * "opnieuw telling uitvoeren"-actie op het Takenbord (nooit bij de
@@ -158,14 +158,14 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
         return ['success' => false, 'onbekend' => true, 'onbekendeRegels' => $ontbrekend, 'verwerkt' => 0];
     }
 
-    // Migratie 037, op verzoek van Harm: zie toelichting bij
+    // Zie toelichting bij
     // maakArtikelenVoorOnbekendeRegels() in includes/transacties.php --
     // een onbekende regel met omschrijving wordt hier meteen een echt
     // artikel, dat dan ook meteen in DEZE telling meetelt.
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
-    // Migratie 043: bij een kast-scoped sessie, gescande regels die bij
+    // Bij een kast-scoped sessie, gescande regels die bij
     // een ANDERE geregistreerde kastlocatie horen eruit filteren vóórdat
     // $geteld/$geteldPerLot hieronder gebouwd worden -- zie de toelichting
     // bij $kastlocatie in de docblock hierboven.
@@ -192,7 +192,7 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
         $geteld[$artikel['ean']] = ($geteld[$artikel['ean']] ?? 0) + $artikel['hoeveelheid'];
     }
 
-    // Migratie 040: naast de EAN-som hierboven (nodig voor de
+    // Naast de EAN-som hierboven (nodig voor de
     // $regels-samenvatting die de frontend ongewijzigd terugkrijgt) ook
     // per ean+lot+vervaldatum tellen, met het lot/de vervaldatum van de
     // gescande regel zelf -- exact hetzelfde patroon als verwerkScan()
@@ -218,7 +218,7 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
     $systeem = [];
     foreach (getTellingArtikelen($locatie, $kastlocatie) as $r) $systeem[$r['ean']] = $r['systeemAantal'];
 
-    // Migratie 040: systeemvoorraad in dezelfde ean+lot+vervaldatum-vorm,
+    // Systeemvoorraad in dezelfde ean+lot+vervaldatum-vorm,
     // via de nieuwe getTellingLotArtikelen()/tellingLotSleutel() hierboven.
     // Let op: voorraadLot() geeft 'vervaldatum' terug als weergavestring
     // (d-m-Y) EN 'vervaldatum_sql' als de rauwe SQL-datum -- hier moet
@@ -266,7 +266,7 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
         ];
     }
 
-    // Migratie 040 (de eigenlijke bugfix): de correctieboeking gebeurt nu
+    // De correctieboeking gebeurt nu
     // per ean+lot+vervaldatum-groep i.p.v. op EAN-niveau met lot=NULL --
     // elke sleutel die óf systeemvoorraad had óf nu geteld is, wordt
     // vergeleken en een afwijking wordt geboekt MET het lot/de vervaldatum
@@ -301,7 +301,7 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
         $verwerkt++;
     }
 
-    // Migratie 043: alleen bij een VOLLEDIGE (niet kast-scoped) telling
+    // Alleen bij een VOLLEDIGE (niet kast-scoped) telling
     // geldt dit als "de hele locatie is nu weer fysiek gecontroleerd" --
     // een kast-telling is per definitie maar een deel van de locatie, dus
     // mag de periodieke Kastcontrole-taak (includes/taken.php) daardoor

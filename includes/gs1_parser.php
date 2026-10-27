@@ -5,7 +5,7 @@
  * overgeslagen, 17=vervaldatum, 10=lot, 21=serienummer als fallback voor
  * lot, 240=interne artikelref).
  *
- * Herbouwd (op verzoek van Harm, na een gemeld praktijkprobleem): er zijn
+ * Herbouwd (na een gemeld praktijkprobleem): er zijn
  * verschillende leveranciers/verpakkingsniveaus in omloop die dezelfde
  * gegevens in een andere volgorde aanbieden, of als twee losse fysieke
  * barcodes i.p.v. één combinatiecode, of als QR-code volgens de GS1
@@ -23,7 +23,7 @@
  *      GS1-128/DataMatrix-barcode.
  *
  * Bekende beperking, en de fix daarvoor (n.a.v. een concrete meldingen-reeks
- * van Harm met echt gescande lotnummers die stelselmatig fout uitkwamen):
+ * met echt gescande lotnummers die stelselmatig fout uitkwamen):
  * een barcodescanner stuurt in de praktijk meestal geen FNC1/GS-
  * scheidingsteken door tussen twee variabele-lengte velden, dus moet het
  * einde van een variabele waarde (lot/serienummer/interne ref) bij
@@ -47,8 +47,8 @@
  * zeldzamer is (3 vaste cijfers i.p.v. 2) en in de praktijk wél een echt
  * tweede veld aankondigt (vaak alfanumeriek, bv. "...240BXA105902E").
  *
- * Update (Migratie 053, op verzoek van Harm, n.a.v. een lijst van 170 echte
- * GS1-scans die tegen deze parser getest zijn): de hierboven genoemde
+ * Update (n.a.v. een lijst van 170 echte GS1-scans die tegen deze
+ * parser getest zijn): de hierboven genoemde
  * restbeperking (een lot dat toevallig "240" bevat) kwam in die lijst 1x
  * voor en is nu gemitigeerd -- zie het commentaar bij gs1LeesVariabeleWaarde()
  * hieronder. Dezelfde testronde bracht ook aan het licht dat AI(17) soms
@@ -135,7 +135,7 @@ function gs1LeesVariabeleWaarde(string $remaining): array {
     $zoekGrens = min(30, strlen($remaining));
     for ($i = 1; $i <= $zoekGrens; $i++) {
         if (substr($remaining, $i, 3) === '240') {
-            // Migratie 053, op verzoek van Harm (n.a.v. een lijst van 170
+            // (n.a.v. een lijst van 170
             // echte GS1-scans waarin dit 1x misging): "240" komt soms
             // toevallig voor als losse deelreeks in een puur numeriek
             // lot-/serienummer (bv. lot "32405978" -> werd afgekapt tot
@@ -176,7 +176,7 @@ function parseGS1Raw(?string $rawString): array {
     $pos = 0;
     $len = strlen($rawString);
 
-    // Volgorde-onafhankelijk (op verzoek van Harm): loopt door de hele
+    // Volgorde-onafhankelijk : loopt door de hele
     // string heen en herkent elke AI-groep waar hij ook staat, i.p.v. een
     // vaste 01->11->17->10->21->240-volgorde te veronderstellen zoals de
     // oude parser deed. Dat maakt het niet meer uit of bijvoorbeeld de
@@ -210,7 +210,7 @@ function parseGS1Raw(?string $rawString): array {
                 $year = 2000 + (int) substr($dateStr, 0, 2);
                 $month = (int) substr($dateStr, 2, 2);
                 $day = (int) substr($dateStr, 4, 2);
-                // Migratie 053, op verzoek van Harm (n.a.v. dezelfde lijst
+                // (n.a.v. dezelfde lijst
                 // van 170 echte GS1-scans): de GS1 General Specifications
                 // staan DD=00 in AI(17) toe als "geen specifieke dag" --
                 // dat kwam in de praktijk ook echt voor. De spec-conforme

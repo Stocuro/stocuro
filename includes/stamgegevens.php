@@ -1,10 +1,10 @@
 <?php
 /**
- * Beheerde keuzelijst voor procedure-typen (migratie 004), plus (migratie
+ * Beheerde keuzelijst voor procedure-typen, plus (migratie
  * 019) de samengevoegde specialisten/laboranten-lijst die nu rechtstreeks
  * uit 'users' komt.
  *
- * Migratie 019 (rollenmodel-herziening, op verzoek van Harm): de aparte
+ * De aparte
  * 'specialisten'-tabel (een naamlijst los van een inlogaccount) is
  * samengevoegd met 'users' -- iedereen die met het systeem werkt logt
  * zelf in, dus is een specialist/laborant nu altijd een users-rij. Deze
@@ -22,7 +22,7 @@ require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/audit.php';
 
 function getSpecialisten(): array {
-    // licentie_geblokkeerd meegestuurd (op verzoek van Harm, "Licentiemodel:
+    // Licentie_geblokkeerd meegestuurd ("Licentiemodel:
     // geen naam-registratie zonder licentie"): de frontend gebruikt dit om
     // een specialist/laborant zonder geldige licentie niet-selecteerbaar te
     // tonen bij Materiaal Verbruik en Eenmalige Bestelling, met een
@@ -32,7 +32,7 @@ function getSpecialisten(): array {
     // hoe dan ook server-side in includes/transacties.php::verwerkScan() en
     // includes/eenmalige_bestellingen.php; dit is puur zodat de gebruiker
     // niet eerst iets hoeft in te dienen om die weigering te zien.
-    // 'foto' meegestuurd (migratie 047, op verzoek van Harm: "Leaderboard
+    // 'foto' meegestuurd ("Leaderboard
     // met wie aan de beurt is uitbreiden met foto") -- getPiccRotatie()
     // hieronder in includes/leaderboard.php geeft dit door aan de
     // Home-widget/Rapportage-weergave (zie avatarHtml() in assets/js/app.js).
@@ -43,7 +43,7 @@ function getSpecialisten(): array {
 
 /**
  * Alle actieve gebruikersnamen (elke rol, dus ook beheerder/bekijker) --
- * migratie 033, op verzoek van Harm: de "Besteld door"-velden (bestel-
+ * De "Besteld door"-velden (bestel-
  * modal, order-detail, eenmalige-bestelling-bewerken) moeten een dropdown
  * van bekende systeemgebruikers zijn i.p.v. vrije tekst, en "wie plaatst
  * een order" is niet beperkt tot specialist/laborant (zie getSpecialisten()
@@ -60,8 +60,8 @@ function getActieveGebruikersNamen(): array {
 
 /**
  * Oude 'specialisten'-rijen die nog geen gekoppeld account hebben (op
- * naam gematcht, geen FK meer sinds migratie 019 de koppelkolom
- * verwijderde) -- getoond op het Gebruikers-scherm onder "Nog te
+ * naam gematcht, geen FK meer sinds de koppelkolom is verwijderd) --
+ * getoond op het Gebruikers-scherm onder "Nog te
  * migreren" zodat de beheerder ze eenvoudig alsnog een echt account kan
  * geven. Er komen geen nieuwe rijen meer bij in 'specialisten'; dit is
  * puur de resterende, aflopende lijst van vóór de samenvoeging.
@@ -103,7 +103,7 @@ function setProcedureTypeActief(int $id, bool $actief, ?string $gebruikerNaam = 
 }
 
 /**
- * Migratie 019: mag een Laborant deze procedure ook zelf uitvoeren (in de
+ * Mag een Laborant deze procedure ook zelf uitvoeren (in de
  * praktijk nu alleen PICC-lijn) -- zie includes/transacties.php::
  * verwerkScan() voor de daadwerkelijke afdwinging bij Scan Usage.
  */

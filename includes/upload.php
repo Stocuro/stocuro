@@ -21,10 +21,10 @@ declare(strict_types=1);
 // een pasfoto en blijft ruim onder gangbare PHP post_max_size-defaults.
 const FOTO_MAX_BYTES = 2 * 1024 * 1024;
 
-// Migratie 028, op verzoek van Harm: productfoto's mogen GEEN kunstmatige
+// Productfoto's mogen GEEN kunstmatige
 // maximale grootte hebben (in tegenstelling tot de avatar-upload
 // hierboven) -- de enige harde grens die overblijft is de databasekolom
-// zelf (artikelen.foto_data is MEDIUMBLOB, migratie 023, max ~16MB). Dit
+// zelf (artikelen.foto_data is MEDIUMBLOB, max ~16MB). Dit
 // is dus geen "product-uploadlimiet" in de gebruikelijke zin, maar puur
 // de technische bodem om te voorkomen dat een corrupt/absurd groot
 // bestand de database-insert laat stuklopen i.p.v. een nette foutmelding
@@ -53,13 +53,13 @@ const FOTO_IMAGETYPE_MIME = [
  * naar ruwe bytes + MIME-type. Gedeelde validatiestap voor beide
  * foto-opslagpatronen in deze app: op-schijf (verwerkFotoUpload()
  * hieronder, users + producent_contacten) en in-database
- * (includes/artikelen.php::uploadArtikelFoto(), migratie 023,
- * producten -- op uitdrukkelijk verzoek van Harm rechtstreeks in de
- * database i.p.v. op schijf). Gooit een RuntimeException met een
+ * (includes/artikelen.php::uploadArtikelFoto(), voor producten
+ * uitdrukkelijk rechtstreeks in de database i.p.v. op schijf). Gooit een
+ * RuntimeException met een
  * gebruikersvriendelijke melding als het geen geldige/toegestane/
  * niet-te-grote/echte afbeelding is.
  *
- * @param int $maxBytes Migratie 028: aanroeper-specifieke bovengrens --
+ * @param int $maxBytes aanroeper-specifieke bovengrens --
  *        FOTO_MAX_BYTES (2MB) voor avatars, PRODUCT_FOTO_MAX_BYTES (16MB,
  *        in de praktijk "geen limiet", zie toelichting daar) voor
  *        productfoto's. Blijft een verplichte parameter i.p.v. een

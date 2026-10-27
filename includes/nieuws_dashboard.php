@@ -1,17 +1,17 @@
 <?php
 /**
- * Migratie 026/028, op verzoek van Harm: drie losse onderdelen die verder
+ * Drie losse onderdelen die verder
  * nergens anders op één plek stonden:
  *   - Nieuws: nieuwste producten + "niet leverbaar maar tijdelijk
- *     vervangen door" (dezelfde vervanger-koppeling als migratie 025,
+ *     vervangen door" (dezelfde vervanger-koppeling als
  *     includes/artikelen.php, hier alleen samengevat als lijst).
  *   - Het Team: foto's van specialisten (alfabetisch), daaronder
- *     laboranten (ook alfabetisch) -- uit users (migratie 019
- *     rollenmodel + migratie 015 profielfoto's).
+ *     laboranten (ook alfabetisch) -- uit users (rollenmodel +
+ *     profielfoto's).
  *   - Contactpersonen: foto's van de contactpersonen per leverancier
- *     (producent_contacten, migratie 012 + 015).
+ *     (producent_contacten).
  *
- * Migratie 030, op verzoek van Harm: stonden eerst met z'n drieën op één
+ * Stonden eerst met z'n drieën op één
  * dashboard/scherm-recht ('nieuws'). Nu drie eigen schermen met elk een
  * eigen scherm-recht (zie includes/schermen.php: 'nieuws', 'team',
  * 'contactpersonen') -- Het Team verhuist naar het nieuwe "Team &
@@ -36,10 +36,10 @@ require_once __DIR__ . '/../config/database.php';
  */
 function getNieuwsteProducten(int $limit = 8): array {
     $limit = max(1, $limit);
-    // Migratie 039_home_nieuwe_producten, op verzoek van Harm ("nieuwe rij
+    // ("nieuwe rij
     // Nieuwe producten met afbeelding" op Home): foto_data/foto_mime erbij
     // gehaald (zelfde BLOB-kolommen als de productfoto op de
-    // productdetailpagina, migratie 023) zodat de frontend een echte
+    // productdetailpagina) zodat de frontend een echte
     // fototegel kan tonen i.p.v. alleen tekst. Producten zonder foto krijgen
     // gewoon 'foto' => null; de frontend valt dan terug op een neutraal
     // productplaceholder (zelfde idee als avatarHtml() voor personen).
@@ -82,7 +82,7 @@ function getNietLeverbaarVervangers(): array {
 }
 
 /**
- * Specialisten en laboranten (users.rol, migratie 019), elk apart
+ * Specialisten en laboranten (users.rol), elk apart
  * alfabetisch gesorteerd op naam zodat de frontend ze zonder verdere
  * bewerking als twee losse, alfabetische secties kan tonen. Alleen
  * actieve accounts -- een gedeactiveerd account op het teamoverzicht
@@ -107,13 +107,13 @@ function getTeamOverzicht(): array {
 }
 
 /**
- * Contactpersonen per leverancier (producenten + producent_contacten,
- * migratie 012), gegroepeerd per producent en alfabetisch op
+ * Contactpersonen per leverancier (producenten + producent_contacten),
+ * gegroepeerd per producent en alfabetisch op
  * producentnaam -- zodat de frontend het per leverancier kan koppen i.p.v.
  * één ongesorteerde pot met namen.
  */
 function getContactpersonenOverzicht(): array {
-    // Migratie 031, op verzoek van Harm: telefoon/email/opmerking meesturen
+    // Telefoon/email/opmerking meesturen
     // zodat een contactpersoon-kaart op de Contacten-pagina direct de
     // contactgegevens kan tonen (uitklappen) i.p.v. eerst door te moeten
     // klikken naar de producent-detailpagina -- zelfde kolommen als
@@ -143,7 +143,7 @@ function getContactpersonenOverzicht(): array {
 }
 
 /**
- * Migratie 030: was getNieuwsDashboard() (alle drie de onderdelen samen),
+ * Was getNieuwsDashboard() (alle drie de onderdelen samen),
  * nu alleen het Nieuws-onderdeel -- Het Team en Contactpersonen hebben nu
  * hun eigen endpoint (api/team_overzicht.php, api/contactpersonen.php)
  * met een eigen scherm-recht.

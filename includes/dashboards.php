@@ -108,10 +108,10 @@ function getCategorieOverzicht(): array {
     $onderMinPerEan = [];
     foreach (voorraadStatus() as $row) {
         $stuksPerEan[$row['ean']] = ($stuksPerEan[$row['ean']] ?? 0) + $row['huidig'];
-        // Migratie 052, op verzoek van Harm: dit gebruikte een eigen
+        // Dit gebruikte een eigen
         // "$row['min'] > 0"-check, wat exact dezelfde bug had als de LAAG-
         // berekening in includes/voorraad.php::voorraadStatus() vóór deze
-        // migratie -- kamers hebben altijd min=0 (par-systeem, migratie 031),
+        // wijziging -- kamers hebben altijd min=0 (par-systeem),
         // dus een kamer die ver onder zijn vereiste dagvoorraad (max) zit
         // werd hier nooit als "onder min" meegeteld. Nu hergebruikt als
         // rechtstreekse afgeleide van $row['voorraadStatus'] (al gecorrigeerd
@@ -151,7 +151,7 @@ function getCategorieOverzicht(): array {
             'ean' => $ean, 'naam' => $artikel['productnaam'], 'producent' => $artikel['producent'] ?? '',
             'prijs' => $prijs, 'stuks' => $stuks, 'waarde' => $waarde,
             'onderMin' => !empty($onderMinPerEan[$ean]), 'orderStatus' => $orderStatusMap[$ean] ?? '',
-            // Migratie 026, op verzoek van Harm: de "Loten < 6mnd"-kolom in
+            // De "Loten < 6mnd"-kolom in
             // het categorie-overzicht moet klikbaar zijn naar precies de
             // producten die dit veroorzaken -- dus per artikel meesturen
             // i.p.v. alleen als categorie-totaal (zoals $summary hierboven).
@@ -169,7 +169,7 @@ function getCategorieOverzicht(): array {
 // =====================================================================
 // VERBRUIK PER PROCEDURE. Poort van getVerbruiksgebruik().
 //
-// Doel (op verzoek van Harm): zichtbaar maken of materiaalgebruik afwijkt
+// Doel : zichtbaar maken of materiaalgebruik afwijkt
 // tussen specialisten die dezelfde procedure uitvoeren. Structuur:
 // procedure (bovenste niveau) -> specialist (daaronder) -> wat die
 // specialist gemiddeld PER PROCEDURE verbruikt, in totaal en per product.
@@ -201,7 +201,7 @@ function getCategorieOverzicht(): array {
 // procedure.
 //
 // Kostprijs gebruikt prijs_op_moment (de prijs die gold tén tijde van
-// het verbruik, migratie 003) met terugval op de actuele artikelprijs
+// het verbruik) met terugval op de actuele artikelprijs
 // voor oudere rijen zonder snapshot. Zo verandert de kostprijs van een
 // procedure uit het verleden niet met terugwerkende kracht als de
 // catalogusprijs later wijzigt.
@@ -218,7 +218,7 @@ function getVerbruiksgebruik(): array {
 
     // Stap 1: groepeer regels tot procedure-momenten (één formulierindiening
     // van Scan Usage, mogelijk meerdere gescande producten, telt als één
-    // procedure). batch_id (migratie 014) is hiervoor de betrouwbare
+    // Procedure). batch_id is hiervoor de betrouwbare
     // sleutel; voor data van vóór die migratie (batch_id IS NULL) valt dit
     // terug op specialist+procedure_type+tijdstempel, de enige sleutel die
     // toen beschikbaar was.
@@ -234,9 +234,9 @@ function getVerbruiksgebruik(): array {
         $momenten[$momentKey]['producten'][$pKey]['kosten'] += (float) $r['prijs'] * (int) $r['hoeveelheid'];
     }
 
-    // Stap 2: aggregeer de procedure-momenten per procedure_type. Op
-    // verzoek van Harm is het specialist-niveau dat hier eerder stond
-    // (per-arts gemiddelden) vervallen: dat voelt op termijn mogelijk
+    // Stap 2: aggregeer de procedure-momenten per procedure_type. Het
+    // specialist-niveau dat hier eerder stond
+    // (per-arts gemiddelden) is vervallen: dat voelt op termijn mogelijk
     // vervelend aan voor artsen, en dit scherm gaat over de procedure, niet
     // over wie 'm uitvoerde. specialist wordt hierboven alleen nog gebruikt
     // om de fallback-sleutel voor oude data uniek te houden. "Verbruik per
@@ -294,10 +294,10 @@ function getVerbruiksgebruik(): array {
 // zodat je (a) kunt terugzien hoeveel voorraad er over datum gaat, en (b)
 // een indicatie hebt hoe nauwkeurig er gescand wordt (veel tekorten =
 // vaak dingen niet teruggevonden bij een telling). Gebruikt
-// prijs_op_moment (snapshot-prijs, migratie 003) voor de waarde, net als
+// prijs_op_moment (snapshot-prijs) voor de waarde, net als
 // getVerbruiksgebruik() hierboven.
 // =====================================================================
-// Migratie 026, op verzoek van Harm: Afboekingen moet beheersbaar blijven
+// Afboekingen moet beheersbaar blijven
 // naarmate de transactielog groeit -- vandaar een periodefilter i.p.v.
 // altijd de volledige historie. AFBOEKINGEN_PERIODES is de canonieke lijst
 // van geldige periode-sleutels (ook gebruikt door de frontend om de
@@ -359,7 +359,7 @@ function getAfboekingenOverzicht(string $periode = 'totaal'): array {
 
 // =====================================================================
 // VERBRUIKSTRENDS + SLOW MOVERS + AANPASSINGEN/AFBOEKINGEN/BESPARING OVER
-// TIJD. Poort van getVerbruiksTrends(). Op verzoek van Harm uitgebreid met
+// TIJD. Poort van getVerbruiksTrends(). uitgebreid met
 // drie extra maandelijkse reeksen naast het bestaande verbruik-per-
 // categorie-overzicht, zodat alles wat "over de tijd" gaat op één scherm
 // staat i.p.v. verspreid:
@@ -370,8 +370,8 @@ function getAfboekingenOverzicht(string $periode = 'totaal'): array {
 //     data als getAfboekingenOverzicht() hierboven, maar hier per maand
 //     i.p.v. als platte lijst).
 //   - besparing: materiaal dat ondanks een naderende vervaldatum tóch nog
-//     gebruikt is i.p.v. te moeten worden afgeboekt. Concreet gemaakt
-//     (overleg met Harm) als: een 'Verbruik'-regel waarvan de vervaldatum
+//     gebruikt is i.p.v. te moeten worden afgeboekt. Concreet gedefinieerd
+//     als: een 'Verbruik'-regel waarvan de vervaldatum
 //     op het moment van scannen nog maar 1, 2 of 3 maand (30/60/90 dagen)
 //     verwijderd was -- dat is materiaal dat een goede kans had om anders
 //     als 'Vervallen' afgeboekt te worden. De euro-waarde daarvan (dezelfde
@@ -506,7 +506,7 @@ function getVerbruiksTrends(): array {
 }
 
 /**
- * Migratie 026, op verzoek van Harm: elk getal op het Verbruikstrends-tabblad
+ * Elk getal op het Verbruikstrends-tabblad
  * moet klikbaar zijn naar precies de producten erachter (bijv. "welke
  * ballonnen zijn in die maand gebruikt" i.p.v. alleen het totaal). Dit is de
  * detail-poort: zelfde brongegevens en dezelfde classificatielogica als
