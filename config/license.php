@@ -16,7 +16,16 @@ declare(strict_types=1);
 
 return [
     // Ed25519 public key, ruwe 32 bytes, base64-gecodeerd.
-    'public_key_b64' => 'e/VMeK488Ih6sjs8tlCCzm2Jnw6ziPZjaoZLq/ZtT9w=',
+    // Vervangen op 11 november 2026: de bijbehorende private sleutel van
+    // de vorige public key was onvindbaar (niet in deze repo, niet elders
+    // op de leverancier-Mac, geen spoor in de wachtwoordmanager). Een
+    // nieuw sleutelpaar aanmaken kostte niets, want er waren nog geen
+    // echte klanten met een uitgegeven, op de oude sleutel ondertekende
+    // activatiecode (zie ook includes/license.php, de toelichting bij
+    // verifieerVendorToken()). De nieuwe private sleutel leeft uitsluitend
+    // op de eigen infrastructuur van de leverancier (vendor-tools/), nooit
+    // in deze codebase.
+    'public_key_b64' => 'Pj6ffYipJ9+G03ydD3DmLeDv5KjDqSKDQNRlLOKIVMg=',
 
     // Hoeveel uur een succesvolle licentiecontrole in de sessie
     // vertrouwd wordt voordat includes/license.php 'm opnieuw

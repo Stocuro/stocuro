@@ -58,6 +58,18 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.13 — vendor signing key rotated.** The Ed25519 private key used
+  to sign activation codes (see "Licensing & self-hosted distribution"
+  below) could no longer be located — not in this repo (by design), not
+  elsewhere on the vendor's machine, no record in the password manager. A
+  fresh keypair was generated at no cost, since no real customer has ever
+  been issued a code signed with the old key (see `includes/license.php`,
+  the note on `verifieerVendorToken()`). `config/license.php`'s
+  `public_key_b64` now holds the new public key; the new private key
+  lives only in `vendor-tools/` on the vendor's own infrastructure, never
+  in this codebase. No effect on existing installations: every
+  installation's own free-user token is signed locally (HMAC,
+  `config/instance.local.php`), entirely independent of this vendor key.
 - **v1.0.12 — code comments cleaned up, part 2 (the long tail).**
   Finishes what v1.0.11 started: the remaining ~220 migration-number/
   maintainer-name references that were woven into the middle of a
