@@ -60,6 +60,43 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.29 — a negative lot could still show up as "TEKORT" even
+  though the overall stock total was already correctly back at 0.**
+  Found through the user's own manual testing: receive one lot, then
+  consume more of it than was ever received. The existing "don't let
+  stock go negative" safety net (`voorkomNegatieveVoorraad()`) already
+  corrected the EAN+location *total* back to 0 with a compensating
+  booking — but that booking was always lot-less, so the one specific
+  lot that actually went negative stayed negative in Lots in Stock (the
+  `TEKORT` badge from v1.0.24), while Stock/Overview already showed 0.
+  Two screens disagreeing about the same stock is exactly the kind of
+  thing "stock can never be negative" is supposed to prevent — the
+  coexistence of an aggregate-level fix and a lot-level symptom was the
+  bug, not a deliberate tradeoff. Fixed by making the correction
+  lot-aware: when the booking that triggered it had a known lot, the
+  compensating correction is now booked **against that exact lot**
+  (same lot number, same expiry) instead of lot-less, bringing it back
+  to 0 directly. This is strictly more informative than before, too —
+  Recent Transactions now shows *which* lot needed correcting, not just
+  that the product's total needed one. As a consequence, this also now
+  auto-resolves the older, deliberately-built multi-lot scenario from
+  v1.0.24 (consumption booked against the wrong one of two lots, while
+  the EAN total stayed correct) instead of just flagging it — stock
+  never shows negative anywhere now, full stop. The `TEKORT` display
+  itself stays in place as a defensive fallback (e.g. for data from
+  before this fix), but is no longer reachable through Material
+  Usage/Expired/Transfer/Returns in normal use. Also reported in the
+  same conversation and verified working correctly already: a Stock
+  Count shortfall (counted less than the system expected) does
+  correctly reduce the recorded stock — confirmed end-to-end against a
+  real database, including the combined case (over-consume a lot to 0,
+  then do a stock count that finds nothing — no phantom "surplus"
+  booking results, which is what the lot incorrectly sitting at a
+  negative number used to cause once a stock count ran into it).
+  Verified against a real database: single-lot over-consumption, the
+  older two-lot wrong-lot-scanned case, a plain stock-count shortfall,
+  and the combined over-consume-then-count case — all four now behave
+  correctly with zero negative numbers anywhere.
 - **v1.0.28 — Deploy-tooling note: the SFTP home directory is not the
   live web root (no app behavior change).** Found while deploying
   v1.0.27's own changelog update — see "SFTP deploy gotcha" in the

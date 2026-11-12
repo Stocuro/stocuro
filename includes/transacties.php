@@ -504,10 +504,10 @@ function insertTransactieRegel(
  * voorraad. Blijf dan gewoon op 0 maar registreer wel dat het product
  * verbruikt is." Roep dit aan VLAK NA elke uitgaande boeking (Verbruik,
  * Vervallen, Verplaatsing uit, Retournering) die de berekende voorraad
- * van een (ean, locatie) negatief zou kunnen laten worden -- de scan zelf
- * is dan al onvoorwaardelijk geboekt (nooit geweigerd/geblokkeerd, dat is
- * hier expliciet niet gewenst), dit controleert alleen wat
- * de RESULTERENDE voorraad nu is.
+ * van een (ean, locatie[, lot]) negatief zou kunnen laten worden -- de
+ * scan zelf is dan al onvoorwaardelijk geboekt (nooit geweigerd/
+ * geblokkeerd, dat is hier expliciet niet gewenst), dit controleert
+ * alleen wat de RESULTERENDE voorraad nu is.
  *
  * Boekt zo nodig een compenserende correctie zodat de weergegeven
  * voorraad nooit onder 0 zakt. Eigen transactietype 'Correctie:
@@ -529,22 +529,40 @@ function insertTransactieRegel(
  * per-lot-weergave. De opmerking maakt het verschil met een echte,
  * fysieke kastcontrole ook in Recente Transacties duidelijk herkenbaar.
  *
- * Geen aparte lot/vervaldatum op de correctieregel: dit corrigeert het
- * EAN+locatie-totaal (wat de gebruiker als "de voorraad" ziet in
- * Overzicht/Voorraad), niet een specifiek lot -- lot-niveau-precisie is
- * hier niet het punt, een telfout van deze aard geeft toch al geen
- * betrouwbaar aanknopingspunt voor WELK lot precies fout stond.
+ * Lot-specifiek i.p.v. alleen het EAN+locatie-totaal (sinds v1.0.29):
+ * gemeld dat bij één lot op voorraad, overconsumptie van dat lot alleen
+ * het EAN-totaal corrigeerde -- het specifieke lot zelf bleef zichtbaar
+ * negatief ("TEKORT"-badge) in Loten op Voorraad, terwijl Overzicht/
+ * Voorraad al netjes 0 toonde. Verwarrend (twee schermen die elkaar
+ * tegenspreken) en in strijd met het uitgangspunt "voorraad kan nooit
+ * negatief zijn" -- dat moet ook op lotniveau gelden, niet alleen
+ * aggregaatniveau. Is $lot bekend (de boeking die net plaatsvond had een
+ * lotnummer), dan wordt nu PRECIES DAT lot gecontroleerd/gecorrigeerd
+ * (huidigeVoorraadVoorLot()) i.p.v. het bredere EAN+locatie-totaal --
+ * dat corrigeert vanzelf ook het totaal mee (de correctieregel telt mee
+ * in TRANSACTIETYPES_INKOMEND), én is preciezer: de correctie zelf krijgt
+ * nu het echte lotnummer mee, dus in Recente Transacties is meteen
+ * zichtbaar WELK lot de afwijking had, niet alleen dat er iets afwijkt.
+ * Dit vangt ook het oudere, bewust gebouwde multi-lot-scenario
+ * (verbruik per ongeluk tegen het verkeerde van twee lotten geboekt,
+ * EAN-totaal bleef toen kloppend) nu automatisch op -- de TEKORT-badge
+ * in voorraadLot() blijft bestaan als defensief vangnet (bv. voor data
+ * van vóór deze fix, of een handmatige lot-correctie elders), maar is
+ * via deze drie aanroeppaden niet meer normaal bereikbaar. Is $lot
+ * NULL (scan zonder lot, genuinely lotloos product of bevestigd
+ * "geen lot"), dan blijft de oude aggregaat-correctie ongewijzigd --
+ * daar IS het EAN+locatie-totaal het enige zinvolle niveau.
  */
-function voorkomNegatieveVoorraad(string $ean, string $locatie, string $artikelNaam, ?float $prijsOpMoment, ?string $gebruikerNaam = null): void {
-    $perLocatie = huidigeVoorraadPerLocatie($ean);
-    $huidig = $perLocatie[$locatie] ?? 0;
+function voorkomNegatieveVoorraad(string $ean, string $locatie, ?string $lot, ?string $vervaldatumSql, string $artikelNaam, ?float $prijsOpMoment, ?string $gebruikerNaam = null): void {
+    $huidig = huidigeVoorraadVoorLot($ean, $locatie, $lot);
     if ($huidig >= 0) return;
 
     $tekort = abs($huidig);
-    $opmerking = "Automatische correctie: deze boeking zou de voorraad van dit product op $locatie op $huidig hebben gebracht, wat niet kan. "
+    $wat = $lot !== null ? "van lot $lot van dit product" : "van dit product";
+    $opmerking = "Automatische correctie: deze boeking zou de voorraad $wat op $locatie op $huidig hebben gebracht, wat niet kan. "
         . "Voorraad teruggezet naar 0 -- wijst op een telfout, controleer de kastvoorraad op deze locatie.";
     insertTransactieRegel(
-        date('Y-m-d H:i:s'), $ean, null, null, $locatie, 'Correctie: negatieve voorraad', $tekort,
+        date('Y-m-d H:i:s'), $ean, $lot, $vervaldatumSql, $locatie, 'Correctie: negatieve voorraad', $tekort,
         $prijsOpMoment, null, null, $opmerking, null, $artikelNaam, $gebruikerNaam
     );
 }
@@ -891,7 +909,7 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
             // de scan is hierboven al onvoorwaardelijk geboekt, dit
             // corrigeert alleen de resulterende voorraad als die door
             // deze boeking onder 0 zou zijn gezakt.
-            voorkomNegatieveVoorraad($artikel['ean'], $effectieveLocatie, $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
+            voorkomNegatieveVoorraad($artikel['ean'], $effectieveLocatie, $item['lot'], $item['expirySql'], $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
         }
 
         $verwerkt++;
@@ -1381,7 +1399,7 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
         // Zie voorkomNegatieveVoorraad() -- alleen de 'uit'-
         // kant (vanLocatie) kan door deze boeking negatief worden, de
         // 'in'-kant (naarLocatie) krijgt er juist voorraad bij.
-        voorkomNegatieveVoorraad($artikel['ean'], $vanLocatie, $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
+        voorkomNegatieveVoorraad($artikel['ean'], $vanLocatie, $item['lot'], $item['expirySql'], $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
 
         $verwerkt++;
     }
@@ -1469,7 +1487,7 @@ function retournering(string $gs1RawBlock, string $vanLocatie, string $redenReto
         );
         $verwerkteItems[] = $item + ['transactielog_id' => $transactielogId];
         // Zie voorkomNegatieveVoorraad() hierboven.
-        voorkomNegatieveVoorraad($artikel['ean'], $effectieveLocatie, $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
+        voorkomNegatieveVoorraad($artikel['ean'], $effectieveLocatie, $item['lot'], $item['expirySql'], $artikel['naam'], $artikel['prijs'], $gebruikerNaam);
         $verwerkt++;
     }
 

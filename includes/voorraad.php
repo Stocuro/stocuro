@@ -221,6 +221,37 @@ function huidigeVoorraadPerLocatie(string $ean): array {
 }
 
 /**
+ * Zelfde berekening als huidigeVoorraadPerLocatie(), maar geschaald naar
+ * precies ÉÉN lot (of de lot=NULL-groep) op precies ÉÉN locatie --
+ * gebruikt door voorkomNegatieveVoorraad() (includes/transacties.php) om
+ * een dreigende negatieve voorraad op het juiste niveau te corrigeren:
+ * tegen het specifieke lot zelf als dat bekend is, niet alleen het
+ * EAN+locatie-totaal (zie de uitgebreide toelichting daar).
+ */
+function huidigeVoorraadVoorLot(string $ean, string $locatie, ?string $lot): int {
+    $stmt = db()->prepare(
+        "SELECT locatie,
+                SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_INKOMEND) . ") THEN hoeveelheid ELSE 0 END) AS inkomend,
+                SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_UITGAAND) . ") THEN hoeveelheid ELSE 0 END) AS uitgaand
+         FROM transactielog WHERE ean = :ean AND " . ($lot === null ? 'lot IS NULL' : 'lot = :lot') . "
+         GROUP BY locatie"
+    );
+    $params = [':ean' => $ean];
+    if ($lot !== null) $params[':lot'] = $lot;
+    $stmt->execute($params);
+
+    // Zelfde actueleNaam()-normalisatie als huidigeVoorraadPerLocatie()
+    // hierboven (locatie-hernoemen cascade).
+    $totaal = 0;
+    foreach ($stmt->fetchAll() as $r) {
+        if (actueleNaam('locatie', $r['locatie']) === $locatie) {
+            $totaal += (int) $r['inkomend'] - (int) $r['uitgaand'];
+        }
+    }
+    return $totaal;
+}
+
+/**
  * Flat lijst, één rij per artikel x locatie -- het exacte equivalent
  * van de oude Voorraad-Status-sheet. Elke dashboard-functie filtert/
  * groepeert hierop verder, precies zoals de oude code per dashboard
@@ -342,8 +373,8 @@ function voorraadLot(): array {
                 MAX(gs1_raw) AS gs1_raw_fallback
          FROM transactielog
          -- 'Correctie: negatieve voorraad' (includes/transacties.php::
-         -- voorkomNegatieveVoorraad()) uitgesloten: dat is een
-         -- automatische, lotloze bijstelling van het EAN+locatie-totaal
+         -- voorkomNegatieveVoorraad()) met lot=NULL uitgesloten: dat is een
+         -- automatische, LOTLOZE bijstelling van het EAN+locatie-totaal
          -- (telt wel mee in TRANSACTIETYPES_INKOMEND, dus in voorraadStatus()/
          -- huidigeVoorraadPerLocatie()), geen echt fysiek lot -- zonder deze
          -- uitsluiting verscheen zo'n correctie hier als een nep 'lot' met
@@ -351,8 +382,18 @@ function voorraadLot(): array {
          -- ECHTE, gebruiker-geïnitieerde kastcontrole-afwijking ('Telling:
          -- overschot'/'Telling: tekort', includes/telling.php) blijft wel
          -- gewoon meedoen, ook met lot=NULL voor een genuinely lotloos
-         -- product -- alleen dit ene, specifieke type is uitgesloten.
-         WHERE transactietype != 'Correctie: negatieve voorraad'
+         -- product -- alleen dit ene, specifieke type is uitgesloten, en
+         -- dan ook alleen zijn lotloze variant (sinds v1.0.29: zie hieronder).
+         --
+         -- EEN CORRECTIE MET EEN ECHT LOTNUMMER TELT HIER WEL MEE (sinds
+         -- v1.0.29). voorkomNegatieveVoorraad() boekt zo'n correctie nu
+         -- tegen het exacte lot dat de boeking veroorzaakte (zie de
+         -- uitgebreide toelichting daar) -- die correctie IS de reden dat
+         -- dit lot weer op 0 staat, dus die moet juist meegeteld worden in
+         -- de 'huidig'-som hieronder. Haar uitsluiten (zoals de lotloze
+         -- variant) zou het lot hier weer als TEKORT/negatief laten zien,
+         -- precies het probleem dat deze correctie net had opgelost.
+         WHERE NOT (transactietype = 'Correctie: negatieve voorraad' AND lot IS NULL)
          GROUP BY ean, lot, vervaldatum, locatie
          -- Extra OR-tak voor een NEGATIEF lot MET een echt lotnummer
          -- (gemeld praktijkprobleem): een EAN kan over twee lotten
@@ -374,6 +415,15 @@ function voorraadLot(): array {
          -- hier ook mee) -- die is al op aggregaatniveau verklaard/
          -- afgehandeld en zou hier alleen als verwarrende, nietszeggende
          -- herhaling verschijnen, geen nieuwe informatie.
+         --
+         -- Sinds v1.0.29 is dit multi-lot-scenario zelf ook opgelost:
+         -- voorkomNegatieveVoorraad() corrigeert nu het EXACTE lot terug
+         -- naar 0 (zie hierboven), dus de 'lot IS NOT NULL AND huidig < 0'
+         -- tak hoort via de normale boekpaden (Verbruik/Vervallen/
+         -- Verplaatsing/Retournering) niet meer bereikt te worden -- blijft
+         -- staan als defensief vangnet (bv. een handmatige lot-correctie
+         -- elders, of data van vóór deze fix), niet als de normale manier
+         -- om dit te ontdekken.
          HAVING huidig > 0 OR (lot IS NOT NULL AND huidig < 0)"
     )->fetchAll();
 

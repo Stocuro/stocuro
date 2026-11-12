@@ -22,7 +22,7 @@ declare(strict_types=1);
 // Features zijn de ontwikkelgeschiedenis van vóór deze release. Vanaf nu
 // zijn nieuwe versies kleine, doorlopende aanpassingen (patch/minor-bumps
 // op 1.0.0), zie README.md.
-const APP_VERSION = '1.0.28';
+const APP_VERSION = '1.0.29';
 
 // 'Correctie: negatieve voorraad' (migratie
 // 043_negatieve_voorraad_correctie_type.sql) telt hier mee zodat het
