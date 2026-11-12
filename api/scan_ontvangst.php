@@ -31,4 +31,6 @@ if ($locatie === '' || trim($gs1Raw) === '') {
 apiTry(fn() => verwerkScan('Ontvangst', $locatie, $gs1Raw, [
     'opmerking' => $opmerking, 'gebruikerNaam' => $user['naam'],
     'omschrijvingen' => $body['omschrijvingen'] ?? [],
+    'lotloos' => $body['lotloos'] ?? [],
+    'lotInvoer' => $body['lot_invoer'] ?? [],
 ]));

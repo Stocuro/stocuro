@@ -60,6 +60,26 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.15 — missing lot number is now caught instead of silently
+  booked.** Some products carry a second, "poorer" barcode next to the
+  real GS1 combination code (GTIN+lot+expiry) — one without lot/expiry
+  data at all. Scanning that one by accident during Goods Receipt or
+  Material Usage used to book silently with an empty lot, which is a real
+  traceability problem for lot-tracked products (mostly implants) but is
+  completely normal for products that never carry a lot/expiry at all.
+  The app now tells the two cases apart per product
+  (`artikelen.lot_tracking`, migration `041_lot_tracking.sql`): either
+  learned automatically from scan history (has this EAN ever had a real
+  lot before?), or set explicitly — "always has a lot" / "never has a
+  lot" — on Add Product, when describing an unknown scan, or afterwards
+  on the product edit screen. When a scan is missing a lot for a
+  lot-tracked product, Goods Receipt/Material Usage now blocks and asks:
+  at Material Usage, if exactly one lot of that product is currently in
+  stock at that location it's resolved automatically (unambiguous); if
+  not, you pick from what's in stock (or confirm "unknown"); at Goods
+  Receipt you enter the lot/expiry by hand or confirm the packaging truly
+  has none. Scoped to Goods Receipt and Material Usage only (where this
+  was reported) — Transfer/Returns/Stock Count are unaffected.
 - **v1.0.14 — stale WooCommerce/webshop references cleaned up.** Follow-up
   to the webshop retirement (site-only at the time, so not previously
   reflected here): the status banner above, the license-model section,
@@ -359,8 +379,7 @@ No step contacts the internet. There is no license-activation server.
 
 The `vendor-tools/` directory (private signing key, code generator) is
 **not part of the customer package**. It
-lives and runs only on the vendor's own infrastructure, outside this
-repository.
+lives and runs only on the vendor's own infrastructure, outside this repository.
 
 ## Installation
 

@@ -322,6 +322,10 @@ function getArtikelEditData(string $ean): array {
         'categorie' => $artikel['categorie'] ?? '',
         'commonFields' => $commonFields, 'specFields' => $specFields,
         'status' => $artikel['status'] ?? 'Actief',
+        // Lot-tracking-override ('automatisch'/'met_lot'/'zonder_lot') --
+        // zie ARTIKEL_LOT_TRACKING_WAARDEN hieronder en
+        // includes/voorraad.php::isLotVerwacht().
+        'lotTracking' => $artikel['lot_tracking'] ?? 'automatisch',
         'vervangendArtikelId' => $vervangendArtikelId,
         'vervangendArtikelNaam' => $vervangendArtikelNaam,
         'vervangendArtikelEan' => $vervangendArtikelEan,
@@ -382,6 +386,44 @@ function setArtikelStatus(string $ean, string $status, ?int $vervangendArtikelId
         return ['success' => true, 'message' => 'Status bijgewerkt'];
     } catch (Throwable $e) {
         logError('ARTIKEL_STATUS_ERROR', $ean, $e->getMessage());
+        return ['success' => false, 'error' => $e->getMessage()];
+    }
+}
+
+const ARTIKEL_LOT_TRACKING_WAARDEN = ['automatisch', 'met_lot', 'zonder_lot'];
+
+/**
+ * Lot-tracking-override voor één artikel -- zie de uitgebreide
+ * toelichting bij ARTIKEL_LOT_TRACKING_WAARDEN hierboven en bij migratie
+ * 041_lot_tracking.sql. Zelfde patroon als setArtikelStatus() hierboven:
+ * een eigen, typed-waarde actie i.p.v. een generiek tekstveld in
+ * ARTIKEL_EDIT_FIELDS/updateArtikelVeld().
+ */
+function setArtikelLotTracking(string $ean, string $waarde, ?string $gebruikerNaam = null): array {
+    if (!in_array($waarde, ARTIKEL_LOT_TRACKING_WAARDEN, true)) {
+        return ['success' => false, 'error' => 'Ongeldige waarde voor lot-tracking'];
+    }
+
+    try {
+        $eanNorm = normalizeEAN($ean);
+        $stmt = db()->prepare('UPDATE artikelen SET lot_tracking = :waarde WHERE ean = :ean');
+        $stmt->execute([':waarde' => $waarde, ':ean' => $eanNorm]);
+        if ($stmt->rowCount() === 0) {
+            // Rowcount 0 betekent hier niet per se "niet gevonden" (kan ook
+            // "waarde was al hetzelfde" zijn) -- alleen bij een echt
+            // ontbrekend artikel is dit een fout.
+            $check = db()->prepare('SELECT id FROM artikelen WHERE ean = :ean');
+            $check->execute([':ean' => $eanNorm]);
+            if (!$check->fetch()) return ['success' => false, 'error' => 'Product niet gevonden met EAN: ' . $eanNorm];
+        }
+
+        if ($gebruikerNaam !== null) {
+            logAudit($gebruikerNaam, 'artikel_lot_tracking_gewijzigd', 'artikel', $eanNorm, "lot_tracking=$waarde");
+        }
+
+        return ['success' => true, 'message' => 'Lot-tracking bijgewerkt'];
+    } catch (Throwable $e) {
+        logError('ARTIKEL_LOT_TRACKING_ERROR', $ean, $e->getMessage());
         return ['success' => false, 'error' => $e->getMessage()];
     }
 }
@@ -966,6 +1008,16 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
     // Handmatige interne code, geen normalisatie (vrije tekst).
     $logistiekCode = !empty($data['logistiek_code']) ? trim((string) $data['logistiek_code']) : null;
 
+    // Lot-tracking-override, zie ARTIKEL_LOT_TRACKING_WAARDEN hieronder --
+    // standaard 'automatisch' (afleiden uit scangeschiedenis), tenzij bij
+    // het aanmaken al expliciet is aangegeven dat dit product altijd/nooit
+    // een lotnummer heeft (bv. het "dit is de correcte barcode, geen
+    // verdere informatie"-vinkje op Artikel Toevoegen of bij het
+    // omschrijven van een onbekende scan, zie includes/transacties.php::
+    // maakArtikelenVoorOnbekendeRegels()).
+    $lotTracking = in_array($data['lot_tracking'] ?? '', ARTIKEL_LOT_TRACKING_WAARDEN, true)
+        ? $data['lot_tracking'] : 'automatisch';
+
     try {
         // Min_ik/min_hybok/min_kar
         // bestaan niet meer (kamers hebben geen eigen minimum meer, zie
@@ -975,11 +1027,11 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
             'INSERT INTO artikelen
                 (ean, doos_ean, eenheden_per_doos, productnaam, gs1_raw, foto_link, categorie, besteltype,
                  max_ik, max_hybok, max_kar, min_berging, max_berging,
-                 locatie_ik, locatie_berging, locatie_hybok, artikelref, logistiek_code, producent, prijs, specs)
+                 locatie_ik, locatie_berging, locatie_hybok, artikelref, logistiek_code, producent, prijs, specs, lot_tracking)
              VALUES
                 (:ean, :doos_ean, :eenheden_per_doos, :naam, :gs1_raw, :foto, :cat, :besteltype,
                  :max_ik, :max_hybok, :max_kar, :min_berging, :max_berging,
-                 :loc_ik, :loc_berging, :loc_hybok, :artikelref, :logistiek_code, :producent, :prijs, :specs)'
+                 :loc_ik, :loc_berging, :loc_hybok, :artikelref, :logistiek_code, :producent, :prijs, :specs, :lot_tracking)'
         )->execute([
             ':ean' => $ean, ':doos_ean' => $doosEan, ':eenheden_per_doos' => $eenhedenPerDoos,
             ':naam' => $productnaam, ':gs1_raw' => $data['gs1_raw'] ?? null,
@@ -995,6 +1047,7 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
             ':logistiek_code' => $logistiekCode,
             ':producent' => $data['producent'] ?? null, ':prijs' => (float) ($data['prijs'] ?? 0),
             ':specs' => $specs ? json_encode($specs, JSON_UNESCAPED_UNICODE) : null,
+            ':lot_tracking' => $lotTracking,
         ]);
 
         if ($gebruikerNaam !== null) {

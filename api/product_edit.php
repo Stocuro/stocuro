@@ -38,6 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // includes/artikelen.php::koppelAlsVervanger().
         $vervangendArtikelId = !empty($body['vervangend_artikel_id']) ? (int) $body['vervangend_artikel_id'] : null;
         apiTry(fn() => setArtikelStatus($ean, (string) ($body['status'] ?? 'Actief'), $vervangendArtikelId, $user['naam']));
+    } elseif ($actie === 'lot_tracking_bijwerken') {
+        // Lot-tracking-override ('automatisch'/'met_lot'/'zonder_lot'),
+        // zie includes/voorraad.php::isLotVerwacht() voor hoe dit het
+        // "ontbrekend lotnummer"-gedrag bij Ontvangst/Verbruik beïnvloedt.
+        apiTry(fn() => setArtikelLotTracking($ean, (string) ($body['lot_tracking'] ?? 'automatisch'), $user['naam']));
     } elseif ($actie === 'lot_corrigeren') {
         // Lot/vervaldatum van een
         // specifiek, mogelijk verkeerd geparst lot rechtzetten -- zie

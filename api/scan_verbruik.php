@@ -46,4 +46,9 @@ apiTry(fn() => verwerkScan($type, $locatie, $gs1Raw, [
     // Bij een hersubmit na een "onbekende barcode"-melding
     // stuurt de frontend een map ruwe regel -> omschrijving mee.
     'omschrijvingen' => $body['omschrijvingen'] ?? [],
+    'lotloos' => $body['lotloos'] ?? [],
+    // Bij een hersubmit na een "lot ontbreekt"-melding (zie
+    // includes/transacties.php::verwerkScan()) stuurt de frontend een map
+    // ruwe regel -> handmatige oplossing mee.
+    'lotInvoer' => $body['lot_invoer'] ?? [],
 ]));

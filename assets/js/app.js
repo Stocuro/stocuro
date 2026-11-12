@@ -457,6 +457,21 @@ const TRANSLATIONS = {
     onbPlaceholder: 'e.g. green suture set, Ethicon',
     onbIndienen: 'Submit again',
     onbOmschrijvingen: 'Description(s)',
+    onbLotloos: 'This product has no lot number / expiry date (this is the correct barcode, nothing more to scan)',
+    lotTitel: 'Missing lot number',
+    lotUitleg: "This scan doesn't contain a lot number, but this product normally has one -- probably the wrong barcode was scanned. Resolve each one below before this submission is booked.",
+    lotKiesOptie: 'Choose a lot...',
+    lotGeen: '(no lot number)',
+    lotOnbekendOptie: "Unknown / none of these -- book without a lot anyway",
+    lotNummerLabel: 'Lot number',
+    lotVervaldatumLabel: 'Expiry date',
+    lotBevestigGeen: 'This package really has no lot number (e.g. a damaged label) -- book without one',
+    lotIndienen: 'Submit again',
+    apLotTracking: 'Lot/expiry tracking',
+    apLotTrackingAuto: 'Automatic (default -- learns from scan history)',
+    apLotTrackingMet: 'Always has a lot number/expiry date',
+    apLotTrackingZonder: 'Never has a lot number/expiry date',
+    apLotTrackingHint: "Only override this if you already know -- 'Automatic' works for most products.",
     forms: '📋 Forms',
     scanUsage: '✅ Material Usage',
     receiveStock: '📦 Goods Receipt',
@@ -1497,6 +1512,21 @@ const TRANSLATIONS = {
     onbPlaceholder: 'bijv. groene hechtset, Ethicon',
     onbIndienen: 'Opnieuw indienen',
     onbOmschrijvingen: 'Omschrijving(en)',
+    onbLotloos: 'Dit product heeft geen lotnummer/vervaldatum (dit is de correcte barcode, verder niets te scannen)',
+    lotTitel: 'Lotnummer ontbreekt',
+    lotUitleg: 'Deze scan bevat geen lotnummer, maar dit product heeft normaal wel een lotnummer -- waarschijnlijk is de verkeerde barcode gescand. Los elke regel hieronder op voordat deze indiening geboekt wordt.',
+    lotKiesOptie: 'Kies een lot...',
+    lotGeen: '(geen lotnummer)',
+    lotOnbekendOptie: 'Onbekend / geen van deze -- toch zonder lot boeken',
+    lotNummerLabel: 'Lotnummer',
+    lotVervaldatumLabel: 'Vervaldatum',
+    lotBevestigGeen: 'Deze verpakking heeft echt geen lotnummer (bijv. een beschadigd label) -- toch boeken',
+    lotIndienen: 'Opnieuw indienen',
+    apLotTracking: 'Lot-/vervaldatumregistratie',
+    apLotTrackingAuto: 'Automatisch (standaard -- leert van scangeschiedenis)',
+    apLotTrackingMet: 'Heeft altijd een lotnummer/vervaldatum',
+    apLotTrackingZonder: 'Heeft nooit een lotnummer/vervaldatum',
+    apLotTrackingHint: "Alleen aanpassen als je dit al zeker weet -- 'Automatisch' werkt voor de meeste producten.",
     forms: '📋 Formulieren',
     scanUsage: '✅ Materiaal verbruik',
     receiveStock: '📦 Goederenontvangst',
@@ -4853,6 +4883,20 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   // hieronder -- die stuurt bij het opslaan zowel de gewone velden
   // (updateArtikelVeld) als status/vervanger (status_bijwerken) in één
   // actie mee.
+  // Lot-tracking-override -- zie includes/voorraad.php::isLotVerwacht()
+  // voor wat dit precies beïnvloedt (of een scan zonder lotnummer bij
+  // Ontvangst/Verbruik stilzwijgend geboekt wordt of om een keuze
+  // vraagt). Eigen select, net als Status hieronder: dit is geen
+  // generiek tekstveld in ARTIKEL_EDIT_FIELDS maar een typed waarde met
+  // een eigen actie (lot_tracking_bijwerken), zie saveProductEdit().
+  html += '<div class="edit-section-box"><div class="section-title">' + t('apLotTracking') + '</div>';
+  html += '<p class="form-hint">' + t('apLotTrackingHint') + '</p>';
+  html += '<div class="form-group"><select id="peLotTracking">';
+  [['automatisch', 'apLotTrackingAuto'], ['met_lot', 'apLotTrackingMet'], ['zonder_lot', 'apLotTrackingZonder']].forEach(function (opt) {
+    html += '<option value="' + opt[0] + '"' + (data.lotTracking === opt[0] ? ' selected' : '') + '>' + t(opt[1]) + '</option>';
+  });
+  html += '</select></div></div>';
+
   html += '<div class="edit-section-box"><div class="section-title">' + t('peStatusTitel') + '</div>';
   html += '<p class="form-hint">' + t('peStatusHint') + '</p>';
   html += '<div class="form-group"><label>' + t('peStatus') + '</label><select id="peStatus">';
@@ -5061,8 +5105,29 @@ function saveProductEdit(ean, vanuitOnbekendeProducten) {
     }, function () { klaar(null); }, function (err) { klaar(err); });
   }
 
+  // Zelfde bugfix-patroon als slaStatusOp() hierboven: lot-tracking is
+  // een eigen, typed actie (lot_tracking_bijwerken, zie
+  // includes/artikelen.php::setArtikelLotTracking()), maar deelt gewoon
+  // de ene "Opslaan"-knop van dit formulier.
+  function slaLotTrackingOp(klaar) {
+    const peLotTrackingEl = document.getElementById('peLotTracking');
+    if (!peLotTrackingEl) { klaar(null); return; }
+    apiPost('api/product_edit.php', {
+      actie: 'lot_tracking_bijwerken',
+      ean: ean,
+      lot_tracking: peLotTrackingEl.value,
+    }, function () { klaar(null); }, function (err) { klaar(err); });
+  }
+
   StocuroRun.withSuccessHandler(function(result) {
     if (result.success) {
+      slaLotTrackingOp(function (lotTrackingErr) {
+        if (lotTrackingErr) {
+          alert(t('peErrorSaving') + (lotTrackingErr.error || t('somethingWrong')));
+          saveBtn.disabled = false;
+          saveBtn.textContent = t('save');
+          return;
+        }
       slaStatusOp(function (statusErr) {
         if (statusErr) {
           alert(t('peErrorSaving') + (statusErr.error || t('somethingWrong')));
@@ -5080,6 +5145,7 @@ function saveProductEdit(ean, vanuitOnbekendeProducten) {
           return;
         }
         showProductDetail(ean);
+      });
       });
     } else {
       alert(t('peErrorSaving') + result.error);
@@ -8427,7 +8493,14 @@ function apiPost(url, body, onSuccess, onError) {
  * map ruwe regel -> omschrijving, die de aanroeper samen met de rest van
  * de formuliervelden opnieuw naar de server stuurt.
  */
-function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen) {
+// $toonLotloosCheckbox: alleen aangezet door Ontvangst/Verbruik (zie
+// renderScanOntvangstForm()/renderScanVerbruikForm()) -- op die twee
+// schermen kan een nieuw aangemaakt product meteen op lot_tracking =
+// 'zonder_lot' gezet worden (zie includes/transacties.php::
+// maakArtikelenVoorOnbekendeRegels()), de andere aanroepers van dit
+// gedeelde paneel (Verplaatsing/Retournering/Tellen/Eenmalige Bestelling)
+// kennen dit begrip niet en laten het vinkje dus weg.
+function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen, toonLotloosCheckbox) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
@@ -8437,6 +8510,9 @@ function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen) {
     const kort = regel.length > 60 ? regel.substring(0, 60) + '...' : regel;
     html += '<div class="form-group"><label><code>' + escapeHtml(kort) + '</code></label>';
     html += '<input type="text" class="onb-omschrijving-input" data-regel="' + escapeAttr(regel) + '" placeholder="' + escapeAttr(t('onbPlaceholder')) + '"></div>';
+    if (toonLotloosCheckbox) {
+      html += '<label class="inline-check"><input type="checkbox" class="onb-lotloos-check" data-regel="' + escapeAttr(regel) + '"> ' + t('onbLotloos') + '</label>';
+    }
   });
   html += '<button type="button" class="edit-save" id="onbIndienBtn">' + t('onbIndienen') + '</button>';
   html += '</div>';
@@ -8447,7 +8523,79 @@ function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen) {
     document.querySelectorAll('.onb-omschrijving-input').forEach(function (inp) {
       omschrijvingen[inp.getAttribute('data-regel')] = inp.value;
     });
-    onIndienen(omschrijvingen);
+    const lotloos = {};
+    document.querySelectorAll('.onb-lotloos-check').forEach(function (chk) {
+      if (chk.checked) lotloos[chk.getAttribute('data-regel')] = true;
+    });
+    onIndienen(omschrijvingen, lotloos);
+  });
+}
+
+/**
+ * Toont één invoerveld per regel die includes/transacties.php::
+ * verwerkScan() blokkeerde omdat er geen lotnummer in de scan zat voor
+ * een product dat er normaal wel een heeft (zie isLotVerwacht() in
+ * includes/voorraad.php) -- zelfde twee-fase-patroon als
+ * toonOnbekendeBarcodesPaneel() hierboven: er is nog NIETS geboekt,
+ * $onIndienen stuurt de scan opnieuw in met de aangevulde keuzes.
+ *
+ * Bij Verbruik (p.lotenOpVoorraad niet leeg) toont dit een keuzemenu met
+ * de lotten die nu op die locatie op voorraad staan, plus een "onbekend"-
+ * optie; bij Ontvangst (of Verbruik zonder enige partij op voorraad) een
+ * handmatig lot+vervaldatum-veld plus een "echt geen lotnummer"-vinkje.
+ */
+function toonLotOntbrekendPaneel(containerId, lotProblemen, onIndienen) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  let html = '<div class="login-error" style="display:block; background:#fff8e1; border-color:#f5a623; color:#333;">';
+  html += '<strong>' + t('lotTitel') + '</strong><p>' + t('lotUitleg') + '</p>';
+  lotProblemen.forEach(function (p) {
+    html += '<div class="form-group" style="border-top:1px solid #eee; padding-top:10px;"><label>' + escapeHtml(p.naam) + ' <code>' + escapeHtml(p.ean) + '</code></label>';
+    if (p.lotenOpVoorraad && p.lotenOpVoorraad.length > 0) {
+      html += '<select class="lot-keuze-select" data-regel="' + escapeAttr(p.line) + '">';
+      html += '<option value="">' + t('lotKiesOptie') + '</option>';
+      p.lotenOpVoorraad.forEach(function (l) {
+        const label = (l.lot || t('lotGeen')) + (l.vervaldatum ? ' -- ' + t('lotVervaldatumLabel') + ': ' + l.vervaldatum : '') + ' (' + l.aantal + 'x)';
+        html += '<option value="' + escapeAttr(l.lot || '') + '" data-vervaldatum="' + escapeAttr(l.vervaldatum_sql || '') + '">' + escapeHtml(label) + '</option>';
+      });
+      html += '<option value="__onbekend__">' + t('lotOnbekendOptie') + '</option>';
+      html += '</select>';
+    } else {
+      html += '<div class="edit-grid">';
+      html += '<div class="form-group"><label>' + t('lotNummerLabel') + '</label><input type="text" class="lot-nummer-input" data-regel="' + escapeAttr(p.line) + '"></div>';
+      html += '<div class="form-group"><label>' + t('lotVervaldatumLabel') + '</label><input type="date" class="lot-vervaldatum-input" data-regel="' + escapeAttr(p.line) + '"></div>';
+      html += '</div>';
+      html += '<label class="inline-check"><input type="checkbox" class="lot-bevestig-check" data-regel="' + escapeAttr(p.line) + '"> ' + t('lotBevestigGeen') + '</label>';
+    }
+    html += '</div>';
+  });
+  html += '<button type="button" class="edit-save" id="lotIndienBtn">' + t('lotIndienen') + '</button>';
+  html += '</div>';
+  container.innerHTML = html;
+
+  document.getElementById('lotIndienBtn').addEventListener('click', function () {
+    const lotInvoer = {};
+    document.querySelectorAll('.lot-keuze-select').forEach(function (sel) {
+      const regel = sel.getAttribute('data-regel');
+      if (sel.value === '__onbekend__') {
+        lotInvoer[regel] = { bevestigd: true };
+      } else if (sel.value !== '') {
+        const opt = sel.options[sel.selectedIndex];
+        lotInvoer[regel] = { lot: sel.value, vervaldatum: opt.getAttribute('data-vervaldatum') || null };
+      }
+    });
+    document.querySelectorAll('.lot-nummer-input').forEach(function (inp) {
+      const regel = inp.getAttribute('data-regel');
+      const vervaldatumInp = container.querySelector('.lot-vervaldatum-input[data-regel="' + regel.replace(/"/g, '\\"') + '"]');
+      const bevestigChk = container.querySelector('.lot-bevestig-check[data-regel="' + regel.replace(/"/g, '\\"') + '"]');
+      if (bevestigChk && bevestigChk.checked) {
+        lotInvoer[regel] = { bevestigd: true };
+      } else if (inp.value.trim() !== '') {
+        lotInvoer[regel] = { lot: inp.value.trim(), vervaldatum: (vervaldatumInp && vervaldatumInp.value) || null };
+      }
+    });
+    onIndienen(lotInvoer);
   });
 }
 
@@ -8779,6 +8927,7 @@ function renderScanOntvangstForm(locRows) {
   html += '<div class="form-group"><label>' + t('roScans') + '</label><textarea id="ontvangstGs1" rows="8" placeholder="Scan hier..."></textarea><div id="ontvangstGs1Hint" class="gs1-hint" style="display:none;"></div></div>';
   html += '<div class="form-group"><label>' + t('roNote') + '</label><textarea id="ontvangstOpmerking" rows="2"></textarea></div>';
   html += '<div id="onbekendPaneel"></div>';
+  html += '<div id="lotPaneel"></div>';
   html += '<div class="edit-actions"><button class="edit-save" id="ontvangstSubmit">' + t('roSave') + '</button></div>';
 
   document.getElementById('content').innerHTML = html;
@@ -8787,7 +8936,11 @@ function renderScanOntvangstForm(locRows) {
   initGs1ScanHint('ontvangstGs1', 'ontvangstGs1Hint');
 
   const btn = document.getElementById('ontvangstSubmit');
-  function doSubmit(omschrijvingen) {
+  // $lotloos/$lotInvoer: zie includes/transacties.php::verwerkScan() --
+  // een geblokkeerde indiening wordt hersubmit met de inmiddels bekende
+  // keuzes erbij, zonder de al ingevulde omschrijvingen/lotloos-vinkjes
+  // van een eerdere ronde te verliezen.
+  function doSubmit(omschrijvingen, lotloos, lotInvoer) {
     const errorEl = document.getElementById('formError');
     errorEl.style.display = 'none';
     btn.disabled = true;
@@ -8797,10 +8950,21 @@ function renderScanOntvangstForm(locRows) {
       gs1_raw: document.getElementById('ontvangstGs1').value,
       opmerking: document.getElementById('ontvangstOpmerking').value,
       omschrijvingen: omschrijvingen || {},
+      lotloos: lotloos || {},
+      lot_invoer: lotInvoer || {},
     }, function (result) {
       if (result.onbekend) {
         btn.disabled = false;
-        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
+        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, function (oms, lotl) {
+          doSubmit(oms, lotl, lotInvoer);
+        }, true);
+        return;
+      }
+      if (result.lotOntbrekend) {
+        btn.disabled = false;
+        toonLotOntbrekendPaneel('lotPaneel', result.lotProblemen, function (li) {
+          doSubmit(omschrijvingen, lotloos, li);
+        });
         return;
       }
       alert(tf('roProcessed', { n: result.verwerkt, m: result.overgeslagen }));
@@ -8813,6 +8977,7 @@ function renderScanOntvangstForm(locRows) {
       document.getElementById('ontvangstGs1').value = '';
       document.getElementById('ontvangstOpmerking').value = '';
       document.getElementById('onbekendPaneel').innerHTML = '';
+      document.getElementById('lotPaneel').innerHTML = '';
       document.getElementById('ontvangstGs1').focus();
     }, function (err) {
       btn.disabled = false;
@@ -8820,7 +8985,7 @@ function renderScanOntvangstForm(locRows) {
       errorEl.style.display = 'block';
     });
   }
-  btn.addEventListener('click', function () { doSubmit({}); });
+  btn.addEventListener('click', function () { doSubmit({}, {}, {}); });
 }
 
 // -----------------------------------------------------------------
@@ -8888,6 +9053,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
   html += '<div class="form-group"><label>' + t('suScans') + '</label><textarea id="verbruikGs1" rows="8" placeholder="Scan hier..."></textarea><div id="verbruikGs1Hint" class="gs1-hint" style="display:none;"></div></div>';
   html += '<div class="form-group"><label>' + t('suNote') + '</label><textarea id="verbruikOpmerking" rows="2"></textarea></div>';
   html += '<div id="onbekendPaneel"></div>';
+  html += '<div id="lotPaneel"></div>';
   html += '<div class="edit-actions"><button class="edit-save" id="verbruikSubmit">' + t('suRegister') + '</button></div>';
 
   document.getElementById('content').innerHTML = html;
@@ -8910,7 +9076,9 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
   });
 
   const btn = document.getElementById('verbruikSubmit');
-  function doSubmit(omschrijvingen) {
+  // $lotloos/$lotInvoer: zie includes/transacties.php::verwerkScan() en
+  // de toelichting bij doSubmit() in renderScanOntvangstForm() hierboven.
+  function doSubmit(omschrijvingen, lotloos, lotInvoer) {
     const errorEl = document.getElementById('formError');
     errorEl.style.display = 'none';
     btn.disabled = true;
@@ -8922,10 +9090,21 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
       gs1_raw: document.getElementById('verbruikGs1').value,
       opmerking: document.getElementById('verbruikOpmerking').value,
       omschrijvingen: omschrijvingen || {},
+      lotloos: lotloos || {},
+      lot_invoer: lotInvoer || {},
     }, function (result) {
       if (result.onbekend) {
         btn.disabled = false;
-        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
+        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, function (oms, lotl) {
+          doSubmit(oms, lotl, lotInvoer);
+        }, true);
+        return;
+      }
+      if (result.lotOntbrekend) {
+        btn.disabled = false;
+        toonLotOntbrekendPaneel('lotPaneel', result.lotProblemen, function (li) {
+          doSubmit(omschrijvingen, lotloos, li);
+        });
         return;
       }
       // "Slimme ruimte": als een product geen voorraad had in de
@@ -8947,6 +9126,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
       document.getElementById('verbruikGs1').value = '';
       document.getElementById('verbruikOpmerking').value = '';
       document.getElementById('onbekendPaneel').innerHTML = '';
+      document.getElementById('lotPaneel').innerHTML = '';
       document.getElementById('verbruikGs1').focus();
     }, function (err) {
       btn.disabled = false;
@@ -8954,7 +9134,7 @@ function renderScanVerbruikForm(specialisten, procedures, locRows) {
       errorEl.style.display = 'block';
     });
   }
-  btn.addEventListener('click', function () { doSubmit({}); });
+  btn.addEventListener('click', function () { doSubmit({}, {}, {}); });
 }
 
 // -----------------------------------------------------------------
@@ -9439,6 +9619,15 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '<div class="form-group"><label>' + t('apCategory') + '</label><select id="naCategorie">' + catOptionsHtml + '</select></div>';
   html += '</div>';
   html += '<div id="naSpecsContainer">' + renderNaSpecsVelden(pre.categorie || catNamen[0], categorieen, null) + '</div>';
+  // Lot-tracking-override, direct bij het aanmaken instelbaar (i.p.v.
+  // pas achteraf op het bewerkscherm) -- zie includes/voorraad.php::
+  // isLotVerwacht() voor waarom dit bij Ontvangst/Verbruik verschil
+  // maakt. Hier bewust een los vinkje i.p.v. de volledige 3-weg-select
+  // van het bewerkscherm (renderProductEdit()): bij het aanmaken is de
+  // enige zinvolle keuze op dit moment "dit is de correcte barcode, dit
+  // product heeft geen lot/vervaldatum" -- 'met_lot' instellen vóór er
+  // ooit een scan is geweest heeft weinig zin, dat kan altijd nog later.
+  html += '<label class="inline-check"><input type="checkbox" id="naLotloos"> ' + t('onbLotloos') + '</label>';
   html += '</div>';
 
   // Dropdown van bestaande producenten + optie om een nieuwe naam in te
@@ -9628,6 +9817,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
       doos_ean: document.getElementById('naDoosEan').value,
       eenheden_per_doos: document.getElementById('naEenhedenPerDoos').value,
       logistiek_code: document.getElementById('naLogistiekCode').value,
+      lot_tracking: document.getElementById('naLotloos').checked ? 'zonder_lot' : 'automatisch',
       // Als dit artikel wordt aangemaakt als vervanger voor
       // een ander (zie renderProductEdit()), koppelt api/artikel_toevoegen.php
       // dat na het aanmaken meteen (includes/artikelen.php::koppelAlsVervanger()).

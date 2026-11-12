@@ -400,6 +400,70 @@ function voorraadLot(): array {
     return $result;
 }
 
+/**
+ * Bepaalt of een scan zonder lotnummer voor dit EAN verdacht is (en dus om
+ * een expliciete keuze vraagt bij Ontvangst/Verbruik, zie
+ * includes/transacties.php::verwerkScan()) i.p.v. stilzwijgend als "geen
+ * lot" geboekt te worden. Gemeld praktijkprobleem: sommige producten
+ * hebben naast de GS1-combinatiebarcode (GTIN+lot+vervaldatum) nog een
+ * losse, "armere" barcode zonder die gegevens -- scan je die per ongeluk,
+ * dan is lot=null vrijwel altijd de verkeerde barcode, niet een bewuste
+ * "dit lot is onbekend"-situatie. Maar niet elk product heeft ÜBERHAUPT
+ * een lotnummer (geen batchcode op de verpakking) -- daar is lot=null
+ * juist altijd correct, en moet nooit gevraagd worden.
+ *
+ * artikelen.lot_tracking (migratie 041_lot_tracking.sql):
+ *  - 'met_lot'     : handmatig bevestigd -- altijd verdacht, ook bij de
+ *                    allereerste scan van dit product.
+ *  - 'zonder_lot'  : handmatig bevestigd -- nooit verdacht.
+ *  - 'automatisch' (standaard): afgeleid uit de scangeschiedenis zelf.
+ *    Heeft dit EAN al eens een scan MET een echt lotnummer opgeleverd,
+ *    dan is een latere scan zonder lot verdacht (waarschijnlijk de
+ *    verkeerde barcode gescand); zonder die geschiedenis wordt niets
+ *    tegengehouden -- een nieuw, nooit-eerder-gescand product kan dan nog
+ *    niet onderscheiden worden van een product dat consequent zonder lot
+ *    gescand wordt, vandaar de handmatige override hierboven voor die
+ *    allereerste-scan-situatie.
+ */
+function isLotVerwacht(string $ean): bool {
+    $stmt = db()->prepare('SELECT lot_tracking FROM artikelen WHERE ean = :ean');
+    $stmt->execute([':ean' => $ean]);
+    $tracking = $stmt->fetchColumn();
+
+    if ($tracking === 'met_lot') return true;
+    if ($tracking === 'zonder_lot') return false;
+
+    $histStmt = db()->prepare('SELECT 1 FROM transactielog WHERE ean = :ean AND lot IS NOT NULL LIMIT 1');
+    $histStmt->execute([':ean' => $ean]);
+    return (bool) $histStmt->fetchColumn();
+}
+
+/**
+ * Lotten die nu op voorraad staan voor één EAN op één locatie -- gebruikt
+ * om bij Verbruik Scannen een ontbrekend lotnummer (zie isLotVerwacht()
+ * hierboven) op te lossen zonder de gebruiker te laten gokken: staat er
+ * precies één lot, dan is dat ondubbelzinnig het juiste (zie
+ * includes/transacties.php::verwerkScan()); staan er nul of meerdere, dan
+ * moet er een keuze gemaakt worden. Hergebruikt voorraadLot() (inclusief
+ * de locatie-hernoemen-samenvoeglogica daarin) i.p.v. een eigen losse
+ * query -- dit pad wordt alleen bereikt bij een ontbrekend lotnummer, dus
+ * de iets hogere kost van een systeembrede berekening speelt hier niet op.
+ *
+ * @return list<array{lot:string, vervaldatum:?string, vervaldatum_sql:?string, aantal:int}>
+ */
+function lotenOpVoorraadVoorEanLocatie(string $ean, string $locatie): array {
+    $resultaat = [];
+    foreach (voorraadLot() as $r) {
+        if ($r['ean'] === $ean && $r['locatie'] === $locatie && $r['lot'] !== null && $r['lot'] !== '') {
+            $resultaat[] = [
+                'lot' => $r['lot'], 'vervaldatum' => $r['vervaldatum'],
+                'vervaldatum_sql' => $r['vervaldatum_sql'], 'aantal' => $r['huidig'],
+            ];
+        }
+    }
+    return $resultaat;
+}
+
 // =====================================================================
 // DASHBOARD: OVERZICHT — poort van getOverzichtData()
 // =====================================================================
