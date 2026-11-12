@@ -60,6 +60,25 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.23 — bugfix: `migratie/leegmaken.php`/`leegmaken.sql` (the
+  "wipe all data, keep accounts" reset script) was missing several
+  tables added by later migrations.** Asked for the command to wipe
+  everything except user accounts before re-testing; checking the
+  script against the actual current schema turned up a real gap —
+  `categorieen`/`categorie_specs`, `eenmalige_bestelling_items`,
+  `onbekende_scans`, `minmax_advies_genegeerd`, `naam_hernoemingen`, and
+  today's new `artikel_alternatieve_codes` were never added to either
+  file as the schema grew. Worse than cosmetic: `eenmalige_bestelling_items`
+  has a real foreign key to `eenmalige_bestellingen` (which *was*
+  cleared), so running the old script left orphaned rows behind
+  silently. Also split out a `groepen`/`gebruiker_groepen`/
+  `groep_schermen`/`license_activations` cluster that needs to travel
+  *with* `users` (kept by default) rather than always being wiped —
+  otherwise a kept account would silently lose its group membership
+  and license binding. Verified against a real database, populating
+  every affected table and confirming both the default (keep accounts)
+  and `--met-gebruikers` (wipe everything) modes clear exactly the
+  right set, nothing orphaned.
 - **v1.0.22 — the automatic "don't let stock go negative" correction no
   longer shows up as a fake lot.** Reported: when a booking would have
   pushed an EAN+location's stock below 0 (a count error, a missed scan,

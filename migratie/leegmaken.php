@@ -11,8 +11,12 @@
  *     testfase in blijft staan.
  *
  * Wat blijft staan (tenzij je --met-gebruikers meegeeft):
- *  - users: je zou anders mogelijk niet meer kunnen inloggen. Geef
- *    --met-gebruikers mee als je ECHT ook alle accounts kwijt wilt (voor
+ *  - users, en (horen daarbij, zie hieronder) groepen/gebruiker_groepen/
+ *    groep_schermen/license_activations: je zou anders mogelijk niet meer
+ *    kunnen inloggen, en een bewaard account zou zijn groepslidmaatschap
+ *    (dus schermtoegang) en licentiekoppeling kwijtraken terwijl het
+ *    account zelf blijft bestaan. Geef --met-gebruikers mee als je ECHT
+ *    ook alle accounts (en hun groepen/licenties) kwijt wilt (voor
  *    situatie 2 hierboven, vlak vóór overdracht) -- maak daarna eerst een
  *    nieuw beheerdersaccount aan (zie README, sectie Installatie) voordat
  *    je weer kunt inloggen.
@@ -73,21 +77,38 @@ if (!$bevestigd) {
 $ookGebruikers = in_array('--met-gebruikers', $args, true) || ($_GET['met_gebruikers'] ?? '') === '1';
 
 // Geen enkele van deze tabellen heeft een FOREIGN KEY naar een andere
-// tabel in deze lijst behalve artikel_locatie_extra -> locaties_extra
-// En producent_contacten -> producenten --
+// tabel in deze lijst behalve artikel_locatie_extra -> locaties_extra,
+// producent_contacten -> producenten, categorie_specs -> categorieen en
+// eenmalige_bestelling_items -> eenmalige_bestellingen --
 // FOREIGN_KEY_CHECKS uitzetten voorkomt dat de volgorde hieronder
 // daarvoor zou moeten uitmaken.
+//
+// (bugfix, gevonden toen deze lijst
+// voor het eerst écht gecontroleerd werd tegen het volledige schema):
+// deze lijst was bij het schrijven compleet, maar is sindsdien niet
+// meegegroeid met latere migraties -- categorieen/categorie_specs (028),
+// eenmalige_bestelling_items (032), onbekende_scans (al veel eerder, 022,
+// over het hoofd gezien), minmax_advies_genegeerd (027), naam_hernoemingen
+// (039) en artikel_alternatieve_codes (042) ontbraken allemaal. Vooral
+// eenmalige_bestelling_items was een echt probleem, niet alleen
+// onvolledig: die tabel heeft een FOREIGN KEY naar eenmalige_bestellingen
+// (die hierboven al wel leeggemaakt werd) -- zonder deze tabel ook leeg
+// te maken, bleven er dus wees-rijen achter die naar niet meer bestaande
+// bestellingen verwezen.
 $tabellen = [
     'transactielog_wijzigingen', 'transactielog',
     // Hoort bij specifieke (nu verdwijnende) scans -- zie
     // toelichting in leegmaken.sql.
     'gs1_correcties',
-    'orders', 'eenmalige_bestellingen',
-    'artikel_locatie_extra', 'artikelen',
+    'eenmalige_bestelling_items', 'eenmalige_bestellingen',
+    'orders',
+    'artikel_locatie_extra', 'artikel_alternatieve_codes', 'artikelen',
+    'onbekende_scans', 'minmax_advies_genegeerd', 'naam_hernoemingen',
     'audit_log', 'foutlog',
     'specialisten', 'procedure_typen',
     'locaties_extra',
     'producent_contacten', 'producenten',
+    'categorie_specs', 'categorieen',
 ];
 
 try {
@@ -103,8 +124,17 @@ try {
     leegmaken_log('Gereset: locatie_instellingen.laatst_geteld_op (namen/volgorde blijven ongewijzigd)');
 
     if ($ookGebruikers) {
+        // Groepen/gebruiker_groepen/groep_schermen (het groepensysteem)
+        // en license_activations horen bij users -- blijven dus ook
+        // staan als users blijft staan (ze zouden anders de bewaarde
+        // accounts hun groepslidmaatschap/licentiekoppeling onder de
+        // voeten wegtrekken), en gaan pas mee leeg sámen met users.
+        $pdo->exec('TRUNCATE TABLE gebruiker_groepen');
+        $pdo->exec('TRUNCATE TABLE groep_schermen');
+        $pdo->exec('TRUNCATE TABLE groepen');
+        $pdo->exec('TRUNCATE TABLE license_activations');
         $pdo->exec('TRUNCATE TABLE users');
-        leegmaken_log('Leeggemaakt: users -- maak een nieuw beheerdersaccount aan (zie README, Installatie) voordat je weer kunt inloggen.');
+        leegmaken_log('Leeggemaakt: users (+ groepen/gebruiker_groepen/groep_schermen/license_activations) -- maak een nieuw beheerdersaccount aan (zie README, Installatie) voordat je weer kunt inloggen.');
     }
 
     $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
