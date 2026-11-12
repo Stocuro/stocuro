@@ -550,6 +550,161 @@ function voorkomNegatieveVoorraad(string $ean, string $locatie, string $artikelN
 }
 
 /**
+ * Lost ontbrekende lotnummers op voor een lijst "bekende" scanregels
+ * (zelfde vorm als splitsBekendOnbekend()['bekend']) -- gedeeld door
+ * verwerkScan() (Ontvangst/Verbruik), verplaatsing(), retournering() en
+ * verwerkTelling(), zodat alle vijf scanformulieren dezelfde
+ * lot-veiligheid hebben i.p.v. dat alleen Ontvangst/Verbruik 'm kregen.
+ *
+ * Gemeld praktijkprobleem: sommige producten hebben naast de GS1-
+ * combinatiebarcode (GTIN+lot+vervaldatum) nog een losse, "armere"
+ * barcode zonder die gegevens. Scan je die per ongeluk, dan werd een
+ * scan zonder lot voorheen altijd stilzwijgend geboekt, ook als dit
+ * product normaal wél een lotnummer heeft (traceerbaarheidsprobleem,
+ * vooral bij implantaten). isLotVerwacht() (includes/voorraad.php)
+ * onderscheidt dat geval van een product dat ÜBERHAUPT geen lotnummer
+ * heeft (daar is lot=null altijd gewoon correct).
+ *
+ * Elk item in $items moet al een 'effectieveLocatie'-sleutel hebben --
+ * de aanroeper bepaalt die vooraf (bv. de "slimme ruimte"-omleiding bij
+ * Verbruik, of de "omleiden naar Berging"-logica bij Retournering),
+ * deze functie weet daar zelf niets van, ze gebruikt 'm alleen om de
+ * lot-resolutie-queries (lotenOpVoorraadVoorEanLocatie()) op de juiste
+ * locatie te richten.
+ *
+ * $gebruiktVoorraadResolutie: of lotenOpVoorraadVoorEanLocatie()/FEFO
+ * overhaupt geprobeerd mag worden. Bij Ontvangst (en alleen daar): nee
+ * -- je VOEGT net voorraad toe, er is nog niets om op te varen, dus
+ * blijft daar altijd een echte vraag over als er geen lot elders in
+ * dezelfde indiening te vinden is.
+ *
+ * $lotInvoer: handmatige/scan-oplossingen van een eerder geblokkeerde
+ * ronde van DEZE indiening (zie toonLotOntbrekendPaneel() in
+ * assets/js/app.js) -- map ruwe regel -> ['bevestigd'=>true] of
+ * ['lot'=>?, 'vervaldatum'=>? (SQL 'Y-m-d' of null)].
+ *
+ * Alles-of-niets: bij één of meer onopgeloste regels is 'resolved' leeg
+ * en bevat 'lotProblemen' precies welke regels nog een keuze nodig
+ * hebben -- de aanroeper boekt dan NIETS (ook niet de regels zonder
+ * probleem) en stuurt 'lotProblemen' terug naar de frontend.
+ *
+ * @param list<array{line:string, parsed:array, artikel:array, effectieveLocatie:string}> $items
+ * @return array{resolved: list<array>, lotProblemen: list<array>}
+ *   resolved heeft dezelfde items als $items, aangevuld met 'lot',
+ *   'expirySql' en 'lotNotitie'.
+ */
+function losLottenOp(array $items, bool $gebruiktVoorraadResolutie, array $lotInvoer): array {
+    // Lotten die in DEZE indiening zelf al voor een EAN zijn meegescand --
+    // bijv. twee combi-barcodes (met lot) plus een kale barcode (zonder
+    // lot) van dezelfde levering, allemaal in één indiening. isLotVerwacht()
+    // hieronder kijkt alleen naar al EERDER VASTGELEGDE (gecommitte)
+    // transacties, dus deze indiening zelf levert daar nog geen
+    // geschiedenis voor op -- zonder dit zou identiek gedrag op de EERSTE
+    // keer (nog geen voorgeschiedenis) dus "gewoon doorgaan" opleveren,
+    // maar op een LATERE, losse scan van alleen de kale barcode (nu wél
+    // voorgeschiedenis) alsnog geblokkeerd worden. Dat is logisch correct
+    // maar voelt inconsistent -- dit lost het meteen op binnen één
+    // indiening: alleen gebruikt als er voor dit EAN precies ÉÉN
+    // onderscheidend lot in deze indiening voorkomt (bij twee verschillende
+    // lotten in dezelfde indiening -- bv. een levering met twee batches
+    // tegelijk -- blijft het een echte vraag).
+    $lotPerEanInIndiening = [];
+    foreach ($items as $item) {
+        if ($item['parsed']['lot'] === null) continue;
+        $lotPerEanInIndiening[$item['artikel']['ean']][$item['parsed']['lot']] = gs1ExpiryToSqlDate($item['parsed']['expiry']);
+    }
+
+    $resolved = [];
+    $lotProblemen = [];
+    foreach ($items as $item) {
+        $parsed = $item['parsed'];
+        $artikel = $item['artikel'];
+        $line = $item['line'];
+        $effectieveLocatie = $item['effectieveLocatie'];
+
+        $lot = $parsed['lot'];
+        $expirySql = gs1ExpiryToSqlDate($parsed['expiry']);
+        $lotNotitie = null;
+
+        if ($lot === null && isLotVerwacht($artikel['ean'])) {
+            $invoer = $lotInvoer[$line] ?? null;
+            if ($invoer !== null && !empty($invoer['bevestigd'])) {
+                // Expliciet bevestigd dat deze scan terecht geen lot heeft
+                // (bv. een beschadigd label) -- toch boeken, niet opnieuw vragen.
+                $lotNotitie = '(bevestigd: geen lotnummer op deze scan)';
+            } elseif ($invoer !== null && (!empty($invoer['lot']) || !empty($invoer['vervaldatum']))) {
+                // Handmatig ingevoerd lot/vervaldatum (vervaldatum al in
+                // SQL-vorm 'Y-m-d', zie toonLotOntbrekendPaneel()).
+                $lot = !empty($invoer['lot']) ? trim((string) $invoer['lot']) : null;
+                $expirySql = !empty($invoer['vervaldatum']) ? (string) $invoer['vervaldatum'] : null;
+                $lotNotitie = '(lot/vervaldatum handmatig ingevoerd na ontbrekende scangegevens)';
+            } else {
+                // Eerst proberen op te lossen met een lot dat al ELDERS in
+                // deze indiening voor hetzelfde EAN is meegescand (zie
+                // $lotPerEanInIndiening hierboven) -- gaat voor op de
+                // voorraad-check hieronder (even ondubbelzinnig, en
+                // directer: dit komt van dezelfde fysieke scanactie).
+                $kandidatenInIndiening = $lotPerEanInIndiening[$artikel['ean']] ?? [];
+                // Daarna, als voorraad-resolutie voor dit transactietype
+                // zinvol is: staat er nu precies één lot van dit product
+                // op de effectieve locatie, dan is dat ondubbelzinnig het
+                // juiste (geen gok, er is geen alternatief).
+                $lotenHier = $gebruiktVoorraadResolutie
+                    ? lotenOpVoorraadVoorEanLocatie($artikel['ean'], $effectieveLocatie) : [];
+                if (count($kandidatenInIndiening) === 1) {
+                    // (string) cast is nodig: een puur numeriek lotnummer
+                    // (bv. "2026050903") wordt door PHP automatisch als
+                    // INTEGER array-sleutel opgeslagen -- zonder deze cast
+                    // geeft array_key_first() hier een int terug, wat
+                    // verderop een TypeError gaf op insertTransactieRegel()'s
+                    // ?string $lot-parameter (gevonden via een test tegen
+                    // een echte database).
+                    $lot = (string) array_key_first($kandidatenInIndiening);
+                    $expirySql = $kandidatenInIndiening[$lot];
+                    $lotNotitie = '(lot automatisch overgenomen van een andere regel in deze indiening)';
+                } elseif (count($lotenHier) === 1) {
+                    $lot = $lotenHier[0]['lot'];
+                    $expirySql = $lotenHier[0]['vervaldatum_sql'];
+                    $lotNotitie = '(lot automatisch afgeleid: enige partij van dit product op voorraad op deze locatie)';
+                } elseif (count($lotenHier) > 1 && ($fefoKeuze = fefoKiesLot($lotenHier)) !== null) {
+                    // Meerdere lotten op voorraad -- geen onontkoombare
+                    // vraag meer nodig als er een vervaldatum-gebaseerd
+                    // "meest voor de hand liggende" lot is: FEFO
+                    // (first-expiry-first-out, de gangbare, verwachte
+                    // voorraadrotatie) kiest het eerst-vervallende lot. Dit
+                    // is een bewuste snelheid-voor-precisie-afweging --
+                    // het boekt een ECHT lotnummer (geen gok naar "geen
+                    // lot"), maar wel zonder bevestiging. Alleen lotten
+                    // MET een vervaldatum komen in aanmerking: zonder een
+                    // enkele vervaldatum in de kandidatenlijst is er geen
+                    // FEFO-signaal en blijft het, terecht, een echte vraag
+                    // (zie de else hieronder).
+                    $lot = $fefoKeuze['lot'];
+                    $expirySql = $fefoKeuze['vervaldatum_sql'];
+                    $lotNotitie = '(lot automatisch gekozen via FEFO: eerst-vervallende van ' . count($lotenHier) . ' lotten op voorraad op deze locatie)';
+                } else {
+                    $lotProblemen[] = [
+                        'line' => $line, 'ean' => $artikel['ean'], 'naam' => $artikel['naam'],
+                        'lotenOpVoorraad' => array_map(fn($l) => [
+                            'lot' => $l['lot'], 'vervaldatum' => $l['vervaldatum'],
+                            'vervaldatum_sql' => $l['vervaldatum_sql'], 'aantal' => $l['aantal'],
+                        ], $lotenHier),
+                    ];
+                    continue;
+                }
+            }
+        }
+
+        $resolved[] = $item + ['lot' => $lot, 'expirySql' => $expirySql, 'lotNotitie' => $lotNotitie];
+    }
+
+    if (!empty($lotProblemen)) {
+        return ['resolved' => [], 'lotProblemen' => $lotProblemen];
+    }
+    return ['resolved' => $resolved, 'lotProblemen' => []];
+}
+
+/**
  * Verwerkt een blok GS1-scans (meerdere regels, één per gescand
  * artikel -- zelfde patroon als het oude Google Forms-textveld) voor
  * Ontvangst of Verbruik. Poort van onFormSubmit_Transactielog().
@@ -654,66 +809,22 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam, $lotloos);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
-    // Lot-resolutie, VOORDAT er iets geboekt wordt. Gemeld
-    // praktijkprobleem: sommige producten hebben naast de GS1-
-    // combinatiebarcode (GTIN+lot+vervaldatum) nog een losse, "armere"
-    // barcode zonder die gegevens. Scan je die per ongeluk -- bij
-    // Ontvangst of bij Verbruik -- dan werd een scan zonder lot voorheen
-    // altijd stilzwijgend geboekt, ook als dit product normaal wél een
-    // lotnummer heeft (traceerbaarheidsprobleem, vooral bij implantaten).
-    // isLotVerwacht() (includes/voorraad.php) onderscheidt dat geval van
-    // een product dat ÜBERHAUPT geen lotnummer heeft (daar is lot=null
-    // altijd gewoon correct).
-    //
-    // Alles-of-niets, zelfde patroon als de onbekende-regel-blokkade
-    // hierboven: bij een onopgeloste regel wordt er NIETS geboekt (ook
-    // niet de regels zonder probleem in deze indiening), en komt de
-    // aanroeper terug met precies welke regels nog een keuze nodig
-    // hebben -- zie toonLotOntbrekendPaneel() in assets/js/app.js.
-    // Lotten die in DEZE indiening zelf al voor een EAN zijn meegescand --
-    // bijv. twee combi-barcodes (met lot) plus een kale barcode (zonder
-    // lot) van dezelfde levering, allemaal in één Ontvangst-indiening.
-    // isLotVerwacht() hieronder kijkt alleen naar al EERDER VASTGELEGDE
-    // (gecommitte) transacties, dus deze indiening zelf levert daar nog
-    // geen geschiedenis voor op -- zonder dit zou identiek gedrag op de
-    // EERSTE keer (nog geen voorgeschiedenis) dus "gewoon doorgaan"
-    // opleveren, maar op een LATERE, losse scan van alleen de kale
-    // barcode (nu wél voorgeschiedenis) alsnog geblokkeerd worden. Dat
-    // is logisch correct maar voelt inconsistent -- dit lost het
-    // meteen op binnen één indiening, net zo veilig als de "slimme
-    // ruimte"-aanpak hierboven: alleen gebruikt als er voor dit EAN
-    // precies ÉÉN onderscheidend lot in deze indiening voorkomt (bij
-    // twee verschillende lotten in dezelfde indiening -- bv. een
-    // levering met twee batches tegelijk -- blijft het een echte vraag).
-    $lotPerEanInIndiening = [];
-    foreach ($split['bekend'] as $item) {
-        if ($item['parsed']['lot'] === null) continue;
-        $lotPerEanInIndiening[$item['artikel']['ean']][$item['parsed']['lot']] = gs1ExpiryToSqlDate($item['parsed']['expiry']);
-    }
-
-    $resolved = [];
-    $lotProblemen = [];
+    // "Slimme ruimte" bij Verbruik Scannen -- pre-pass die elk item zijn
+    // 'effectieveLocatie' meegeeft vóór de lot-resolutie hieronder (die is
+    // namelijk per locatie, zie losLottenOp()). Sommige producten horen
+    // niet thuis in de gescande ruimte zelf -- bijv. een uniek, eenmalig
+    // besteld artikel dat rechtstreeks in Berging of op een kar staat, in
+    // plaats van in de kamer waar het gebruikt wordt. Als dit artikel GEEN
+    // voorraad heeft in de gescande ruimte, maar wél in PRECIES ÉÉN andere
+    // ruimte, wordt het verbruik daar automatisch uit afgeschreven --
+    // ondubbelzinnig, dus veilig om automatisch te doen. Staat het in nul
+    // of in meerdere andere ruimtes, dan blijft het gewoon de gescande
+    // ruimte: bij nul is er sowieso iets mis (nergens voorraad) en bij
+    // meerdere zou gokken een verkeerde ruimte kunnen leegboeken.
     $omgeleid = [];
+    $itemsMetLocatie = [];
     foreach ($split['bekend'] as $item) {
-        $parsed = $item['parsed'];
         $artikel = $item['artikel'];
-        $line = $item['line'];
-
-        // "Slimme ruimte" bij
-        // Verbruik Scannen. Sommige producten horen niet thuis in de
-        // gescande ruimte zelf -- bijv. een uniek, eenmalig besteld
-        // artikel dat rechtstreeks in Berging of op een kar staat, in
-        // plaats van in de kamer waar het gebruikt wordt. Als dit
-        // artikel GEEN voorraad heeft in de gescande ruimte, maar wél in
-        // PRECIES ÉÉN andere ruimte, wordt het verbruik daar automatisch
-        // uit afgeschreven -- ondubbelzinnig, dus veilig om automatisch
-        // te doen. Staat het in nul of in meerdere andere ruimtes, dan
-        // blijft het gewoon de gescande ruimte (zoals voorheen): bij nul
-        // is er sowieso iets mis (nergens voorraad) en bij meerdere zou
-        // gokken een verkeerde ruimte kunnen leegboeken. Al hier (i.p.v.
-        // pas bij het boeken verderop) bepaald, want de lot-keuze bij
-        // Verbruik hieronder is per LOCATIE (lotenOpVoorraadVoorEanLocatie()),
-        // dus moet de effectieve locatie al vaststaan.
         $effectieveLocatie = $locatie;
         if ($transactieType === 'Verbruik') {
             $perLocatie = huidigeVoorraadPerLocatie($artikel['ean']);
@@ -729,89 +840,19 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
                 }
             }
         }
-
-        $lot = $parsed['lot'];
-        $expirySql = gs1ExpiryToSqlDate($parsed['expiry']);
-        $lotNotitie = null;
-
-        if ($lot === null && isLotVerwacht($artikel['ean'])) {
-            $invoer = $lotInvoer[$line] ?? null;
-            if ($invoer !== null && !empty($invoer['bevestigd'])) {
-                // Expliciet bevestigd dat deze scan terecht geen lot heeft
-                // (bv. een beschadigd label) -- toch boeken, niet opnieuw vragen.
-                $lotNotitie = '(bevestigd: geen lotnummer op deze scan)';
-            } elseif ($invoer !== null && (!empty($invoer['lot']) || !empty($invoer['vervaldatum']))) {
-                // Handmatig ingevoerd lot/vervaldatum (vervaldatum al in
-                // SQL-vorm 'Y-m-d', zie toonLotOntbrekendPaneel()).
-                $lot = !empty($invoer['lot']) ? trim((string) $invoer['lot']) : null;
-                $expirySql = !empty($invoer['vervaldatum']) ? (string) $invoer['vervaldatum'] : null;
-                $lotNotitie = '(lot/vervaldatum handmatig ingevoerd na ontbrekende scangegevens)';
-            } else {
-                // Eerst proberen op te lossen met een lot dat al ELDERS in
-                // deze indiening voor hetzelfde EAN is meegescand (zie
-                // $lotPerEanInIndiening hierboven) -- geldt voor zowel
-                // Ontvangst als Verbruik, en gaat voor op de
-                // voorraad-check hieronder (even ondubbelzinnig, en
-                // directer: dit komt van dezelfde fysieke scanactie).
-                $kandidatenInIndiening = $lotPerEanInIndiening[$artikel['ean']] ?? [];
-                // Bij Verbruik eerst proberen automatisch op te lossen:
-                // staat er nu precies één lot van dit product op de
-                // effectieve locatie, dan is dat ondubbelzinnig het juiste
-                // (geen gok, er is geen alternatief) -- bij Ontvangst is
-                // hier niets om op te varen (je VOEGT net voorraad toe),
-                // dus daar altijd een keuze vragen.
-                $lotenHier = $transactieType === 'Verbruik'
-                    ? lotenOpVoorraadVoorEanLocatie($artikel['ean'], $effectieveLocatie) : [];
-                if (count($kandidatenInIndiening) === 1) {
-                    // (string) cast is nodig: een puur numeriek lotnummer
-                    // (bv. "2026050903", zoals in dit voorbeeld) wordt door
-                    // PHP automatisch als INTEGER array-sleutel opgeslagen
-                    // -- zonder deze cast geeft array_key_first() hier een
-                    // int terug, wat verderop een TypeError gaf op
-                    // insertTransactieRegel()'s ?string $lot-parameter
-                    // (gevonden via een test tegen een echte database).
-                    $lot = (string) array_key_first($kandidatenInIndiening);
-                    $expirySql = $kandidatenInIndiening[$lot];
-                    $lotNotitie = '(lot automatisch overgenomen van een andere regel in deze indiening)';
-                } elseif (count($lotenHier) === 1) {
-                    $lot = $lotenHier[0]['lot'];
-                    $expirySql = $lotenHier[0]['vervaldatum_sql'];
-                    $lotNotitie = '(lot automatisch afgeleid: enige partij van dit product op voorraad op deze locatie)';
-                } elseif (count($lotenHier) > 1 && ($fefoKeuze = fefoKiesLot($lotenHier)) !== null) {
-                    // Meerdere lotten op voorraad -- geen onontkoombare
-                    // vraag meer nodig als er een vervaldatum-gebaseerd
-                    // "meest voor de hand liggende" lot is: FEFO
-                    // (first-expiry-first-out, de gangbare, verwachte
-                    // voorraadrotatie) kiest het eerst-vervallende lot. Dit
-                    // is een bewuste snelheid-voor-precisie-afweging --
-                    // het boekt een ECHT lotnummer (geen gok naar "geen
-                    // lot"), maar wel zonder bevestiging. Alleen lotten
-                    // MET een vervaldatum komen in aanmerking: zonder een
-                    // enkele vervaldatum in de kandidatenlijst is er geen
-                    // FEFO-signaal en blijft het, terecht, een echte vraag
-                    // (zie de else hieronder).
-                    $lot = $fefoKeuze['lot'];
-                    $expirySql = $fefoKeuze['vervaldatum_sql'];
-                    $lotNotitie = '(lot automatisch gekozen via FEFO: eerst-vervallende van ' . count($lotenHier) . ' lotten op voorraad op deze locatie)';
-                } else {
-                    $lotProblemen[] = [
-                        'line' => $line, 'ean' => $artikel['ean'], 'naam' => $artikel['naam'],
-                        'lotenOpVoorraad' => array_map(fn($l) => [
-                            'lot' => $l['lot'], 'vervaldatum' => $l['vervaldatum'],
-                            'vervaldatum_sql' => $l['vervaldatum_sql'], 'aantal' => $l['aantal'],
-                        ], $lotenHier),
-                    ];
-                    continue;
-                }
-            }
-        }
-
-        $resolved[] = $item + ['effectieveLocatie' => $effectieveLocatie, 'lot' => $lot, 'expirySql' => $expirySql, 'lotNotitie' => $lotNotitie];
+        $itemsMetLocatie[] = $item + ['effectieveLocatie' => $effectieveLocatie];
     }
 
-    if (!empty($lotProblemen)) {
-        return ['success' => false, 'lotOntbrekend' => true, 'lotProblemen' => $lotProblemen, 'verwerkt' => 0];
+    // Lot-resolutie, VOORDAT er iets geboekt wordt -- gedeelde logica, zie
+    // losLottenOp() hierboven. Alleen bij Verbruik is er al bestaande
+    // voorraad om op te varen (lotenOpVoorraadVoorEanLocatie()/FEFO); bij
+    // Ontvangst VOEG je net toe, dus blijft een onopgeloste regel daar
+    // altijd een echte vraag.
+    $lotUitkomst = losLottenOp($itemsMetLocatie, $transactieType === 'Verbruik', $lotInvoer);
+    if (!empty($lotUitkomst['lotProblemen'])) {
+        return ['success' => false, 'lotOntbrekend' => true, 'lotProblemen' => $lotUitkomst['lotProblemen'], 'verwerkt' => 0];
     }
+    $resolved = $lotUitkomst['resolved'];
 
     $verwerkt = 0;
     $verwerkteItems = []; // $item + transactielog_id per regel
@@ -1295,7 +1336,7 @@ function verwijderTransactieBatch(string $batchKey, string $gebruikerNaam): arra
  * Verplaatsing tussen twee locaties: twee transactieregels per gescand
  * artikel (uit + in). Poort van handleVerplaatsing().
  */
-function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocatie, string $reden, string $opmerking, ?string $gebruikerNaam = null, array $omschrijvingen = []): array {
+function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocatie, string $reden, string $opmerking, ?string $gebruikerNaam = null, array $omschrijvingen = [], array $lotInvoer = []): array {
     $tijdstempel = date('Y-m-d H:i:s');
     $batchId = nieuweBatchId();
     $lines = preg_split('/\r?\n/', trim($gs1RawBlock, "\" \t\n\r\0\x0B"));
@@ -1310,23 +1351,33 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
+    // Lot-resolutie (gedeeld, zie losLottenOp() hierboven) -- de
+    // 'van'-locatie is hier altijd vast (geen "slimme ruimte" nodig, de
+    // gebruiker kiest beide locaties al expliciet in het formulier), en
+    // er is al bestaande voorraad op die locatie om op te varen
+    // (lotenOpVoorraadVoorEanLocatie()/FEFO), vandaar de 'true' hieronder.
+    $itemsMetLocatie = array_map(fn($item) => $item + ['effectieveLocatie' => $vanLocatie], $split['bekend']);
+    $lotUitkomst = losLottenOp($itemsMetLocatie, true, $lotInvoer);
+    if (!empty($lotUitkomst['lotProblemen'])) {
+        return ['success' => false, 'lotOntbrekend' => true, 'lotProblemen' => $lotUitkomst['lotProblemen'], 'verwerkt' => 0];
+    }
+
     $verwerkt = 0;
-    foreach ($split['bekend'] as $item) {
-        $parsed = $item['parsed'];
+    foreach ($lotUitkomst['resolved'] as $item) {
         $artikel = $item['artikel'];
         $line = $item['line'];
 
-        $vervaldatumSql = gs1ExpiryToSqlDate($parsed['expiry']);
-        $opmerkingUit = "Verplaatst naar $naarLocatie - $reden. $opmerking";
-        $opmerkingIn = "Verplaatst van $vanLocatie - $reden. $opmerking";
+        $extraNotitie = $item['lotNotitie'] !== null ? ' ' . $item['lotNotitie'] : '';
+        $opmerkingUit = "Verplaatst naar $naarLocatie - $reden. $opmerking" . $extraNotitie;
+        $opmerkingIn = "Verplaatst van $vanLocatie - $reden. $opmerking" . $extraNotitie;
 
         // $artikel['hoeveelheid']: dekt zowel een hele,
         // ongeopende doos die in één keer verplaatst wordt (scan de
         // doos-EAN, hoeveelheid = eenheden_per_doos) als losse, al
         // uitgepakte stuks die één voor één gescand worden (elke regel
         // hoeveelheid 1) -- zie lookupArtikelen().
-        insertTransactieRegel($tijdstempel, $artikel['ean'], $parsed['lot'], $vervaldatumSql, $vanLocatie, 'Verplaatsing uit', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingUit, $line, $artikel['naam'], $gebruikerNaam, $batchId);
-        insertTransactieRegel($tijdstempel, $artikel['ean'], $parsed['lot'], $vervaldatumSql, $naarLocatie, 'Verplaatsing in', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingIn, $line, $artikel['naam'], $gebruikerNaam, $batchId);
+        insertTransactieRegel($tijdstempel, $artikel['ean'], $item['lot'], $item['expirySql'], $vanLocatie, 'Verplaatsing uit', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingUit, $line, $artikel['naam'], $gebruikerNaam, $batchId);
+        insertTransactieRegel($tijdstempel, $artikel['ean'], $item['lot'], $item['expirySql'], $naarLocatie, 'Verplaatsing in', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $opmerkingIn, $line, $artikel['naam'], $gebruikerNaam, $batchId);
         // Zie voorkomNegatieveVoorraad() -- alleen de 'uit'-
         // kant (vanLocatie) kan door deze boeking negatief worden, de
         // 'in'-kant (naarLocatie) krijgt er juist voorraad bij.
@@ -1354,7 +1405,7 @@ function verplaatsing(string $gs1RawBlock, string $vanLocatie, string $naarLocat
  * Berging (zie de echte Ontvangst-boeking daarvandaan),
  * niet in de kliniekruimte die hier toevallig geselecteerd is.
  */
-function retournering(string $gs1RawBlock, string $vanLocatie, string $redenRetour, string $opmerking, ?string $gebruikerNaam = null, array $omschrijvingen = []): array {
+function retournering(string $gs1RawBlock, string $vanLocatie, string $redenRetour, string $opmerking, ?string $gebruikerNaam = null, array $omschrijvingen = [], array $lotInvoer = []): array {
     $tijdstempel = date('Y-m-d H:i:s');
     $batchId = nieuweBatchId();
     $lines = preg_split('/\r?\n/', trim($gs1RawBlock, "\" \t\n\r\0\x0B"));
@@ -1369,15 +1420,15 @@ function retournering(string $gs1RawBlock, string $vanLocatie, string $redenReto
     $aangemaakt = maakArtikelenVoorOnbekendeRegels($split['onbekend'], $omschrijvingen, $gebruikerNaam);
     $split['bekend'] = array_merge($split['bekend'], $aangemaakt['nieuwBekend']);
 
+    // "Omleiden naar Berging"-pre-pass (zet 'effectieveLocatie' per item)
+    // -- moet vóór de lot-resolutie hieronder gebeuren, want die is per
+    // locatie (zie losLottenOp()/verwerkScan()'s "slimme ruimte" voor
+    // dezelfde volgorde-reden).
     $bergingNaam = locatieNaamVoorSlot('berging');
-    $verwerkt = 0;
     $omgeleid = [];
-    $verwerkteItems = []; // $item + transactielog_id per regel
+    $itemsMetLocatie = [];
     foreach ($split['bekend'] as $item) {
-        $parsed = $item['parsed'];
         $artikel = $item['artikel'];
-        $line = $item['line'];
-
         $effectieveLocatie = $vanLocatie;
         if ($bergingNaam !== null && $bergingNaam !== $vanLocatie) {
             $perLocatie = huidigeVoorraadPerLocatie($artikel['ean']);
@@ -1387,14 +1438,33 @@ function retournering(string $gs1RawBlock, string $vanLocatie, string $redenReto
                 $omgeleid[] = ['ean' => $artikel['ean'], 'naam' => $artikel['naam'], 'van' => $vanLocatie, 'naar' => $effectieveLocatie];
             }
         }
+        $itemsMetLocatie[] = $item + ['effectieveLocatie' => $effectieveLocatie];
+    }
+
+    // Lot-resolutie (gedeeld, zie losLottenOp() hierboven) -- er is al
+    // bestaande voorraad op de effectieve locatie om op te varen.
+    $lotUitkomst = losLottenOp($itemsMetLocatie, true, $lotInvoer);
+    if (!empty($lotUitkomst['lotProblemen'])) {
+        return ['success' => false, 'lotOntbrekend' => true, 'lotProblemen' => $lotUitkomst['lotProblemen'], 'verwerkt' => 0];
+    }
+
+    $verwerkt = 0;
+    $verwerkteItems = []; // $item + transactielog_id per regel
+    foreach ($lotUitkomst['resolved'] as $item) {
+        $artikel = $item['artikel'];
+        $line = $item['line'];
+        $effectieveLocatie = $item['effectieveLocatie'];
 
         $regelOpmerking = "Retour - $redenRetour. $opmerking";
         if ($effectieveLocatie !== $vanLocatie) {
             $regelOpmerking = trim($regelOpmerking . " (automatisch geretourneerd vanuit $effectieveLocatie i.p.v. $vanLocatie -- daar geen voorraad van dit product)");
         }
+        if ($item['lotNotitie'] !== null) {
+            $regelOpmerking = trim($regelOpmerking . ' ' . $item['lotNotitie']);
+        }
 
         $transactielogId = insertTransactieRegel(
-            $tijdstempel, $artikel['ean'], $parsed['lot'], gs1ExpiryToSqlDate($parsed['expiry']), $effectieveLocatie,
+            $tijdstempel, $artikel['ean'], $item['lot'], $item['expirySql'], $effectieveLocatie,
             'Retournering', $artikel['hoeveelheid'], $artikel['prijs'], null, null, $regelOpmerking, $line, $artikel['naam'], $gebruikerNaam, $batchId
         );
         $verwerkteItems[] = $item + ['transactielog_id' => $transactielogId];

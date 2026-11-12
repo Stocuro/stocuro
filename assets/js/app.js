@@ -55,6 +55,7 @@ const API_MAP = {
   // Product-drilldown achter een cel op het Trends-tabblad.
   getVerbruiksTrendDetail:                { method: 'GET',  url: 'api/verbruikstrend_detail.php', params: ['maand', 'reeks', 'sub'] },
   getFoutlog:                              { method: 'GET',  url: 'api/foutlog.php' },
+  getAuditLog:                             { method: 'GET',  url: 'api/audit_log.php' },
   getLeaderboardData:                       { method: 'GET',  url: 'api/leaderboard.php', params: ['periode', 'procedure_type'] },
   // "wie is aan de beurt" -- zelfde endpoint,
   // aparte actie (zie api/leaderboard.php).
@@ -451,6 +452,7 @@ const TRANSLATIONS = {
     usageTrends: '📈 Usage Trends',
     errorLog: '⚠️ Error Log',
     unknownProducts: '❓ Unknown Products',
+    auditLogTitle: '🗂️ Audit Log',
     opHint: 'Barcodes scanned during Goods Receipt, Transfer + Returns, Material Usage, Write Off Expired, or Stock Count that did not match any known product. Each one is created automatically as a real product, using the description the scanner typed in as a temporary name -- it already shows up in stock and works everywhere. Finish it up below: fill in the real name, category, price, and so on.',
     opNone: 'No unknown barcodes right now.',
     opLastSeen: 'Last seen',
@@ -519,6 +521,7 @@ const TRANSLATIONS = {
     editLabel: 'Edit',
     deleteLabel: 'Delete',
     addLabel: 'Add',
+    csvExportLabel: '⬇️ Download CSV',
     yesLabel: 'Yes',
     noLabel: 'No',
     activeLabel: 'Active',
@@ -998,6 +1001,14 @@ const TRANSLATIONS = {
     colErrorType: 'Error type',
     colBarcodeCol: 'Barcode',
     colMessage: 'Message',
+
+    // Audit log
+    alNone: 'No audit entries yet',
+    alHint: 'Last {n} entries, newest first.',
+    alFilterPlaceholder: 'Filter on user, action, or details...',
+    colUser: 'User',
+    colEntity: 'Entity',
+    colDetails: 'Details',
 
     // Order modal / bestelling
     omFillOrderer: 'Please fill in "Ordered by"',
@@ -1517,6 +1528,7 @@ const TRANSLATIONS = {
     usageTrends: '📈 Verbruikstrends',
     errorLog: '⚠️ Foutlog',
     unknownProducts: '❓ Onbekende Producten',
+    auditLogTitle: '🗂️ Audit Log',
     opHint: 'Barcodes gescand bij Goederenontvangst, Verplaatsing + Retour, Materiaal verbruik, Vervallen Afschrijven of Tellen die niet bij een bekend product hoorden. Elke barcode wordt automatisch als een echt product aangemaakt, met de omschrijving die de scanner heeft ingevuld als tijdelijke naam -- het staat al in de voorraad en werkt al overal. Rond het hieronder af: vul de echte naam, categorie, prijs, etc. in.',
     opNone: 'Op dit moment geen onbekende barcodes.',
     opLastSeen: 'Laatst gezien',
@@ -1581,6 +1593,7 @@ const TRANSLATIONS = {
     editLabel: 'Bewerken',
     deleteLabel: 'Verwijderen',
     addLabel: 'Toevoegen',
+    csvExportLabel: '⬇️ Download CSV',
     yesLabel: 'Ja',
     noLabel: 'Nee',
     activeLabel: 'Actief',
@@ -2004,6 +2017,14 @@ const TRANSLATIONS = {
     colErrorType: 'Fouttype',
     colBarcodeCol: 'Barcode',
     colMessage: 'Bericht',
+
+    // Audit log
+    alNone: 'Nog geen audit-regels',
+    alHint: 'Laatste {n} regels, nieuwste eerst.',
+    alFilterPlaceholder: 'Filter op gebruiker, actie of details...',
+    colUser: 'Gebruiker',
+    colEntity: 'Entiteit',
+    colDetails: 'Details',
 
     omFillOrderer: 'Vul "Besteller" in alstublieft',
     omErrorPrefix: 'Fout: ',
@@ -2637,6 +2658,7 @@ const ROUTE_DISPATCH = {
   'verplaatsadvies': function () { showVoorraad(); },
   'foutlog': function () { showFoutlog(); },
   'onbekende-producten': function () { showOnbekendeProducten(); },
+  'audit-log': function () { showAuditLog(); },
   'scan-ontvangst': function () { showScanOntvangst(); },
   'scan-verbruik': function () { showScanVerbruik(); },
   'verval-afboeken': function () { showVervalAfboeken(); },
@@ -2804,7 +2826,7 @@ function renderSidebar() {
   if (heeftScherm('nieuws')) dash += sidebarBtnHtml('sbNieuws', 'nieuws', t('newsTitle'));
   html += sidebarSectionHtml('dashboards', dash);
 
-  const adminSchermen = ['gebruikers', 'groepen', 'stamgegevens', 'locaties', 'foutlog', 'onbekende-producten'];
+  const adminSchermen = ['gebruikers', 'groepen', 'stamgegevens', 'locaties', 'foutlog', 'onbekende-producten', 'audit-log'];
   if (adminSchermen.some(heeftScherm)) {
     // Geen 3 nieuwe samengevoegde
     // beheerpagina's (te veel risico op de onderliggende CRUD-logica in de
@@ -2819,6 +2841,7 @@ function renderSidebar() {
     let datakwaliteit = '';
     if (heeftScherm('foutlog')) datakwaliteit += sidebarBtnHtml('sbFoutlog', 'foutlog', t('errorLog'));
     if (heeftScherm('onbekende-producten')) datakwaliteit += sidebarBtnHtml('sbOnbekendeProducten', 'onbekende-producten', t('unknownProducts'));
+    if (heeftScherm('audit-log')) datakwaliteit += sidebarBtnHtml('sbAuditLog', 'audit-log', t('auditLogTitle'));
 
     html += '<div class="sidebar-group"><div class="sidebar-group-label">' + t('admin') + '</div>';
     if (toegang) html += '<div class="sidebar-subgroup-label">' + t('adminGroupAccess') + '</div>' + toegang;
@@ -2856,6 +2879,7 @@ function renderSidebar() {
   wire('sbLocaties', showLocatiesBeheer);
   wire('sbFoutlog', showFoutlog);
   wire('sbOnbekendeProducten', showOnbekendeProducten);
+  wire('sbAuditLog', showAuditLog);
 }
 
 // Zoekveld boven de zijbalk: puur client-side tekstfilter over de al
@@ -3542,6 +3566,7 @@ function renderRecenteTransacties(transacties, specialisten, procedures, locRows
   if (transacties.length === 0) {
     html += '<p class="empty">' + t('rtNoneRecent') + '</p>';
   } else {
+    html += '<button class="action-btn" id="rtCsvBtn">' + t('csvExportLabel') + '</button>';
     html += '<table><tr><th>' + t('colDate') + '</th><th>' + t('colType') + '</th><th>' + t('colLocation') + '</th><th>' + t('colLines') + '</th><th>' + t('colSpecialist') + '</th><th>' + t('colProcedure') + '</th><th>' + t('colNote') + '</th><th>' + t('colScannedBy') + '</th><th></th><th></th></tr>';
     transacties.forEach(function (item, index) {
       html += renderRecenteTransactieRow(item, index);
@@ -3551,6 +3576,17 @@ function renderRecenteTransacties(transacties, specialisten, procedures, locRows
 
   document.getElementById('content').innerHTML = html;
   attachRecenteTransactieHandlers(transacties, locaties, specialisten, procedures);
+  wire('rtCsvBtn', function () {
+    exporteerAlsCsv(
+      'recente-transacties.csv',
+      [t('colDate'), t('colType'), t('colLocation'), t('colLines'), t('colSpecialist'), t('colProcedure'), t('colNote'), t('colScannedBy')],
+      transacties.map(function (item) {
+        const isTransfer = item.type === 'Verplaatsing';
+        const locatie = isTransfer ? (item.van_locatie || '-') + ' -> ' + (item.naar_locatie || '-') : (item.locatie || '-');
+        return [item.tijdstempel, transactieTypeLabel(item.type), locatie, item.aantal_regels, item.specialist || '-', item.procedure_type || '-', item.opmerking || '-', item.aangemaakt_door || '-'];
+      })
+    );
+  });
 }
 
 function attachRecenteTransactieHandlers(transacties, locaties, specialisten, procedures) {
@@ -4101,6 +4137,7 @@ function renderTellingForm(locatie, kastlocatie) {
   html += '<div id="formError" class="login-error" style="display:none;"></div>';
   html += '<div class="form-group"><label>' + t('tlScansLabel') + '</label><textarea id="tellingGs1" rows="10" placeholder="Scan hier..."></textarea><div id="tellingGs1Hint" class="gs1-hint" style="display:none;"></div></div>';
   html += '<div id="onbekendPaneel"></div>';
+  html += '<div id="lotPaneel"></div>';
   html += '<div class="edit-actions"><button class="edit-save" id="tellingSubmit">' + t('tlSubmit') + '</button></div>';
 
   document.getElementById('content').innerHTML = html;
@@ -4108,7 +4145,9 @@ function renderTellingForm(locatie, kastlocatie) {
   initGs1ScanHint('tellingGs1', 'tellingGs1Hint');
 
   const btn = document.getElementById('tellingSubmit');
-  function doSubmit(omschrijvingen) {
+  // $lotloos/$lotInvoer: zie includes/transacties.php::losLottenOp() en
+  // de toelichting bij doSubmit() in renderScanOntvangstForm().
+  function doSubmit(omschrijvingen, lotloos, lotInvoer) {
     const errorEl = document.getElementById('formError');
     errorEl.style.display = 'none';
     btn.disabled = true;
@@ -4118,10 +4157,20 @@ function renderTellingForm(locatie, kastlocatie) {
       gs1_raw: document.getElementById('tellingGs1').value,
       omschrijvingen: omschrijvingen || {},
       kastlocatie: kastlocatie || '',
+      lot_invoer: lotInvoer || {},
     }, function (result) {
       if (result.onbekend) {
         btn.disabled = false;
-        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
+        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, function (oms, lotl) {
+          doSubmit(oms, lotl, lotInvoer);
+        }, true);
+        return;
+      }
+      if (result.lotOntbrekend) {
+        btn.disabled = false;
+        toonLotOntbrekendPaneel('lotPaneel', result.lotProblemen, function (li) {
+          doSubmit(omschrijvingen, lotloos, li);
+        });
         return;
       }
       renderTellingResultaat(locatie, kastlocatie, result);
@@ -4131,7 +4180,7 @@ function renderTellingForm(locatie, kastlocatie) {
       errorEl.style.display = 'block';
     });
   }
-  btn.addEventListener('click', function () { doSubmit({}); });
+  btn.addEventListener('click', function () { doSubmit({}, {}, {}); });
 }
 
 function renderTellingResultaat(locatie, kastlocatie, result) {
@@ -6887,6 +6936,8 @@ function renderLotTracking(data) {
 
   if (!hasData) {
     html += '<p class="empty">' + t('ltNone') + '</p>';
+  } else {
+    html += '<button class="action-btn" id="ltCsvBtn">' + t('csvExportLabel') + '</button>';
   }
 
   document.getElementById('content').innerHTML = html;
@@ -6898,6 +6949,19 @@ function renderLotTracking(data) {
     });
   });
   wireVervalTabs();
+  wire('ltCsvBtn', function () {
+    const rijen = [];
+    for (const loc in data) {
+      data[loc].forEach(item => {
+        rijen.push([loc, item.product, item.lot, item.vervaldatum, item.monthsLeft, item.huidig, item.status]);
+      });
+    }
+    exporteerAlsCsv(
+      'lot-tracking.csv',
+      [t('colLocation'), t('colProduct'), t('colLot'), t('colExpiryDate'), t('colMonths'), t('colQuantity'), t('colStatus')],
+      rijen
+    );
+  });
 }
 
 // Verbruik per Procedure en
@@ -7044,6 +7108,7 @@ function renderVoorraadwaarde(data) {
   html += '</div>';
 
   html += '<div class="section-title">' + t('svByLocation') + '</div>';
+  html += '<button class="action-btn" id="svCsvLocatieBtn">' + t('csvExportLabel') + '</button>';
   html += '<table><tr><th>' + t('colLocation') + '</th><th>' + t('colNumProducts') + '</th><th>' + t('colTotalUnits') + '</th><th>' + t('colValue') + '</th></tr>';
   Object.keys(data.perLocatie).sort((a, b) => data.perLocatie[b].waarde - data.perLocatie[a].waarde).forEach(loc => {
     const d = data.perLocatie[loc];
@@ -7052,6 +7117,7 @@ function renderVoorraadwaarde(data) {
   html += '</table>';
 
   html += '<div class="section-title">' + t('svByCategory') + '</div>';
+  html += '<button class="action-btn" id="svCsvCategorieBtn">' + t('csvExportLabel') + '</button>';
   html += '<table><tr><th>' + t('colCategory') + '</th><th>' + t('colNumProducts') + '</th><th>' + t('colTotalUnits') + '</th><th>' + t('colValue') + '</th></tr>';
   Object.keys(data.perCategorie).sort((a, b) => data.perCategorie[b].waarde - data.perCategorie[a].waarde).forEach(cat => {
     const d = data.perCategorie[cat];
@@ -7070,6 +7136,20 @@ function renderVoorraadwaarde(data) {
   document.getElementById('content').innerHTML = html;
   wire('backBtn', goBack);
   wireVoorraadTabs();
+  wire('svCsvLocatieBtn', function () {
+    const rijen = Object.keys(data.perLocatie).sort((a, b) => data.perLocatie[b].waarde - data.perLocatie[a].waarde).map(loc => {
+      const d = data.perLocatie[loc];
+      return [loc, d.aantalArtikelen, d.aantalStuks, d.waarde.toFixed(2)];
+    });
+    exporteerAlsCsv('voorraadwaarde-per-locatie.csv', [t('colLocation'), t('colNumProducts'), t('colTotalUnits'), t('colValue')], rijen);
+  });
+  wire('svCsvCategorieBtn', function () {
+    const rijen = Object.keys(data.perCategorie).sort((a, b) => data.perCategorie[b].waarde - data.perCategorie[a].waarde).map(cat => {
+      const d = data.perCategorie[cat];
+      return [cat, d.aantalArtikelen, d.aantalStuks, d.waarde.toFixed(2)];
+    });
+    exporteerAlsCsv('voorraadwaarde-per-categorie.csv', [t('colCategory'), t('colNumProducts'), t('colTotalUnits'), t('colValue')], rijen);
+  });
 }
 
 // =================================================================
@@ -8381,6 +8461,69 @@ function renderFoutlog(data) {
 }
 
 // -----------------------------------------------------------------
+// Audit Log: beheersacties zonder eigen logtabel (orders, eenmalige
+// bestellingen, product-/stamgegevensbeheer, ...), zie includes/audit.php.
+// Groeit sneller dan Foutlog, daarom hier wel een simpel client-side
+// tekstfilter (geen server-side filtering/paginering nodig zolang
+// getAuditLog() een vast aantal regels teruggeeft).
+// -----------------------------------------------------------------
+let auditLogData = [];
+
+function showAuditLog() {
+  setRoute('audit-log');
+  document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
+  StocuroRun.withSuccessHandler(renderAuditLog).getAuditLog();
+}
+
+function renderAuditLog(data) {
+  if (data.error) {
+    document.getElementById('content').innerHTML = '<button class="back-btn" id="backBtn">' + t('backLabel') + '</button><h2>' + t('errorLabel') + ': ' + data.error + '</h2>';
+    wire('backBtn', goBack);
+    return;
+  }
+
+  auditLogData = data;
+
+  let html = '<h2>' + t('auditLogTitle') + '</h2>';
+  if (data.length === 0) {
+    html += '<p class="empty">' + t('alNone') + '</p>';
+  } else {
+    html += '<p style="color:#999; font-size:13px;">' + tf('alHint', { n: data.length }) + '</p>';
+    html += '<input type="text" id="alFilter" placeholder="' + escapeHtml(t('alFilterPlaceholder')) + '" style="margin-bottom:10px; width:100%; max-width:400px;">';
+    html += '<div id="alTableWrap"></div>';
+  }
+
+  document.getElementById('content').innerHTML = html;
+  if (data.length > 0) {
+    renderAuditLogTable(auditLogData);
+    const filterInput = document.getElementById('alFilter');
+    if (filterInput) {
+      filterInput.addEventListener('keyup', function () {
+        const q = this.value.toLowerCase().trim();
+        const gefilterd = q === '' ? auditLogData : auditLogData.filter(item =>
+          (item.gebruiker_naam || '').toLowerCase().includes(q) ||
+          (item.actie || '').toLowerCase().includes(q) ||
+          (item.entiteit_type || '').toLowerCase().includes(q) ||
+          (item.details || '').toLowerCase().includes(q)
+        );
+        renderAuditLogTable(gefilterd);
+      });
+    }
+  }
+  wire('backBtn', goBack);
+}
+
+function renderAuditLogTable(rows) {
+  let html = '<table><tr><th>' + t('colDate') + '</th><th>' + t('colTime') + '</th><th>' + t('colUser') + '</th><th>' + t('colAction') + '</th><th>' + t('colEntity') + '</th><th>' + t('colDetails') + '</th></tr>';
+  rows.forEach(item => {
+    const entiteit = [item.entiteit_type, item.entiteit_id].filter(Boolean).join(' #');
+    html += '<tr><td>' + escapeHtml(item.datum) + '</td><td>' + escapeHtml(item.tijd) + '</td><td>' + escapeHtml(item.gebruiker_naam || '') + '</td><td>' + escapeHtml(item.actie || '') + '</td><td>' + escapeHtml(entiteit) + '</td><td>' + escapeHtml(item.details || '') + '</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('alTableWrap').innerHTML = html;
+}
+
+// -----------------------------------------------------------------
 // "Onbekende Producten": barcodes die tijdens een scan
 // niet herkend werden, met de omschrijving die de scanner ervoor heeft
 // ingevuld -- zie includes/onbekende_scans.php. "Afronden" gebeurt door
@@ -8489,6 +8632,33 @@ function escapeHtml(text) {
 
 function escapeAttr(text) {
   return String(text).replace(/"/g, '&quot;');
+}
+
+// Gedeelde CSV-export: puur client-side (data staat al in het geheugen van
+// het scherm), geen apart server-endpoint nodig. Puntkomma als scheiding
+// -- dat is wat Excel-NL (komma als decimaalteken) standaard verwacht bij
+// het openen van een .csv-bestand, en deze app is primair voor
+// Nederlandse ziekenhuizen. BOM vooraan zodat Excel de UTF-8-tekens
+// (bv. é, €) goed interpreteert i.p.v. als Latin-1 te lezen.
+function csvCel(waarde) {
+  const s = waarde === null || waarde === undefined ? '' : String(waarde);
+  if (/[;"\n\r]/.test(s)) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function exporteerAlsCsv(bestandsnaam, headers, rijen) {
+  const csv = [headers].concat(rijen).map(rij => rij.map(csvCel).join(';')).join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = bestandsnaam;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Modal event listeners
@@ -9397,6 +9567,7 @@ function renderVerplaatsingForm(locRows) {
   html += '<div class="form-group"><label>' + t('tfReason') + '</label><input type="text" id="vpReden"></div>';
   html += '<div class="form-group"><label>' + t('tfNote') + '</label><textarea id="vpOpmerking" rows="2"></textarea></div>';
   html += '<div id="onbekendPaneel"></div>';
+  html += '<div id="lotPaneel"></div>';
   html += '<div class="edit-actions"><button class="edit-save" id="vpSubmit">' + t('tfSave') + '</button></div>';
 
   document.getElementById('content').innerHTML = html;
@@ -9412,7 +9583,9 @@ function renderVerplaatsingForm(locRows) {
   });
 
   const btn = document.getElementById('vpSubmit');
-  function doSubmit(omschrijvingen) {
+  // $lotloos/$lotInvoer: zie includes/transacties.php::losLottenOp() en
+  // de toelichting bij doSubmit() in renderScanOntvangstForm().
+  function doSubmit(omschrijvingen, lotloos, lotInvoer) {
     const errorEl = document.getElementById('formError');
     errorEl.style.display = 'none';
     btn.disabled = true;
@@ -9426,10 +9599,20 @@ function renderVerplaatsingForm(locRows) {
       reden: document.getElementById('vpReden').value,
       opmerking: document.getElementById('vpOpmerking').value,
       omschrijvingen: omschrijvingen || {},
+      lot_invoer: lotInvoer || {},
     }, function (result) {
       if (result.onbekend) {
         btn.disabled = false;
-        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, doSubmit);
+        toonOnbekendeBarcodesPaneel('onbekendPaneel', result.onbekendeRegels, function (oms, lotl) {
+          doSubmit(oms, lotl, lotInvoer);
+        }, true);
+        return;
+      }
+      if (result.lotOntbrekend) {
+        btn.disabled = false;
+        toonLotOntbrekendPaneel('lotPaneel', result.lotProblemen, function (li) {
+          doSubmit(omschrijvingen, lotloos, li);
+        });
         return;
       }
       // Zelfde soort "slimme ruimte"-melding als bij Verbruik Scannen --
@@ -9453,6 +9636,7 @@ function renderVerplaatsingForm(locRows) {
       document.getElementById('vpReden').value = '';
       document.getElementById('vpOpmerking').value = '';
       document.getElementById('onbekendPaneel').innerHTML = '';
+      document.getElementById('lotPaneel').innerHTML = '';
       document.getElementById('vpGs1').focus();
     }, function (err) {
       btn.disabled = false;
@@ -9460,7 +9644,7 @@ function renderVerplaatsingForm(locRows) {
       errorEl.style.display = 'block';
     });
   }
-  btn.addEventListener('click', function () { doSubmit({}); });
+  btn.addEventListener('click', function () { doSubmit({}, {}, {}); });
 }
 
 // -----------------------------------------------------------------

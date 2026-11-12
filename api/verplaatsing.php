@@ -35,14 +35,14 @@ if ($actie === 'verplaatsen') {
         http_response_code(400);
         jsonResponse(['error' => 'Van- en naar-locatie zijn verplicht']);
     }
-    apiTry(fn() => verplaatsing($gs1Raw, $van, $naar, $body['reden'] ?? '', $body['opmerking'] ?? '', $user['naam'], $body['omschrijvingen'] ?? []));
+    apiTry(fn() => verplaatsing($gs1Raw, $van, $naar, $body['reden'] ?? '', $body['opmerking'] ?? '', $user['naam'], $body['omschrijvingen'] ?? [], $body['lot_invoer'] ?? []));
 } elseif ($actie === 'retourneren') {
     $van = $body['van_locatie'] ?? '';
     if ($van === '') {
         http_response_code(400);
         jsonResponse(['error' => 'Locatie van retour is verplicht']);
     }
-    apiTry(fn() => retournering($gs1Raw, $van, $body['reden'] ?? '', $body['opmerking'] ?? '', $user['naam'], $body['omschrijvingen'] ?? []));
+    apiTry(fn() => retournering($gs1Raw, $van, $body['reden'] ?? '', $body['opmerking'] ?? '', $user['naam'], $body['omschrijvingen'] ?? [], $body['lot_invoer'] ?? []));
 } else {
     http_response_code(400);
     jsonResponse(['error' => "Onbekende actie: verwacht 'verplaatsen' of 'retourneren'"]);

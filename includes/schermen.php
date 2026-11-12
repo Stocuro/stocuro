@@ -107,6 +107,9 @@ const SCHERMEN = [
     'locaties'            => ['sectie' => 'beheer', 'labelKey' => 'locations'],
     'foutlog'             => ['sectie' => 'beheer', 'labelKey' => 'errorLog'],
     'onbekende-producten' => ['sectie' => 'beheer', 'labelKey' => 'unknownProducts'],
+    // Audit-trail van beheeracties zonder eigen logtabel (zie
+    // includes/audit.php) -- tot nu toe verzameld maar nergens zichtbaar.
+    'audit-log'           => ['sectie' => 'beheer', 'labelKey' => 'auditLogTitle'],
 
     // --- Beheer (altijd beheerder-only, NIET via een groep toe te kennen) ---
     'gebruikers'          => ['sectie' => 'beheer', 'labelKey' => 'users', 'beheerderOnly' => true],

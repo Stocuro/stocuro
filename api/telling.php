@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         jsonResponse(['error' => 'Locatie en minstens één GS1-scan zijn verplicht']);
     }
 
-    apiTry(fn() => verwerkTelling($locatie, $gs1Raw, $user['naam'], $body['omschrijvingen'] ?? [], $kastlocatie));
+    apiTry(fn() => verwerkTelling($locatie, $gs1Raw, $user['naam'], $body['omschrijvingen'] ?? [], $kastlocatie, $body['lot_invoer'] ?? []));
 } else {
     $locatie = (string) ($_GET['locatie'] ?? '');
     if ($locatie === '') {

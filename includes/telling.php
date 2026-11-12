@@ -144,7 +144,7 @@ function tellingLotSleutel(string $ean, ?string $lot, ?string $vervaldatumSql): 
  *     hele locatie, dus mag de periodieke Kastcontrole-taak niet laten
  *     verdwijnen).
  */
-function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerNaam, array $omschrijvingen = [], ?string $kastlocatie = null): array {
+function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerNaam, array $omschrijvingen = [], ?string $kastlocatie = null, array $lotInvoer = []): array {
     if (!in_array($locatie, actieveLocatieNamen(), true)) {
         throw new RuntimeException('Onbekende of inactieve locatie');
     }
@@ -186,6 +186,23 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
         $split['bekend'] = $bekendInDezeKast;
     }
 
+    // Lot-resolutie, VÓÓR het groeperen hieronder (gedeeld, zie
+    // losLottenOp() in includes/transacties.php). Zonder dit zou een
+    // gescande regel zonder lotnummer voor een lot-getrackt product een
+    // NIEUWE, aparte lot=NULL-telgroep vormen, los van het echte lot dat
+    // het systeem al kent -- met als gevolg dat de vergelijking hieronder
+    // dat bestaande lot als volledig "weg" (tekort) zou boeken EN
+    // tegelijk een verzonnen nieuwe "lot=NULL"-partij als overschot, in
+    // plaats van gewoon de juiste lot-telling bij te werken. Net als bij
+    // Verbruik is er hier al bestaande voorraad op deze locatie om op te
+    // varen (lotenOpVoorraadVoorEanLocatie()/FEFO), vandaar 'true'.
+    $itemsMetLocatie = array_map(fn($item) => $item + ['effectieveLocatie' => $locatie], $split['bekend']);
+    $lotUitkomst = losLottenOp($itemsMetLocatie, true, $lotInvoer);
+    if (!empty($lotUitkomst['lotProblemen'])) {
+        return ['success' => false, 'lotOntbrekend' => true, 'lotProblemen' => $lotUitkomst['lotProblemen'], 'verwerkt' => 0];
+    }
+    $split['bekend'] = $lotUitkomst['resolved'];
+
     $geteld = [];
     foreach ($split['bekend'] as $item) {
         $artikel = $item['artikel'];
@@ -194,17 +211,16 @@ function verwerkTelling(string $locatie, string $gs1RawBlock, string $gebruikerN
 
     // Naast de EAN-som hierboven (nodig voor de
     // $regels-samenvatting die de frontend ongewijzigd terugkrijgt) ook
-    // per ean+lot+vervaldatum tellen, met het lot/de vervaldatum van de
-    // gescande regel zelf -- exact hetzelfde patroon als verwerkScan()
+    // per ean+lot+vervaldatum tellen, met het (inmiddels opgeloste) lot
+    // van de gescande regel -- exact hetzelfde patroon als verwerkScan()
     // gebruikt bij een gewone Verbruik/Ontvangst-boeking. Dit is de
     // sleutel tot de bugfix: de correctieboeking hieronder gebeurt straks
     // per lotgroep, niet meer op EAN-niveau met lot=NULL.
     $geteldPerLot = [];
     foreach ($split['bekend'] as $item) {
         $artikel = $item['artikel'];
-        $parsed = $item['parsed'];
-        $lot = $parsed['lot'] ?? null;
-        $vervaldatumSql = gs1ExpiryToSqlDate($parsed['expiry'] ?? null);
+        $lot = $item['lot'];
+        $vervaldatumSql = $item['expirySql'];
         $sleutel = tellingLotSleutel($artikel['ean'], $lot, $vervaldatumSql);
         if (!isset($geteldPerLot[$sleutel])) {
             $geteldPerLot[$sleutel] = ['ean' => $artikel['ean'], 'lot' => $lot, 'vervaldatumSql' => $vervaldatumSql, 'aantal' => 0];

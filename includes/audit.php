@@ -41,5 +41,19 @@ function getAuditLog(int $limiet = 200): array {
     $stmt = db()->prepare('SELECT * FROM audit_log ORDER BY tijdstempel DESC, id DESC LIMIT :limiet');
     $stmt->bindValue(':limiet', $limiet, PDO::PARAM_INT);
     $stmt->execute();
-    return $stmt->fetchAll();
+    $rows = $stmt->fetchAll();
+
+    // Datum/tijd gesplitst teruggeven, consistent met getFoutlog()
+    // (includes/logging.php) -- het scherm toont ze als twee kolommen.
+    return array_map(function (array $r): array {
+        return [
+            'datum' => (new DateTime($r['tijdstempel']))->format('d-m-Y'),
+            'tijd' => (new DateTime($r['tijdstempel']))->format('H:i:s'),
+            'gebruiker_naam' => $r['gebruiker_naam'],
+            'actie' => $r['actie'],
+            'entiteit_type' => $r['entiteit_type'],
+            'entiteit_id' => $r['entiteit_id'],
+            'details' => $r['details'],
+        ];
+    }, $rows);
 }

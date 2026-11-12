@@ -60,6 +60,52 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.27 — Verplaatsing, Retournering and Telling now get the same
+  lot-safety as Ontvangst/Verbruik, closing a scanning-flow parity gap
+  found during the same full-system audit as v1.0.26.** The lot-resolution
+  logic (same-submission lot sharing, auto-pick when only one lot is in
+  stock, FEFO when several are and at least one has an expiry, otherwise
+  a blocking question) previously only existed inline inside
+  `verwerkScan()` (Ontvangst/Verbruik). Extracted into one shared
+  `losLottenOp()` (`includes/transacties.php`) and applied to
+  `verplaatsing()`, `retournering()`, and `verwerkTelling()`
+  (`includes/telling.php`) as well, each feeding it their own
+  location-determination logic unchanged (smart-room pick for Verbruik,
+  Berging-redirect for Retournering, fixed locations for Verplaatsing/
+  Telling). Found a more serious variant specifically in Telling while
+  doing this: counting a lot-tracked product without scanning its lot
+  during a stocktake used the raw, unresolved scan to build the
+  counted-vs-system comparison, which could book the real lot's stock as
+  "fully gone" (a false shortage) while *also* fabricating a brand-new
+  lot=NULL "surplus" group for the same count — silent data corruption
+  with no error shown. Fixed by resolving lots before building the
+  comparison, same as the other flows. Verified against a real database
+  across all four flows: Ontvangst/Verbruik regression (unchanged),
+  Verplaatsing/Retournering single-lot auto-resolve, Telling single-lot
+  resolution (the critical case — a correct count now produces zero
+  bookings, and a real shortfall books against the real lot instead of a
+  phantom one), and FEFO resolution with two lots in stock.
+- **Also in v1.0.27 — new Audit Log screen (Admin → Data Quality).**
+  `includes/audit.php`'s `audit_log` table (orders, one-off orders,
+  product/master-data edits, user/location/group management — anything
+  without its own richer log) has existed since v1.0.6's user-tracking
+  work, written to from roughly a dozen places, but was never shown
+  anywhere — there was no way to actually look at it. Added the
+  `audit-log` screen permission (group-configurable, same as Error Log),
+  `api/audit_log.php`, and an Admin → Data Quality page with a flat,
+  newest-first table and a client-side text filter (it grows faster than
+  Error Log, so a filter earns its place immediately). No backend
+  changes beyond splitting the existing timestamp into date/time columns
+  for display, same as Error Log already does.
+- **Also in v1.0.27 — CSV export added to Recent Transactions, Lot
+  Tracking by Location, and Stock Value.** Requested as part of "more
+  data for admins" during the same audit. Pure client-side export (the
+  data driving each screen's table is already loaded in memory, so no
+  new endpoint) via a small shared `exporteerAlsCsv()` helper
+  (`assets/js/app.js`) — semicolon-delimited with a UTF-8 BOM, matching
+  what Dutch-locale Excel expects by default on open. Stock Value gets
+  two buttons (by location, by category) since those are two independent
+  tables on that screen.
 - **v1.0.26 — critical bugfix: the GS1 parser could fabricate a lot
   number out of thin air from a plain, un-prefixed barcode.** Found
   during a full-system audit requested after this session's lot-tracking
@@ -596,8 +642,8 @@ No step contacts the internet. There is no license-activation server.
 
 The `vendor-tools/` directory (private signing key, code generator) is
 **not part of the customer package**. It
-lives and runs only on the vendor's own infrastructure, outside this
-repository.
+lives and runs only on the vendor's own infrastructure. See
+`vendor-tools/README.md` for setup.
 
 ## Installation
 
