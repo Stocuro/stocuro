@@ -509,17 +509,25 @@ function insertTransactieRegel(
  * hier expliciet niet gewenst), dit controleert alleen wat
  * de RESULTERENDE voorraad nu is.
  *
- * Boekt zo nodig een compenserende correctie van hetzelfde transactietype
- * als een positieve afwijking bij een echte kastcontrole ('Telling:
- * overschot', zie verwerkTelling() in includes/telling.php) zodat de
- * weergegeven voorraad nooit onder 0 zakt. Bewust hergebruikt i.p.v. een
- * gloednieuw transactietype: beide betekenen feitelijk hetzelfde (de
- * administratie liep achter op de fysieke werkelijkheid) en dit type telt
- * al automatisch mee in TRANSACTIETYPES_INKOMEND (voorraadberekening),
- * Verbruikstrends ("aanpassingen") en de vertaalde badge-labels -- geen
- * enkele andere plek in de app hoeft hiervoor aangepast te worden. De
- * opmerking maakt het verschil met een echte, fysieke kastcontrole
- * duidelijk herkenbaar in Recente Transacties.
+ * Boekt zo nodig een compenserende correctie zodat de weergegeven
+ * voorraad nooit onder 0 zakt. Eigen transactietype 'Correctie:
+ * negatieve voorraad' (migratie 043_negatieve_voorraad_correctie_type.sql)
+ * -- NIET hergebruikt 'Telling: overschot' (de oude aanpak, tot
+ * gemeld praktijkprobleem): die laatste is voor een ECHTE,
+ * gebruiker-geïnitieerde kastcontrole-afwijking (verwerkTelling() in
+ * includes/telling.php), die óók lot=NULL kan hebben voor een
+ * genuinely lotloos product. Op (transactietype, lot) alleen waren de
+ * twee dus niet te onderscheiden, waardoor deze automatische correctie
+ * als een nep "lot" verscheen in Loten op Voorraad/Vervaldatums &
+ * Lotbeheer (voorraadLot(), includes/voorraad.php) en in de
+ * "Ontbrekende Batch"-takenlijst (getOntbrekendeBatchTaken(), includes/
+ * taken.php) -- een melding die niemand kan oplossen, want er is geen
+ * fysiek lot dat ontbreekt, puur een boekhoudkundige bijstelling. Dit
+ * eigen type telt nog wél mee in TRANSACTIETYPES_INKOMEND (het
+ * EAN+locatie-totaal moet wél kloppen), maar voorraadLot()/
+ * getOntbrekendeBatchTaken() sluiten dit type nu expliciet uit van hun
+ * per-lot-weergave. De opmerking maakt het verschil met een echte,
+ * fysieke kastcontrole ook in Recente Transacties duidelijk herkenbaar.
  *
  * Geen aparte lot/vervaldatum op de correctieregel: dit corrigeert het
  * EAN+locatie-totaal (wat de gebruiker als "de voorraad" ziet in
@@ -536,7 +544,7 @@ function voorkomNegatieveVoorraad(string $ean, string $locatie, string $artikelN
     $opmerking = "Automatische correctie: deze boeking zou de voorraad van dit product op $locatie op $huidig hebben gebracht, wat niet kan. "
         . "Voorraad teruggezet naar 0 -- wijst op een telfout, controleer de kastvoorraad op deze locatie.";
     insertTransactieRegel(
-        date('Y-m-d H:i:s'), $ean, null, null, $locatie, 'Telling: overschot', $tekort,
+        date('Y-m-d H:i:s'), $ean, null, null, $locatie, 'Correctie: negatieve voorraad', $tekort,
         $prijsOpMoment, null, null, $opmerking, null, $artikelNaam, $gebruikerNaam
     );
 }

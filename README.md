@@ -60,6 +60,28 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.22 — the automatic "don't let stock go negative" correction no
+  longer shows up as a fake lot.** Reported: when a booking would have
+  pushed an EAN+location's stock below 0 (a count error, a missed scan,
+  or stock refilled by hand without a matching database entry),
+  `voorkomNegatieveVoorraad()` books a compensating correction back to
+  0 — this always has to use lot=NULL, since there's no reliable way to
+  know which specific batch the discrepancy belongs to. That correction
+  reused the same transaction type as a *real*, user-initiated stocktake
+  adjustment (`Telling: overschot`), and a real stocktake adjustment can
+  *also* legitimately be lot=NULL (for a genuinely lot-less product) —
+  so the two were impossible to tell apart afterwards. Result: the
+  automatic correction showed up as a phantom "lot" in Lots in
+  Stock/Expiry & Lot Management, and as a false entry in the "Missing
+  Batch" task list — a problem nobody can actually resolve, since
+  there's no real physical lot to go find. Fixed with a dedicated
+  transaction type, `Correctie: negatieve voorraad` (migration
+  `043_negatieve_voorraad_correctie_type.sql`): it still counts toward
+  the overall stock total as before, but is now explicitly excluded from
+  `voorraadLot()` and the "Missing Batch" task query. Verified against a
+  real database: the automatic correction no longer appears in either
+  place while the total stays correct, and a genuine lot-less product's
+  real stocktake adjustment still shows up exactly as before.
 - **v1.0.21 — a lot scanned elsewhere in the same submission now
   resolves a missing-lot line too, instead of always asking.** Reported
   after testing: a product with no prior lot history sailed through

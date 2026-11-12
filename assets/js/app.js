@@ -591,6 +591,7 @@ const TRANSLATIONS = {
     rtTypeSurplus: 'Stocktake: surplus',
     rtTypeShortage: 'Stocktake: shortage',
     rtTypeExpired: 'Expired write-off',
+    rtTypeNegativeCorrection: 'Automatic correction (count was off)',
     rtViewLines: 'View lines ({n})',
     rtHideLines: 'Hide lines',
     rtConfirmDeleteBatch: 'Delete this whole scan action ({n} line(s))? This directly changes the stock count for every line in it and cannot be undone from here.',
@@ -1647,6 +1648,7 @@ const TRANSLATIONS = {
     rtTypeSurplus: 'Telling: overschot',
     rtTypeShortage: 'Telling: tekort',
     rtTypeExpired: 'Afschrijving vervallen',
+    rtTypeNegativeCorrection: 'Automatische correctie (telling klopte niet)',
     rtViewLines: 'Bekijk regels ({n})',
     rtHideLines: 'Verberg regels',
     rtConfirmDeleteBatch: 'Deze hele scanactie verwijderen ({n} regel(s))? Dit wijzigt direct de voorraadtelling voor elke regel erin en kan hier niet ongedaan worden gemaakt.',
@@ -3467,6 +3469,7 @@ function transactieTypeLabel(type) {
     'Retournering': t('rtTypeReturned'),
     'Telling: overschot': t('rtTypeSurplus'), 'Telling: tekort': t('rtTypeShortage'),
     'Vervallen': t('rtTypeExpired'),
+    'Correctie: negatieve voorraad': t('rtTypeNegativeCorrection'),
   };
   return map[type] || type;
 }

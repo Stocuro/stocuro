@@ -142,6 +142,12 @@ function getVervallenProductenTaken(): array {
  * als er maar één van de twee mist) -- dat is het duidelijkste signaal dat
  * de batch-/vervaldatumcode nooit gescand is, en voorkomt ruis van
  * producten die legitiem maar één van de twee gegevens voeren.
+ *
+ * 'Correctie: negatieve voorraad' (includes/transacties.php::
+ * voorkomNegatieveVoorraad()) uitgesloten -- dat is een automatische
+ * bijstelling, geen gemiste batch-scan, en zou hier anders een taak
+ * tonen die niemand kan "oplossen" (zie dezelfde uitsluiting in
+ * voorraadLot(), includes/voorraad.php, voor de volledige toelichting).
  */
 function getOntbrekendeBatchTaken(): array {
     $rows = db()->query(
@@ -150,7 +156,7 @@ function getOntbrekendeBatchTaken(): array {
                 SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_INKOMEND) . ") THEN hoeveelheid ELSE 0 END)
                 - SUM(CASE WHEN transactietype IN (" . sqlInList(TRANSACTIETYPES_UITGAAND) . ") THEN hoeveelheid ELSE 0 END) AS huidig
          FROM transactielog
-         WHERE lot IS NULL AND vervaldatum IS NULL
+         WHERE lot IS NULL AND vervaldatum IS NULL AND transactietype != 'Correctie: negatieve voorraad'
          GROUP BY ean, locatie
          HAVING huidig > 0
          ORDER BY productnaam ASC"

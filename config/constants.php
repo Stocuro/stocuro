@@ -22,9 +22,16 @@ declare(strict_types=1);
 // Features zijn de ontwikkelgeschiedenis van vóór deze release. Vanaf nu
 // zijn nieuwe versies kleine, doorlopende aanpassingen (patch/minor-bumps
 // op 1.0.0), zie README.md.
-const APP_VERSION = '1.0.21';
+const APP_VERSION = '1.0.22';
 
-const TRANSACTIETYPES_INKOMEND = ['Ontvangst', 'Verplaatsing in', 'Telling: overschot'];
+// 'Correctie: negatieve voorraad' (migratie
+// 043_negatieve_voorraad_correctie_type.sql) telt hier mee zodat het
+// EAN+locatie-totaal nooit negatief weergeeft, maar is bewust een EIGEN
+// type (niet 'Telling: overschot') -- zie includes/transacties.php::
+// voorkomNegatieveVoorraad() en de uitsluiting in includes/voorraad.php::
+// voorraadLot()/includes/taken.php::getOntbrekendeBatchTaken() voor
+// waarom dat onderscheid nodig is.
+const TRANSACTIETYPES_INKOMEND = ['Ontvangst', 'Verplaatsing in', 'Telling: overschot', 'Correctie: negatieve voorraad'];
 const TRANSACTIETYPES_UITGAAND = ['Verbruik', 'Verplaatsing uit', 'Retournering', 'Telling: tekort', 'Vervallen'];
 
 const ORDER_STATUS_OPEN = ['In bestelling', 'Gedeeltelijk ontvangen'];

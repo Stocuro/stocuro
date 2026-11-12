@@ -341,6 +341,18 @@ function voorraadLot(): array {
                 MAX(CASE WHEN transactietype = 'Ontvangst' THEN gs1_raw END) AS gs1_raw_ontvangst,
                 MAX(gs1_raw) AS gs1_raw_fallback
          FROM transactielog
+         -- 'Correctie: negatieve voorraad' (includes/transacties.php::
+         -- voorkomNegatieveVoorraad()) uitgesloten: dat is een
+         -- automatische, lotloze bijstelling van het EAN+locatie-totaal
+         -- (telt wel mee in TRANSACTIETYPES_INKOMEND, dus in voorraadStatus()/
+         -- huidigeVoorraadPerLocatie()), geen echt fysiek lot -- zonder deze
+         -- uitsluiting verscheen zo'n correctie hier als een nep 'lot' met
+         -- lot=NULL dat voor altijd als 'op voorraad' bleef staan. Een
+         -- ECHTE, gebruiker-geïnitieerde kastcontrole-afwijking ('Telling:
+         -- overschot'/'Telling: tekort', includes/telling.php) blijft wel
+         -- gewoon meedoen, ook met lot=NULL voor een genuinely lotloos
+         -- product -- alleen dit ene, specifieke type is uitgesloten.
+         WHERE transactietype != 'Correctie: negatieve voorraad'
          GROUP BY ean, lot, vervaldatum, locatie
          HAVING huidig > 0"
     )->fetchAll();
