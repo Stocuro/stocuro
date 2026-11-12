@@ -475,8 +475,15 @@ function voegAlternatieveCodeToe(string $ean, string $ruweCode, ?string $gebruik
             return ['success' => false, 'error' => 'Dit is al het hoofd-EAN van dit product'];
         }
 
-        $conflict = db()->prepare('SELECT productnaam FROM artikelen WHERE ean = :code OR doos_ean = :code OR logistiek_code = :code');
-        $conflict->execute([':code' => $code]);
+        // Drie losse parameternamen voor dezelfde waarde, niet driemaal
+        // dezelfde :code -- deze app draait met PDO::ATTR_EMULATE_PREPARES
+        // false (echte server-side prepares, zie config/database.php), en
+        // MySQL's binaire protocol staat een herhaalde named placeholder
+        // dan niet toe (PDOException "SQLSTATE[HY093]: Invalid parameter
+        // number", bevestigd tegen een echte MariaDB-instantie -- dit was
+        // de daadwerkelijke oorzaak van "hij slaat het niet op").
+        $conflict = db()->prepare('SELECT productnaam FROM artikelen WHERE ean = :code1 OR doos_ean = :code2 OR logistiek_code = :code3');
+        $conflict->execute([':code1' => $code, ':code2' => $code, ':code3' => $code]);
         $conflictRij = $conflict->fetch();
         if ($conflictRij) {
             return ['success' => false, 'error' => "Deze code is al in gebruik bij '" . $conflictRij['productnaam'] . "'"];

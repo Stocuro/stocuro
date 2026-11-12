@@ -60,6 +60,20 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.20 — bugfix: adding an alternative code that looked like a URL
+  silently failed to save.** `voegAlternatieveCodeToe()`'s conflict check
+  queried `WHERE ean = :code OR doos_ean = :code OR logistiek_code = :code`
+  — the same named placeholder three times in one query. This app runs
+  PDO with `ATTR_EMULATE_PREPARES => false` (real server-side prepared
+  statements, see `config/database.php`), and under that mode MySQL does
+  not allow a repeated named placeholder — it throws `PDOException:
+  SQLSTATE[HY093]: Invalid parameter number` on every single call,
+  caught and surfaced as that same cryptic message. Fixed by giving each
+  occurrence its own placeholder (`:code1`/`:code2`/`:code3`), all bound
+  to the same value. Reproduced and confirmed fixed against a real
+  MariaDB instance with the app's actual migrations and this exact
+  PDO configuration, including the full add/duplicate-reject/lookup
+  round-trip for a URL-style code.
 - **v1.0.19 — bugfix: scanning a non-barcode QR code (e.g. an
   instructions-for-use link) crashed the whole submission.** Found while
   testing a real packaging example: some boxes carry a QR code that
