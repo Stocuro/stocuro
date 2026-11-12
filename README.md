@@ -60,6 +60,24 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.21 — a lot scanned elsewhere in the same submission now
+  resolves a missing-lot line too, instead of always asking.** Reported
+  after testing: a product with no prior lot history sailed through
+  fine when a lot-bearing scan and a lot-less scan (e.g. a bare EAN
+  without the GS1 batch/expiry block) for the same EAN were submitted
+  together — but once that history existed, the exact same bare-EAN
+  scan started getting blocked every time, even within one submission
+  that also included a lot-bearing scan of the same product. Verwerkt
+  as follow-up: `verwerkScan()` now also checks, for a missing-lot line,
+  whether exactly one distinct lot was scanned for the same EAN
+  elsewhere in the *same* submission (e.g. two combo barcodes plus one
+  worn label that only has the bare EAN) and uses that — safe because
+  it's the same physical scanning event, not a memorized guess; if two
+  different lots appear in the same submission, it still correctly asks
+  rather than guessing. Caught a real bug while testing this against an
+  actual database: a purely numeric lot number (e.g. `2026050903`) got
+  silently coerced into a PHP integer array key, crashing the booking
+  step with a type error — fixed with an explicit string cast.
 - **v1.0.20 — bugfix: adding an alternative code that looked like a URL
   silently failed to save.** `voegAlternatieveCodeToe()`'s conflict check
   queried `WHERE ean = :code OR doos_ean = :code OR logistiek_code = :code`

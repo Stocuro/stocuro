@@ -662,6 +662,27 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
     // niet de regels zonder probleem in deze indiening), en komt de
     // aanroeper terug met precies welke regels nog een keuze nodig
     // hebben -- zie toonLotOntbrekendPaneel() in assets/js/app.js.
+    // Lotten die in DEZE indiening zelf al voor een EAN zijn meegescand --
+    // bijv. twee combi-barcodes (met lot) plus een kale barcode (zonder
+    // lot) van dezelfde levering, allemaal in één Ontvangst-indiening.
+    // isLotVerwacht() hieronder kijkt alleen naar al EERDER VASTGELEGDE
+    // (gecommitte) transacties, dus deze indiening zelf levert daar nog
+    // geen geschiedenis voor op -- zonder dit zou identiek gedrag op de
+    // EERSTE keer (nog geen voorgeschiedenis) dus "gewoon doorgaan"
+    // opleveren, maar op een LATERE, losse scan van alleen de kale
+    // barcode (nu wél voorgeschiedenis) alsnog geblokkeerd worden. Dat
+    // is logisch correct maar voelt inconsistent -- dit lost het
+    // meteen op binnen één indiening, net zo veilig als de "slimme
+    // ruimte"-aanpak hierboven: alleen gebruikt als er voor dit EAN
+    // precies ÉÉN onderscheidend lot in deze indiening voorkomt (bij
+    // twee verschillende lotten in dezelfde indiening -- bv. een
+    // levering met twee batches tegelijk -- blijft het een echte vraag).
+    $lotPerEanInIndiening = [];
+    foreach ($split['bekend'] as $item) {
+        if ($item['parsed']['lot'] === null) continue;
+        $lotPerEanInIndiening[$item['artikel']['ean']][$item['parsed']['lot']] = gs1ExpiryToSqlDate($item['parsed']['expiry']);
+    }
+
     $resolved = [];
     $lotProblemen = [];
     $omgeleid = [];
@@ -718,6 +739,13 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
                 $expirySql = !empty($invoer['vervaldatum']) ? (string) $invoer['vervaldatum'] : null;
                 $lotNotitie = '(lot/vervaldatum handmatig ingevoerd na ontbrekende scangegevens)';
             } else {
+                // Eerst proberen op te lossen met een lot dat al ELDERS in
+                // deze indiening voor hetzelfde EAN is meegescand (zie
+                // $lotPerEanInIndiening hierboven) -- geldt voor zowel
+                // Ontvangst als Verbruik, en gaat voor op de
+                // voorraad-check hieronder (even ondubbelzinnig, en
+                // directer: dit komt van dezelfde fysieke scanactie).
+                $kandidatenInIndiening = $lotPerEanInIndiening[$artikel['ean']] ?? [];
                 // Bij Verbruik eerst proberen automatisch op te lossen:
                 // staat er nu precies één lot van dit product op de
                 // effectieve locatie, dan is dat ondubbelzinnig het juiste
@@ -726,7 +754,18 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
                 // dus daar altijd een keuze vragen.
                 $lotenHier = $transactieType === 'Verbruik'
                     ? lotenOpVoorraadVoorEanLocatie($artikel['ean'], $effectieveLocatie) : [];
-                if (count($lotenHier) === 1) {
+                if (count($kandidatenInIndiening) === 1) {
+                    // (string) cast is nodig: een puur numeriek lotnummer
+                    // (bv. "2026050903", zoals in dit voorbeeld) wordt door
+                    // PHP automatisch als INTEGER array-sleutel opgeslagen
+                    // -- zonder deze cast geeft array_key_first() hier een
+                    // int terug, wat verderop een TypeError gaf op
+                    // insertTransactieRegel()'s ?string $lot-parameter
+                    // (gevonden via een test tegen een echte database).
+                    $lot = (string) array_key_first($kandidatenInIndiening);
+                    $expirySql = $kandidatenInIndiening[$lot];
+                    $lotNotitie = '(lot automatisch overgenomen van een andere regel in deze indiening)';
+                } elseif (count($lotenHier) === 1) {
                     $lot = $lotenHier[0]['lot'];
                     $expirySql = $lotenHier[0]['vervaldatum_sql'];
                     $lotNotitie = '(lot automatisch afgeleid: enige partij van dit product op voorraad op deze locatie)';
