@@ -354,7 +354,27 @@ function voorraadLot(): array {
          -- product -- alleen dit ene, specifieke type is uitgesloten.
          WHERE transactietype != 'Correctie: negatieve voorraad'
          GROUP BY ean, lot, vervaldatum, locatie
-         HAVING huidig > 0"
+         -- Extra OR-tak voor een NEGATIEF lot MET een echt lotnummer
+         -- (gemeld praktijkprobleem): een EAN kan over twee lotten
+         -- verdeeld voorraad hebben waarbij verbruik per ongeluk tegen
+         -- het ene lot geboekt wordt terwijl het andere lot de
+         -- daadwerkelijke herkomst was (bv. de verkeerde van twee
+         -- barcodes op een doos gescand) -- zo'n lot kan dan NEGATIEF
+         -- uitkomen terwijl het EAN-totaal (voorraadStatus()/
+         -- huidigeVoorraadPerLocatie(), dat over ALLE lotten samen
+         -- optelt) prima positief blijft dankzij het andere lot. Met
+         -- alleen '> 0' verdween dat negatieve lot hier stilletjes uit
+         -- beeld, waardoor de som van de WEL zichtbare lotten voor dat
+         -- EAN lager leek dan het echte totaal. Bewust NIET hetzelfde
+         -- gedaan voor lot IS NULL: een negatieve lot=NULL-groep is
+         -- gewoon het resultaat van voorkomNegatieveVoorraad()'s eigen
+         -- correctie op het EAN-totaal (de 'Correctie: negatieve
+         -- voorraad'-rij zelf is hierboven al uitgesloten, maar de
+         -- ECHTE Verbruik/Vervallen-regel die de aanleiding was, telt
+         -- hier ook mee) -- die is al op aggregaatniveau verklaard/
+         -- afgehandeld en zou hier alleen als verwarrende, nietszeggende
+         -- herhaling verschijnen, geen nieuwe informatie.
+         HAVING huidig > 0 OR (lot IS NOT NULL AND huidig < 0)"
     )->fetchAll();
 
     // (locatie-hernoemen cascade-bug):
@@ -382,16 +402,27 @@ function voorraadLot(): array {
         if (!$samengevoegd[$sleutel]['gs1_raw_ontvangst'] && $r['gs1_raw_ontvangst']) $samengevoegd[$sleutel]['gs1_raw_ontvangst'] = $r['gs1_raw_ontvangst'];
         if (!$samengevoegd[$sleutel]['gs1_raw_fallback'] && $r['gs1_raw_fallback']) $samengevoegd[$sleutel]['gs1_raw_fallback'] = $r['gs1_raw_fallback'];
     }
-    $rows = array_values(array_filter($samengevoegd, fn($r) => $r['huidig'] > 0));
+    // Zelfde '> 0 OR (lot niet-null EN < 0)'-logica als de HAVING
+    // hierboven, nu toegepast ná het samenvoegen van hernoemde-locatie-
+    // duplicaten (een negatief lot kan over twee van zulke rijen
+    // verdeeld zijn).
+    $rows = array_values(array_filter($samengevoegd, fn($r) => $r['huidig'] > 0 || ($r['lot'] !== null && $r['huidig'] < 0)));
 
     $result = [];
     foreach ($rows as $r) {
         $vervaldatum = $r['vervaldatum'];
         $daysLeft = daysLeftUntil($vervaldatum);
-        $status = 'OK';
-        if ($vervaldatum !== null) {
-            if ($daysLeft < 0) $status = 'VERLOPEN';
-            elseif ($daysLeft <= 30) $status = 'KRITIEK';
+        // 'TEKORT' gaat voor op de vervaldatum-gebaseerde status: een lot
+        // dat negatief staat is een telfout/data-probleem dat om
+        // aandacht vraagt, los van hoe lang het nog geldig zou zijn.
+        if ($r['huidig'] < 0) {
+            $status = 'TEKORT';
+        } else {
+            $status = 'OK';
+            if ($vervaldatum !== null) {
+                if ($daysLeft < 0) $status = 'VERLOPEN';
+                elseif ($daysLeft <= 30) $status = 'KRITIEK';
+            }
         }
         $result[] = [
             'ean' => $r['ean'],

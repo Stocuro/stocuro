@@ -714,6 +714,7 @@ const TRANSLATIONS = {
     // badge-tekst terwijl de kleurclassificatie (classifyStatus()) op de
     // originele ruwe tekst blijft werken. Zie statusBadgeHtml() hieronder.
     statusBadgeExpired: 'Expired',
+    statusBadgeTekort: 'Deficit -- check this lot',
     statusBadgeUrgentUse: 'Urgent use',
     statusBadgeMonitor: 'Monitor',
     statusBadgeValid: 'Valid',
@@ -1758,6 +1759,7 @@ const TRANSLATIONS = {
     statusNietMeerInGebruik: 'Niet meer in gebruik',
 
     statusBadgeExpired: 'Verlopen',
+    statusBadgeTekort: 'Tekort -- controleer dit lot',
     statusBadgeUrgentUse: 'Spoedgebruik',
     statusBadgeMonitor: 'Monitoren',
     statusBadgeValid: 'Geldig',
@@ -2401,6 +2403,11 @@ function classifyStatus(text) {
   if (t.indexOf('NIET LEVERBAAR') !== -1) return 'monitoren';
   if (t.indexOf('NIET MEER IN GEBRUIK') !== -1) return 'neutraal';
   if (t.indexOf('VERLOPEN') !== -1) return 'verlopen';
+  // 'TEKORT' (een lot met een negatief berekend aantal -- zie
+  // voorraadLot() in includes/voorraad.php) hergebruikt bewust dezelfde
+  // rode 'kritiek'-stijl als een bijna-vervallen lot: allebei "dit moet
+  // nu aandacht krijgen", geen apart kleurenschema nodig.
+  if (t.indexOf('TEKORT') !== -1) return 'kritiek';
   if (t.indexOf('SPOED') !== -1 || t.indexOf('KRITIEK') !== -1) return 'kritiek';
   if (t.indexOf('LEEG') !== -1) return 'leeg';
   if (t.indexOf('LAAG') !== -1) return 'laag';
@@ -2451,6 +2458,7 @@ var STATUS_BADGE_LABEL_KEYS = {
   'ACTIEF': 'statusActief',
   'NIET LEVERBAAR': 'statusNietLeverbaar',
   'NIET MEER IN GEBRUIK': 'statusNietMeerInGebruik',
+  'TEKORT': 'statusBadgeTekort',
 };
 
 function statusBadgeHtml(text) {

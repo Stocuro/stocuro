@@ -60,6 +60,23 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.24 — a lot that goes negative while the product's overall
+  stock stays positive was silently invisible in Lots in Stock.**
+  Follow-up to v1.0.22, which fixed one source of a fake lot appearing
+  in that view — this is the mirror-image problem: a *real* lot can go
+  negative (e.g. consumption scanned against the wrong one of two lots
+  belonging to the same product) while the product's total stays
+  correct, because another lot covers the difference. `voorraadLot()`
+  only ever showed groups with `huidig > 0`, so that negative lot just
+  vanished — the lots you *could* see no longer summed to the real
+  total, with no indication why. Fixed: a lot with a real lot number
+  that's gone negative now stays visible with a new `TEKORT` status
+  (distinct red badge), so it can be found and corrected by hand. A
+  negative *lot-less* group is still hidden, deliberately — that's
+  just the already-explained aggregate correction from v1.0.22, not new
+  information. Verified against a real database with both cases side
+  by side: the real-lot-negative case now shows and reconciles; the
+  lot-less case stays hidden exactly as before.
 - **v1.0.23 — bugfix: `migratie/leegmaken.php`/`leegmaken.sql` (the
   "wipe all data, keep accounts" reset script) was missing several
   tables added by later migrations.** Asked for the command to wipe
