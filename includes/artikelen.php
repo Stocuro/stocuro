@@ -214,8 +214,10 @@ function getProductList(): array {
 
     // Eerstvolgende vervaldatum per ean (zelfde logica als op meerdere
     // andere plekken, o.a. includes/beschikbaarheid.php).
+    // voorraadLotPositief(): een TEKORT-lot mag hier nooit als
+    // "eerstvolgende vervaldatum" meetellen, zie includes/voorraad.php.
     $eerstvolgendeVervaldatum = [];
-    foreach (voorraadLot() as $lot) {
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $ean = $lot['ean'];
         if (!isset($eerstvolgendeVervaldatum[$ean]) || $lot['vervaldatum_sql'] < $eerstvolgendeVervaldatum[$ean]['sql']) {

@@ -22,7 +22,12 @@ function getActiecentrumData(): array {
     $spoed = [];
     $artikelen = artikelenMap();
 
-    foreach (voorraadLot() as $lot) {
+    // voorraadLotPositief() i.p.v. voorraadLot(): een TEKORT-lot
+    // (negatieve huidig, zie includes/voorraad.php) is een boekhoud-
+    // probleem, geen bijna-vervallen voorraad -- zou hier anders met een
+    // negatief aantal/negatieve euro-waarde in het Actiecentrum
+    // verschijnen (gevonden tijdens een systeembrede controle na v1.0.24).
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $monthsLeft = $lot['daysLeft'] / 30.44;
         if ($lot['daysLeft'] >= 0 && $monthsLeft >= 3) continue;
@@ -64,7 +69,9 @@ function getVervaldatumFocus(): array {
     $waardeVerlopen = 0.0; $waarde3 = 0.0; $waarde6 = 0.0; $waarde12 = 0.0;
     $aantalVerlopen = 0;
 
-    foreach (voorraadLot() as $lot) {
+    // Zie de toelichting bij getActiecentrumData() hierboven -- zelfde
+    // reden om voorraadLotPositief() i.p.v. voorraadLot() te gebruiken.
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $daysLeft = $lot['daysLeft'];
         $monthsLeft = $daysLeft / 30.44;
@@ -121,7 +128,9 @@ function getCategorieOverzicht(): array {
     }
 
     $lot6PerEan = [];
-    foreach (voorraadLot() as $lot) {
+    // Zie de toelichting bij getActiecentrumData() hierboven -- zelfde
+    // reden om voorraadLotPositief() i.p.v. voorraadLot() te gebruiken.
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $monthsLeft = $lot['daysLeft'] / 30.44;
         if ($monthsLeft < 6) $lot6PerEan[$lot['ean']] = ($lot6PerEan[$lot['ean']] ?? 0) + 1;

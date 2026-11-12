@@ -114,7 +114,11 @@ function getVerplaatsAdviesOverzicht(): array {
     };
 
     $result = [];
-    foreach (voorraadLot() as $lot) {
+    // voorraadLotPositief(): een TEKORT-lot (negatieve huidig) mag hier
+    // nooit een verplaatsadvies opleveren -- $lot['huidig'] /
+    // $huidige['gemDag'] verderop zou dan een onzinnig NEGATIEF aantal
+    // "nog resterende dagen" opleveren (zie includes/voorraad.php).
+    foreach (voorraadLotPositief() as $lot) {
         if (!isOverdatumRisico($lot['vervaldatum_sql'], $lot['daysLeft'])) continue;
 
         $huidige = $dagverbruik($lot['ean'], $lot['locatie']);

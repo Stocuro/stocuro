@@ -444,6 +444,31 @@ function voorraadLot(): array {
 }
 
 /**
+ * voorraadLot() zonder lotten met status TEKORT (negatieve huidig --
+ * zie de uitgebreide toelichting bij voorraadLot() hierboven). Voor elke
+ * aanroeper die vervaldatum-/risico-gebaseerde logica toepast op "echte,
+ * bruikbare" voorraad (vervalrisico, verplaatsadvies, categorie-/
+ * productoverzicht-tellingen, ...): die mogen een tekort-lot nooit
+ * meerekenen als bijna-vervallen voorraad, risico-euro's of een
+ * "eerstvolgende vervaldatum" -- dat is een boekhoudprobleem, geen
+ * fysieke voorraad die kan vervallen. Gevonden tijdens een systeembrede
+ * controle na het invoeren van TEKORT in v1.0.24: zonder deze gedeelde
+ * helper moest elke aanroeper zelf een `$lot['huidig'] > 0`-check
+ * onthouden, met het risico dat een toekomstige, nieuwe aanroeper van
+ * voorraadLot() die check net zo makkelijk zou vergeten.
+ *
+ * Bewust NIET gebruikt door getProductDetail() (productpagina, toont een
+ * tekort-lot juist express met zijn eigen status) en
+ * getTellingLotArtikelen()/verwerkTelling() (includes/telling.php, die
+ * hebben een tekort-lot net nodig om het via een echte kastcontrole weer
+ * recht te kunnen zetten) -- die blijven voorraadLot() rechtstreeks
+ * aanroepen.
+ */
+function voorraadLotPositief(): array {
+    return array_values(array_filter(voorraadLot(), fn($l) => $l['huidig'] > 0));
+}
+
+/**
  * Bepaalt of een scan zonder lotnummer voor dit EAN verdacht is (en dus om
  * een expliciete keuze vraagt bij Ontvangst/Verbruik, zie
  * includes/transacties.php::verwerkScan()) i.p.v. stilzwijgend als "geen
@@ -831,7 +856,15 @@ function getVervaldatumDetail(): array {
             'ean' => $lot['ean'], 'product' => $lot['product'], 'lot' => $lot['lot'],
             'locatie' => $lot['locatie'], 'huidig' => $lot['huidig'], 'vervaldatum' => $lot['vervaldatum'],
             'daysLeft' => $lot['daysLeft'], 'monthsLeft' => $monthsLeft,
-            'status' => classifyVervalStatus($lot['daysLeft']),
+            // Gevonden tijdens een systeembrede controle na v1.0.24: een
+            // TEKORT-lot (negatieve huidig) heeft hier vroeger gewoon zijn
+            // dagen-gebaseerde status herberekend gekregen (vaak 'OK'),
+            // wat het tekort compleet verborg op precies het scherm
+            // ("Vervaldatums & Lotbeheer") dat voor lot-overzicht bedoeld
+            // is. $lot['status'] is al 'TEKORT' waar nodig (zie
+            // voorraadLot()) -- die gewoon doorgeven i.p.v. blind
+            // herberekenen.
+            'status' => $lot['huidig'] < 0 ? 'TEKORT' : classifyVervalStatus($lot['daysLeft']),
         ];
     }
     usort($result, fn($a, $b) => $a['daysLeft'] <=> $b['daysLeft']);
@@ -845,7 +878,8 @@ function getLotTracking(): array {
     $result = [];
     foreach (voorraadLot() as $lot) {
         $monthsLeft = $lot['vervaldatum_sql'] ? round($lot['daysLeft'] / 30.44, 1) : '?';
-        $status = $lot['vervaldatum_sql'] ? classifyVervalStatus($lot['daysLeft']) : 'LANGDURIG';
+        // Zelfde TEKORT-behoud als getVervaldatumDetail() hierboven.
+        $status = $lot['huidig'] < 0 ? 'TEKORT' : ($lot['vervaldatum_sql'] ? classifyVervalStatus($lot['daysLeft']) : 'LANGDURIG');
         $result[$lot['locatie']][] = [
             'ean' => $lot['ean'], 'product' => $lot['product'], 'lot' => $lot['lot'],
             'vervaldatum' => $lot['vervaldatum'], 'huidig' => $lot['huidig'],

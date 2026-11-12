@@ -60,6 +60,52 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.26 — critical bugfix: the GS1 parser could fabricate a lot
+  number out of thin air from a plain, un-prefixed barcode.** Found
+  during a full-system audit requested after this session's lot-tracking
+  work. `parseGS1Raw()`'s AI-recognition loop (`includes/gs1_parser.php`)
+  scanned every position in a scanned string for anything that looked
+  like a 2-digit AI code (`10`/`11`/`17`/`21`) or `240`, with no
+  requirement that a real GTIN (`01` + 14 digits) be present anywhere
+  first. A plain, unframed barcode with no GS1 structure at all — just a
+  bare EAN or serial — can by pure coincidence contain one of those
+  2-digit sequences as a substring, and the parser would then treat the
+  rest of the string as a fabricated lot/expiry. Confirmed with real
+  input: `12121212121212` (not a valid GTIN) produced a completely
+  invented lot number `21212121212`, purely because `21` happened to sit
+  at position 1. This is worse than "unrecognized" — a fabricated lot is
+  never `NULL`, so it never trips the missing-lot check built earlier
+  this session, and the same input always produces the same fabricated
+  result, which can look deceptively consistent. This bug predates this
+  session (it's in the originally-ported parser logic) but directly
+  undermines the "product tracking is a must" requirement. Fixed with a
+  gate: AI(10)/(11)/(17)/(21)/(240) are now only ever considered if a
+  genuine GTIN (`01` followed by 14 digits) exists somewhere in the
+  string — matching how every real combination barcode in this app's
+  actual usage is structured. Verified against every real barcode
+  example encountered this session (plain GTIN-only, full combination
+  with lot+expiry, GS1 Digital Link URLs, a lot value that itself
+  contains `21`/`240` as a coincidental substring) with zero change in
+  output, and against the fabrication cases, which now correctly return
+  no lot instead of a fabricated one.
+- **Also in v1.0.26 — `voorraadLot()`'s new negative ("deficit") lots
+  (v1.0.24) were polluting six admin dashboards that never expected a
+  negative quantity.** Same audit as above. Actiecentrum, Vervaldatum Focus,
+  Categorieën, Beschikbaarheid, the product list's "next expiry", and
+  Voorraad Tabel all iterate lots to compute near-expiry risk, euro
+  value at risk, and "soonest expiring" dates — none of them guarded
+  against a lot with a negative quantity, so a deficit lot could
+  silently subtract from a risk-value total or surface as a nonsensical
+  negative count on an "attention needed" screen. New shared
+  `voorraadLotPositief()` helper (`includes/voorraad.php`) excludes
+  deficit lots for all six. Separately, "Vervaldatums & Lotbeheer" and
+  "Lot-tracking per locatie" — which exist specifically to let an admin
+  review every lot — were *recomputing* a misleading expiry-based status
+  for a deficit lot (often just "OK"), silently hiding the one thing
+  that screen most needs to show; fixed to preserve the `TEKORT` status
+  instead of recalculating over it. The product detail page and the
+  Stocktake lot-matching logic were already correct (they're supposed to
+  see deficit lots) and are untouched. Verified against a real database.
 - **v1.0.25 — Material Usage auto-picks the most sensible lot (FEFO)
   instead of asking, when it can.** Reported as friction: with multiple
   lots of a product in stock, a lot-less scan still had to stop and ask

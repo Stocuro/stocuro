@@ -75,7 +75,11 @@ function getBeschikbaarheid(): array {
     // logica als includes/dashboards.php::getCategorieOverzicht()).
     $eerstvolgendeVervaldatum = [];
     $loten6PerEan = [];
-    foreach (voorraadLot() as $lot) {
+    // voorraadLotPositief() i.p.v. voorraadLot(): een TEKORT-lot
+    // (negatieve huidig) mag nooit als "eerstvolgende vervaldatum" of
+    // "bijna-vervallen lot" meetellen, dat is een boekhoudprobleem, geen
+    // vervalrisico (zie includes/voorraad.php::voorraadLotPositief()).
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $ean = $lot['ean'];
         if (!isset($eerstvolgendeVervaldatum[$ean]) || $lot['vervaldatum_sql'] < $eerstvolgendeVervaldatum[$ean]['sql']) {

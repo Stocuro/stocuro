@@ -157,6 +157,27 @@ function gs1LeesVariabeleWaarde(string $remaining): array {
 }
 
 /**
+ * Geeft true terug als er ERGENS in $rawString een letterlijke AI(01)
+ * gevolgd door 14 cijfers staat -- d.w.z. een echte GTIN. Gebruikt als
+ * poortwachter vóór de AI-herkenningslus in parseGS1Raw() hieronder (zie
+ * de uitgebreide toelichting daar): die lus zoekt bewust volgorde-
+ * onafhankelijk naar 10/11/17/21/240 op ELKE positie, wat voor een echte
+ * GS1-barcode (die in de praktijk altijd met AI(01) begint) geen
+ * probleem is, maar een kale, ongeframede numerieke code (een los EAN of
+ * lotnummer zonder AI-structuur) kan toevallig zo'n 2-cijferige
+ * deelreeks bevatten en dan ten onrechte als AI gelezen worden.
+ */
+function gs1HeeftGeldigeGtin(string $rawString): bool {
+    $grens = strlen($rawString) - 16;
+    for ($i = 0; $i <= $grens; $i++) {
+        if (substr($rawString, $i, 2) === '01' && ctype_digit(substr($rawString, $i + 2, 14))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * @return array{ean:string, lot:?string, expiry:?string, interneRef:string}
  *         expiry is een 'd-m-Y'-string (zelfde notatie als de oude
  *         Sheets-kolom), zodat de aanroeper zelf naar DATE kan casten.
@@ -167,6 +188,30 @@ function parseGS1Raw(?string $rawString): array {
     }
     $rawString = trim($rawString);
     $rawString = gs1OntvouwDigitalLink($rawString);
+
+    // Gevonden tijdens een
+    // systeembrede controle: zonder deze poortwachter herkende de lus
+    // hieronder AI(10)/(17)/(21)/(240) ook in een kale, ongeframede
+    // numerieke code (geen GS1-structuur, gewoon een los EAN/serienummer)
+    // zodra een toevallige deelreeks daarin op zo'n AI leek -- bv.
+    // "12121212121212" (geen GTIN) leverde een compleet VERZONNEN
+    // lotnummer "21212121212" op, puur omdat "21" toevallig op positie 1
+    // stond. Dat is strikt erger dan "niet herkend": een verzonnen lot
+    // is onzichtbaar fout (triggert nooit de ontbrekend-lotnummer-
+    // controle, want lot is niet NULL) en zou bovendien -- omdat dezelfde
+    // kale tekst altijd dezelfde toevallige deelreeks bevat -- consistent
+    // hetzelfde foute lot opleveren bij elke volgende scan, wat het laat
+    // lijken op een echt, herhaalbaar resultaat in plaats van een
+    // toevalstreffer. In de praktijk begint elke ECHTE GS1-combinatiebarcode
+    // in deze app altijd met AI(01) (bevestigd over talloze echte scans
+    // dit seizoen) -- zonder een geldige GTIN ergens in de string is er
+    // dus nooit een legitieme reden om 10/11/17/21/240 te herkennen, en
+    // geven we hier liever een leeg resultaat terug (valt terug op de
+    // kale-EAN-afhandeling van de aanroeper, of op "onbekende barcode")
+    // dan een geraden waarde.
+    if (!gs1HeeftGeldigeGtin($rawString)) {
+        return ['ean' => '', 'lot' => null, 'expiry' => null, 'interneRef' => ''];
+    }
 
     $ean = '';
     $expiry = null;

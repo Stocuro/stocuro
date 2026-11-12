@@ -48,7 +48,9 @@ function getVoorraadTabel(): array {
     // ene locatie snel vervallen en op de andere niet).
     $vervalPerEanLocatie = [];
     $loten6PerEanLocatie = [];
-    foreach (voorraadLot() as $lot) {
+    // voorraadLotPositief(): een TEKORT-lot mag hier nooit meetellen,
+    // zie includes/voorraad.php.
+    foreach (voorraadLotPositief() as $lot) {
         if ($lot['vervaldatum_sql'] === null) continue;
         $ean = $lot['ean'];
         $loc = $lot['locatie'];
