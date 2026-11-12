@@ -326,6 +326,9 @@ function getArtikelEditData(string $ean): array {
         // zie ARTIKEL_LOT_TRACKING_WAARDEN hieronder en
         // includes/voorraad.php::isLotVerwacht().
         'lotTracking' => $artikel['lot_tracking'] ?? 'automatisch',
+        // Alternatieve barcodes/QR-codes die ook naar dit artikel scannen
+        // -- zie getAlternatieveCodes() hieronder.
+        'alternatieveCodes' => getAlternatieveCodes($artikel['ean']),
         'vervangendArtikelId' => $vervangendArtikelId,
         'vervangendArtikelNaam' => $vervangendArtikelNaam,
         'vervangendArtikelEan' => $vervangendArtikelEan,
@@ -429,6 +432,96 @@ function setArtikelLotTracking(string $ean, string $waarde, ?string $gebruikerNa
 }
 
 /**
+ * Alternatieve barcodes/QR-codes voor een artikel ("ik heb ook sommige
+ * producten die hebben meerdere barcodes/qr codes... niet qua omdozen of
+ * andere voorraad, gewoon meerdere codes"): sommige producten hebben
+ * naast hun hoofd-EAN nog één of meer andere, losstaande codes die altijd
+ * naar hetzelfde fysieke stuk verwijzen (hoeveelheid 1, net als het stuk-
+ * EAN -- geen doosvariant). Zie migratie 042_alternatieve_codes.sql en
+ * lookupArtikelen() in includes/transacties.php (het herkennen zelf).
+ */
+function getAlternatieveCodes(string $ean): array {
+    $stmt = db()->prepare('SELECT id, code, toegevoegd_op FROM artikel_alternatieve_codes WHERE ean = :ean ORDER BY toegevoegd_op ASC');
+    $stmt->execute([':ean' => normalizeEAN($ean)]);
+    return $stmt->fetchAll();
+}
+
+/**
+ * Voegt een alternatieve code toe aan een artikel. $ruweCode mag zowel
+ * een kale code (een EAN, of vrije tekst zoals een QR-inhoud) als een
+ * volledige GS1-scan zijn -- zelfde voorkeur-voor-geparste-GTIN-aanpak
+ * als addArtikel() hierboven voor het stuk-/doos-EAN: wordt er een GTIN
+ * uit geparst, dan wordt DIE (genormaliseerd) als code opgeslagen, anders
+ * de kale, getrimde tekst (net als artikelen.logistiek_code).
+ *
+ * Weigert een code die al ELDERS in gebruik is (als stuk-EAN, doos-EAN,
+ * logistiek_code van dit-of-een-ander artikel, of als alternatieve code
+ * van een ander artikel) -- anders zou eenzelfde scan soms naar het ene,
+ * soms naar het andere product resolven. Geeft in de foutmelding mee
+ * welk product de code al heeft, zodat dat meteen duidelijk is.
+ */
+function voegAlternatieveCodeToe(string $ean, string $ruweCode, ?string $gebruikerNaam = null): array {
+    $eanNorm = normalizeEAN($ean);
+    $parsed = parseGS1Raw($ruweCode);
+    $code = $parsed['ean'] !== '' ? normalizeEAN($parsed['ean']) : trim($ruweCode);
+    if ($code === '') return ['success' => false, 'error' => 'Geen geldige code opgegeven'];
+
+    try {
+        $stmt = db()->prepare('SELECT id FROM artikelen WHERE ean = :ean');
+        $stmt->execute([':ean' => $eanNorm]);
+        if (!$stmt->fetch()) return ['success' => false, 'error' => 'Product niet gevonden met EAN: ' . $eanNorm];
+
+        if ($code === $eanNorm) {
+            return ['success' => false, 'error' => 'Dit is al het hoofd-EAN van dit product'];
+        }
+
+        $conflict = db()->prepare('SELECT productnaam FROM artikelen WHERE ean = :code OR doos_ean = :code OR logistiek_code = :code');
+        $conflict->execute([':code' => $code]);
+        $conflictRij = $conflict->fetch();
+        if ($conflictRij) {
+            return ['success' => false, 'error' => "Deze code is al in gebruik bij '" . $conflictRij['productnaam'] . "'"];
+        }
+
+        $altConflict = db()->prepare(
+            'SELECT ar.productnaam FROM artikel_alternatieve_codes a JOIN artikelen ar ON ar.ean = a.ean WHERE a.code = :code'
+        );
+        $altConflict->execute([':code' => $code]);
+        $altConflictRij = $altConflict->fetch();
+        if ($altConflictRij) {
+            return ['success' => false, 'error' => "Deze code is al als alternatieve code gekoppeld aan '" . $altConflictRij['productnaam'] . "'"];
+        }
+
+        db()->prepare('INSERT INTO artikel_alternatieve_codes (ean, code, toegevoegd_door) VALUES (:ean, :code, :door)')
+            ->execute([':ean' => $eanNorm, ':code' => $code, ':door' => $gebruikerNaam]);
+
+        if ($gebruikerNaam !== null) {
+            logAudit($gebruikerNaam, 'alternatieve_code_toegevoegd', 'artikel', $eanNorm, "code=$code");
+        }
+
+        return ['success' => true, 'message' => 'Alternatieve code toegevoegd'];
+    } catch (Throwable $e) {
+        logError('ALT_CODE_TOEVOEGEN_ERROR', $ean, $e->getMessage());
+        return ['success' => false, 'error' => $e->getMessage()];
+    }
+}
+
+/** Tegenhanger van voegAlternatieveCodeToe() hierboven. */
+function verwijderAlternatieveCode(int $id, ?string $gebruikerNaam = null): array {
+    $stmt = db()->prepare('SELECT ean, code FROM artikel_alternatieve_codes WHERE id = :id');
+    $stmt->execute([':id' => $id]);
+    $rij = $stmt->fetch();
+    if (!$rij) return ['success' => false, 'error' => 'Alternatieve code niet gevonden'];
+
+    db()->prepare('DELETE FROM artikel_alternatieve_codes WHERE id = :id')->execute([':id' => $id]);
+
+    if ($gebruikerNaam !== null) {
+        logAudit($gebruikerNaam, 'alternatieve_code_verwijderd', 'artikel', $rij['ean'], 'code=' . $rij['code']);
+    }
+
+    return ['success' => true, 'message' => 'Alternatieve code verwijderd'];
+}
+
+/**
  * Koppelt een net aangemaakt artikel als vervanger aan een ander,
  * bestaand artikel, en zet dat originele artikel meteen op 'Niet
  * leverbaar'. Gebruikt door api/artikel_toevoegen.php wanneer een nieuw
@@ -455,6 +548,10 @@ function koppelAlsVervanger(string $origineelEan, string $nieuwEan, ?string $geb
 const ARTIKEL_EAN_CASCADE_TABELLEN = [
     'transactielog', 'orders', 'eenmalige_bestellingen',
     'artikel_locatie_extra', 'minmax_advies_genegeerd',
+    // Alternatieve barcodes/QR-codes (migratie
+    // 042_alternatieve_codes.sql) -- zelfde platte-EAN-waarde-opslag als
+    // de andere tabellen hier, dus hoort in dezelfde cascade.
+    'artikel_alternatieve_codes',
 ];
 
 /**

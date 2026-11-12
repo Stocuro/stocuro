@@ -1112,6 +1112,14 @@ const TRANSLATIONS = {
     doosSuffix: '= {n} boxes',
     apLogistiekTitle: '🏷️ Internal logistics code (optional)',
     apLogistiekHint: "Only fill this in if you want your own printable barcode label for this product (e.g. for a shelf label), separate from the manufacturer's EAN. Fully manual -- always entered by hand, never generated automatically. Scanning the printed label will be recognized the same as the product's own EAN, anywhere a barcode is scanned.",
+    apAltCodesTitle: '🏷️ Alternative barcodes/QR codes',
+    apAltCodesHint: "For products that carry more than one official barcode/QR code for the exact same single item (not a box/case variant -- that's the Box barcode above). Scanning any of these is recognized the same as scanning the product's own EAN, always counting as 1 piece.",
+    apAltCodesNewLabel: 'Add a code',
+    apAltCodesPlaceholder: 'Scan or type the barcode...',
+    apAltCodesAddBtn: 'Add',
+    apAltCodesNone: 'No alternative codes yet.',
+    apAltCodesRemove: 'Remove',
+    apAltCodesRemoveConfirm: 'Remove this alternative code? Scanning it will no longer be recognized for this product.',
     apLogistiekCode: 'Internal logistics code',
     apMinMax: 'Min/max per location',
     apMin: 'Min ',
@@ -2094,6 +2102,14 @@ const TRANSLATIONS = {
     doosSuffix: '= {n} dozen',
     apLogistiekTitle: '🏷️ Interne logistiekcode (optioneel)',
     apLogistiekHint: 'Alleen invullen als je een eigen printbaar barcode-label voor dit product wilt (bijv. voor een schaplabel), los van het EAN van de fabrikant. Volledig handmatig -- altijd zelf ingevuld, nooit automatisch gegenereerd. Het geprinte label scannen wordt overal herkend alsof het EAN van het product zelf gescand is.',
+    apAltCodesTitle: '🏷️ Alternatieve barcodes/QR-codes',
+    apAltCodesHint: 'Voor producten met meer dan één officiële barcode/QR-code voor exact hetzelfde losse stuk (geen doos-/verpakkingsvariant -- dat is het Doos-EAN hierboven). Elke van deze codes scannen wordt herkend alsof het EAN van het product zelf gescand is, altijd als 1 stuk.',
+    apAltCodesNewLabel: 'Code toevoegen',
+    apAltCodesPlaceholder: 'Scan of typ de barcode...',
+    apAltCodesAddBtn: 'Toevoegen',
+    apAltCodesNone: 'Nog geen alternatieve codes.',
+    apAltCodesRemove: 'Verwijderen',
+    apAltCodesRemoveConfirm: 'Deze alternatieve code verwijderen? Scannen hiervan wordt dan niet meer herkend voor dit product.',
     apLogistiekCode: 'Interne logistiekcode',
     apMinMax: 'Min/max per locatie',
     apMin: 'Min ',
@@ -4723,6 +4739,14 @@ function showProductEdit(ean, vanuitOnbekendeProducten) {
   }).getKastlocatieSuggesties();
 }
 
+/** Zie de toelichting bij "Alternatieve barcodes/QR-codes" in renderProductEdit() hieronder. */
+function renderAltCodesListHtml(codes) {
+  if (!codes || codes.length === 0) return '<p class="empty">' + t('apAltCodesNone') + '</p>';
+  return '<table><tr><th>' + t('colBarcodeCol') + '</th><th></th></tr>' + codes.map(function (c) {
+    return '<tr><td><code>' + escapeHtml(c.code) + '</code></td><td><button type="button" class="action-btn alt-code-remove-btn" data-id="' + c.id + '">' + t('apAltCodesRemove') + '</button></td></tr>';
+  }).join('') + '</table>';
+}
+
 function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieSuggesties, vanuitOnbekendeProducten) {
   kastlocatieSuggesties = kastlocatieSuggesties || [];
   if (data.error) {
@@ -4881,6 +4905,24 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
   html += '<div class="form-group"><label>' + t('apLogistiekCode') + '</label><input type="text" data-key="logistiek_code" value="' + escapeAttr(veld('logistiek_code')) + '"></div>';
   html += '</div>';
 
+  // --- Alternatieve barcodes/QR-codes ("ik heb ook sommige producten die
+  // hebben meerdere barcodes/qr codes... niet qua omdozen of andere
+  // voorraad, gewoon meerdere codes"): een los, herhaalbaar lijstje i.p.v.
+  // een enkel tekstveld zoals logistiek_code hierboven, want er kunnen er
+  // meerdere zijn. Elke code scant (via lookupArtikelen(), includes/
+  // transacties.php) naar precies dit product, altijd hoeveelheid 1 --
+  // geen doosvariant. Eigen sectie i.p.v. het generieke commonFields-
+  // mechanisme: dit is een 1-op-veel-lijst, geen los veld op artikelen zelf.
+  html += '<div class="edit-section-box"><div class="section-title">' + t('apAltCodesTitle') + '</div>';
+  html += '<p class="form-hint">' + t('apAltCodesHint') + '</p>';
+  html += '<div id="peAltCodesList">' + renderAltCodesListHtml(data.alternatieveCodes || []) + '</div>';
+  html += '<div class="form-group" style="display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap;">';
+  html += '<div style="flex:1; min-width:200px;"><label>' + t('apAltCodesNewLabel') + '</label><input type="text" id="peAltCodeNieuw" placeholder="' + escapeAttr(t('apAltCodesPlaceholder')) + '"></div>';
+  html += '<button type="button" class="action-btn" id="peAltCodeAddBtn">' + t('apAltCodesAddBtn') + '</button>';
+  html += '</div>';
+  html += '<div class="login-error" id="peAltCodeError" style="display:none;"></div>';
+  html += '</div>';
+
   // --- Categorie-specifieke specificaties. ---
   html += '<div id="peSpecsContainer">' + renderSpecsVeldenEdit(data.categorie) + '</div>';
 
@@ -5008,6 +5050,41 @@ function renderProductEdit(data, locRows, producenten, categorieen, kastlocatieS
         });
       }, function (errMsg) {
         alert(errMsg);
+      });
+    });
+  }
+  // Alternatieve barcodes/QR-codes -- toevoegen/verwijderen, zie
+  // includes/artikelen.php::voegAlternatieveCodeToe()/verwijderAlternatieveCode().
+  // Zelfde "hele scherm opnieuw tekenen na de actie"-aanpak als de foto-
+  // knoppen hierboven, i.p.v. alleen de lijst lokaal bijwerken -- dit
+  // scherm wordt sowieso zelden gewisseld zonder te navigeren, en dit
+  // voorkomt dat de client zijn eigen kopie van data.alternatieveCodes
+  // moet bijhouden.
+  document.querySelectorAll('.alt-code-remove-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!confirm(t('apAltCodesRemoveConfirm'))) return;
+      apiPost('api/product_edit.php', { actie: 'alternatieve_code_verwijderen', id: parseInt(this.getAttribute('data-id'), 10) }, function () {
+        showProductEdit(data.ean, vanuitOnbekendeProducten);
+      }, function (err) {
+        alert((err && err.error) || t('somethingWrong'));
+      });
+    });
+  });
+  const peAltCodeAddBtn = document.getElementById('peAltCodeAddBtn');
+  if (peAltCodeAddBtn) {
+    peAltCodeAddBtn.addEventListener('click', function () {
+      const inp = document.getElementById('peAltCodeNieuw');
+      const errEl = document.getElementById('peAltCodeError');
+      errEl.style.display = 'none';
+      const waarde = inp.value.trim();
+      if (!waarde) return;
+      peAltCodeAddBtn.disabled = true;
+      apiPost('api/product_edit.php', { actie: 'alternatieve_code_toevoegen', ean: data.ean, code: waarde }, function () {
+        showProductEdit(data.ean, vanuitOnbekendeProducten);
+      }, function (err) {
+        peAltCodeAddBtn.disabled = false;
+        errEl.textContent = (err && err.error) || t('somethingWrong');
+        errEl.style.display = 'block';
       });
     });
   }

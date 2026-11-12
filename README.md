@@ -60,6 +60,18 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.18 — alternative barcodes/QR codes per product.** Some products
+  carry more than one official barcode/QR code for the exact same single
+  item — not a box/case variant (that's the existing Box EAN field), just
+  multiple distinct codes that should all scan to the same product. New
+  `artikel_alternatieve_codes` table (migration `042_alternatieve_codes.sql`)
+  plus a repeatable "Alternative barcodes/QR codes" list on the product
+  edit screen (add/remove, scan-or-type). `lookupArtikelen()` now checks
+  these alongside the main EAN, box EAN, and internal logistics code —
+  always counting as 1 piece, never a box multiplier. Adding a code is
+  rejected if it's already in use anywhere else (own EAN, box EAN,
+  logistics code, or another product's alternative code), so a scan can
+  never resolve ambiguously.
 - **v1.0.17 — scan a barcode to fill in lot/expiry, everywhere a lot can
   be edited by hand.** Follow-up to v1.0.15's missing-lot detection: the
   only way to resolve a missing lot used to be typing it in by hand. Now

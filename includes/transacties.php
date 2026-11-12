@@ -33,23 +33,31 @@ require_once __DIR__ . '/artikelen.php';
 require_once __DIR__ . '/lot_correcties.php';
 
 /**
- * $ean kan het stuk-EAN, het doos-EAN, OF
- * de handmatige interne logistiek_code van een artikel zijn -- sommige
- * producten (bijv. voerdraden, PICC-lijnen) hebben zowel een stuk- als
- * een doos-barcode, en een product kan daarnaast nog een eigen geprint
- * schaplabel (logistiek_code) hebben. Een stuk-EAN matcht met
+ * $ean kan het stuk-EAN, het doos-EAN, een
+ * alternatieve code, OF de handmatige interne logistiek_code van een
+ * artikel zijn -- sommige producten (bijv. voerdraden, PICC-lijnen)
+ * hebben zowel een stuk- als een doos-barcode, sommige hebben meerdere
+ * losstaande barcodes/QR-codes die allemaal naar hetzelfde fysieke stuk
+ * verwijzen (artikel_alternatieve_codes, zie includes/artikelen.php::
+ * voegAlternatieveCodeToe() -- "ik heb ook sommige producten die hebben
+ * meerdere barcodes/qr codes... niet qua omdozen of andere voorraad,
+ * gewoon meerdere codes"), en een product kan daarnaast nog een eigen
+ * geprint schaplabel (logistiek_code) hebben. Een stuk-EAN matcht met
  * hoeveelheid 1; een doos-EAN matcht met hoeveelheid =
- * artikelen.eenheden_per_doos; logistiek_code matcht ook met hoeveelheid
- * 1 (het is een productidentiteit, geen doos). Alle drie geven ALTIJD
- * het stuk-EAN terug (voorraad wordt nooit in "dozen" of onder de
- * logistiekcode bijgehouden) -- de aanroeper (verwerkScan()/
- * verplaatsing()/retournering() hieronder) hoeft dus niet te weten welke
- * van de drie gescand is, alleen hoeveel stuks het voorstelt.
+ * artikelen.eenheden_per_doos; een alternatieve code en logistiek_code
+ * matchen ook met hoeveelheid 1 (allebei een productidentiteit, geen
+ * doos). Alle vier geven ALTIJD het stuk-EAN terug (voorraad wordt nooit
+ * in "dozen" of onder een andere code bijgehouden) -- de aanroeper
+ * (verwerkScan()/verplaatsing()/retournering() hieronder) hoeft dus niet
+ * te weten welke van de vier gescand is, alleen hoeveel stuks het
+ * voorstelt.
  *
  * logistiek_code is bewust NIET genormaliseerd via normalizeEAN(): dat
  * pad verwacht een numerieke, 14-cijferige GS1-code, en een
  * logistiek_code is vrije alfanumerieke tekst (bijv. "STK-00042") --
- * alleen trimmen, exacte match.
+ * alleen trimmen, exacte match. Een alternatieve code kan allebei zijn
+ * (opgeslagen als genormaliseerde GTIN als die geparst kon worden, anders
+ * als vrije tekst), dus daar wordt op beide vormen gematcht.
  *
  * @return array{ean:string, naam:string, prijs:float, hoeveelheid:int}|null
  */
@@ -74,9 +82,30 @@ function lookupArtikelen(string $ean): ?array {
         return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => $hoeveelheid];
     }
 
-    // Ook niet als doos-EAN -- proberen als interne logistiek_code
-    //. Geen normalizeEAN(): exacte, getrimde tekstmatch.
     $codeTrimmed = trim($ean);
+
+    // Ook niet als doos-EAN -- proberen als alternatieve
+    // barcode/QR-code (zie includes/artikelen.php::voegAlternatieveCodeToe()):
+    // sommige producten hebben meerdere, losstaande codes die allemaal naar
+    // hetzelfde fysieke stuk verwijzen, altijd hoeveelheid 1 (geen
+    // doosvariant). Een alternatieve code kan zelf zowel een genormaliseerde
+    // GTIN als vrije tekst zijn (zelfde opslagkeuze als logistiek_code
+    // hieronder), dus hier allebei de vormen proberen in één query.
+    if ($codeTrimmed !== '') {
+        $stmt = db()->prepare(
+            'SELECT ar.ean, ar.productnaam, ar.prijs FROM artikel_alternatieve_codes a
+             JOIN artikelen ar ON ar.ean = a.ean
+             WHERE a.code = :norm OR a.code = :raw'
+        );
+        $stmt->execute([':norm' => $eanNorm, ':raw' => $codeTrimmed]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => 1];
+        }
+    }
+
+    // Ook niet als alternatieve code -- proberen als interne
+    // logistiek_code. Geen normalizeEAN(): exacte, getrimde tekstmatch.
     if ($codeTrimmed !== '') {
         $stmt = db()->prepare('SELECT ean, productnaam, prijs FROM artikelen WHERE logistiek_code = :code');
         $stmt->execute([':code' => $codeTrimmed]);

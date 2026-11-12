@@ -22,7 +22,7 @@ declare(strict_types=1);
 // Features zijn de ontwikkelgeschiedenis van vóór deze release. Vanaf nu
 // zijn nieuwe versies kleine, doorlopende aanpassingen (patch/minor-bumps
 // op 1.0.0), zie README.md.
-const APP_VERSION = '1.0.17';
+const APP_VERSION = '1.0.18';
 
 const TRANSACTIETYPES_INKOMEND = ['Ontvangst', 'Verplaatsing in', 'Telling: overschot'];
 const TRANSACTIETYPES_UITGAAND = ['Verbruik', 'Verplaatsing uit', 'Retournering', 'Telling: tekort', 'Vervallen'];
