@@ -60,6 +60,18 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.17 — scan a barcode to fill in lot/expiry, everywhere a lot can
+  be edited by hand.** Follow-up to v1.0.15's missing-lot detection: the
+  only way to resolve a missing lot used to be typing it in by hand. Now
+  every place that has a manual lot/expiry field also has a "scan the
+  barcode" field above it that fills both in automatically — the missing-
+  lot panel at Goods Receipt/Material Usage, and the "Lots in Stock →
+  Edit" form on the product detail page. Implemented via a small new
+  read-only endpoint (`api/gs1_parse.php`) that reuses the real
+  `parseGS1Raw()`/`pasGs1CorrectieToe()` server-side parser — no separate
+  JS reimplementation that could drift from the actual scan logic. The
+  scanned barcode itself is never booked directly; it only fills the
+  existing lot/expiry fields, which stay freely editable either way.
 - **v1.0.16 — deploy-tooling note: `sftp -b batchfile` silently blocks
   password auth.** Documentation-only, no app code changed. Recorded the
   `-o BatchMode=no` fix (see "SFTP deploy gotcha" below) after it caused a

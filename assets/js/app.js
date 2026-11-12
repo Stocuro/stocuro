@@ -102,6 +102,10 @@ const API_MAP = {
   getGroepen:                                { method: 'GET',  url: 'api/groepen.php' },
   getGroepDetail:                            { method: 'GET',  url: 'api/groepen.php', params: ['id'] },
   getGroepTemplate:                          { method: 'GET',  url: 'api/groepen.php', params: ['nieuw'] },
+  // Puur-lezende GS1-parse-hulp, zie wireGs1LotScanInput() hieronder --
+  // gedeeld door het ontbrekend-lotnummer-paneel (Ontvangst/Verbruik) en
+  // het lot-correctieformulier op de productdetailpagina.
+  parseGs1Scan:                               { method: 'GET',  url: 'api/gs1_parse.php', params: ['gs1_raw'] },
 };
 
 function callApi(functionName, args, onSuccess, onFailure) {
@@ -462,7 +466,6 @@ const TRANSLATIONS = {
     lotUitleg: "This scan doesn't contain a lot number, but this product normally has one -- probably the wrong barcode was scanned. Resolve each one below before this submission is booked.",
     lotKiesOptie: 'Choose a lot...',
     lotGeen: '(no lot number)',
-    lotOnbekendOptie: "Unknown / none of these -- book without a lot anyway",
     lotNummerLabel: 'Lot number',
     lotVervaldatumLabel: 'Expiry date',
     lotBevestigGeen: 'This package really has no lot number (e.g. a damaged label) -- book without one',
@@ -472,6 +475,8 @@ const TRANSLATIONS = {
     apLotTrackingMet: 'Always has a lot number/expiry date',
     apLotTrackingZonder: 'Never has a lot number/expiry date',
     apLotTrackingHint: "Only override this if you already know -- 'Automatic' works for most products.",
+    gs1LotScanLabel: 'Or scan the barcode to fill this in automatically',
+    gs1LotScanPlaceholder: 'Scan here...',
     forms: '📋 Forms',
     scanUsage: '✅ Material Usage',
     receiveStock: '📦 Goods Receipt',
@@ -1517,7 +1522,6 @@ const TRANSLATIONS = {
     lotUitleg: 'Deze scan bevat geen lotnummer, maar dit product heeft normaal wel een lotnummer -- waarschijnlijk is de verkeerde barcode gescand. Los elke regel hieronder op voordat deze indiening geboekt wordt.',
     lotKiesOptie: 'Kies een lot...',
     lotGeen: '(geen lotnummer)',
-    lotOnbekendOptie: 'Onbekend / geen van deze -- toch zonder lot boeken',
     lotNummerLabel: 'Lotnummer',
     lotVervaldatumLabel: 'Vervaldatum',
     lotBevestigGeen: 'Deze verpakking heeft echt geen lotnummer (bijv. een beschadigd label) -- toch boeken',
@@ -1527,6 +1531,8 @@ const TRANSLATIONS = {
     apLotTrackingMet: 'Heeft altijd een lotnummer/vervaldatum',
     apLotTrackingZonder: 'Heeft nooit een lotnummer/vervaldatum',
     apLotTrackingHint: "Alleen aanpassen als je dit al zeker weet -- 'Automatisch' werkt voor de meeste producten.",
+    gs1LotScanLabel: 'Of scan de barcode om dit automatisch over te nemen',
+    gs1LotScanPlaceholder: 'Scan hier...',
     forms: '📋 Formulieren',
     scanUsage: '✅ Materiaal verbruik',
     receiveStock: '📦 Goederenontvangst',
@@ -4428,6 +4434,7 @@ function renderProductDetail(data) {
         }).join('')
         + '</table></td></tr>';
       html += '<tr class="lot-edit-row" id="lotEditRow' + idx + '" style="display:none;"><td colspan="7">'
+        + '<div class="form-group"><label>' + t('gs1LotScanLabel') + '</label><input type="text" id="lotEditScan' + idx + '" placeholder="' + escapeAttr(t('gs1LotScanPlaceholder')) + '"></div>'
         + '<div class="form-group" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">'
         + '<div><label>' + t('colLot') + '</label><input type="text" id="lotEditLot' + idx + '" value="' + escapeAttr(groep.lot || '') + '"></div>'
         + '<div><label>' + t('colExpiryDate') + '</label><input type="date" id="lotEditDatum' + idx + '" value="' + escapeAttr(groep.vervaldatumSql || '') + '"></div>'
@@ -4571,8 +4578,13 @@ function renderProductDetail(data) {
   // toe op alle locaties waar dit lot voorkomt.
   document.querySelectorAll('.lot-edit-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      const row = document.getElementById('lotEditRow' + this.getAttribute('data-idx'));
+      const idx = this.getAttribute('data-idx');
+      const row = document.getElementById('lotEditRow' + idx);
       if (row) row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+      // Scanveld pas hier wiren (i.p.v. meteen bij het tekenen van de
+      // pagina) -- dezelfde reden als initGs1ScanHint() elders: geen zin
+      // om events te binden op een rij die nog verborgen is.
+      wireGs1LotScanInput(document.getElementById('lotEditScan' + idx), document.getElementById('lotEditLot' + idx), document.getElementById('lotEditDatum' + idx));
     });
   });
   document.querySelectorAll('.lot-edit-cancel').forEach(function (btn) {
@@ -8532,6 +8544,53 @@ function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen, t
 }
 
 /**
+ * Koppelt een "scan de barcode"-tekstveld aan een bestaand lot- en
+ * vervaldatum-veld: zodra er in $scanEl een barcode wordt gescand (Enter,
+ * zoals een barcodescanner na elke scan stuurt) of het veld verliest de
+ * focus, wordt die ÉÉN regel naar de server gestuurd om 'm te parsen
+ * (api/gs1_parse.php -- hergebruikt dezelfde parseGS1Raw()/
+ * pasGs1CorrectieToe() als een echte scan, geen losse JS-herimplementatie
+ * die uit de pas kan gaan lopen met de server-side parser), en vult bij
+ * succes $lotEl/$datumEl in. Puur een invulgemak -- $lotEl/$datumEl blijven
+ * normale, los bewerkbare velden; de aanroeper leest alsnog gewoon die
+ * twee velden uit bij het opslaan/indienen, niet het scanveld zelf.
+ *
+ * Gedeeld door toonLotOntbrekendPaneel() (Ontvangst/Verbruik) en het
+ * lot-correctieformulier op de productdetailpagina (renderProductDetail()).
+ */
+function wireGs1LotScanInput(scanEl, lotEl, datumEl) {
+  if (!scanEl || !lotEl || !datumEl) return;
+  // Idempotent: deze rij kan meerdere keren open/dicht geklikt worden
+  // (zie .lot-edit-btn hierboven) zonder dat het scanveld opnieuw uit de
+  // DOM verwijderd wordt -- zonder deze vlag zou elke her-opening een
+  // extra paar listeners stapelen, met dubbele API-aanroepen per scan.
+  if (scanEl.dataset.gs1LotScanWired) return;
+  scanEl.dataset.gs1LotScanWired = '1';
+
+  function verwerk() {
+    const raw = scanEl.value.trim();
+    if (!raw) return;
+    callApi('parseGs1Scan', [raw], function (result) {
+      if (result && result.success && (result.lot || result.vervaldatum_sql)) {
+        if (result.lot) lotEl.value = result.lot;
+        if (result.vervaldatum_sql) datumEl.value = result.vervaldatum_sql;
+      }
+      scanEl.value = '';
+      scanEl.focus();
+    }, function () {
+      // Stil falen -- dit is een invulgemak, geen verplichte stap; de
+      // handmatige velden blijven gewoon bruikbaar als dit misgaat.
+      scanEl.value = '';
+    });
+  }
+
+  scanEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); verwerk(); }
+  });
+  scanEl.addEventListener('blur', verwerk);
+}
+
+/**
  * Toont één invoerveld per regel die includes/transacties.php::
  * verwerkScan() blokkeerde omdat er geen lotnummer in de scan zat voor
  * een product dat er normaal wel een heeft (zie isLotVerwacht() in
@@ -8539,56 +8598,80 @@ function toonOnbekendeBarcodesPaneel(containerId, onbekendeRegels, onIndienen, t
  * toonOnbekendeBarcodesPaneel() hierboven: er is nog NIETS geboekt,
  * $onIndienen stuurt de scan opnieuw in met de aangevulde keuzes.
  *
- * Bij Verbruik (p.lotenOpVoorraad niet leeg) toont dit een keuzemenu met
- * de lotten die nu op die locatie op voorraad staan, plus een "onbekend"-
- * optie; bij Ontvangst (of Verbruik zonder enige partij op voorraad) een
- * handmatig lot+vervaldatum-veld plus een "echt geen lotnummer"-vinkje.
+ * Per regel altijd drie manieren om 'm op te lossen, die allemaal
+ * uiteindelijk hetzelfde lot-/vervaldatumveld vullen (zie
+ * wireGs1LotScanInput() hierboven): de juiste barcode scannen, kiezen uit
+ * de lotten die nu op die locatie op voorraad staan (alleen bij Verbruik,
+ * p.lotenOpVoorraad), of handmatig intypen -- plus een "echt geen
+ * lotnummer"-vinkje voor als de verpakking er daadwerkelijk geen heeft.
  */
 function toonLotOntbrekendPaneel(containerId, lotProblemen, onIndienen) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  // data-regel is de ruwe scanregel zelf (willekeurige tekst, kan in
+  // theorie aanhalingstekens bevatten) -- hier gebruikt om 'm veilig in een
+  // attribuut-CSS-selector te zetten bij het terugvinden van de bijbehorende
+  // velden.
+  function regelSelector(regel) {
+    return '[data-regel="' + regel.replace(/"/g, '\\"') + '"]';
+  }
+
   let html = '<div class="login-error" style="display:block; background:#fff8e1; border-color:#f5a623; color:#333;">';
   html += '<strong>' + t('lotTitel') + '</strong><p>' + t('lotUitleg') + '</p>';
   lotProblemen.forEach(function (p) {
     html += '<div class="form-group" style="border-top:1px solid #eee; padding-top:10px;"><label>' + escapeHtml(p.naam) + ' <code>' + escapeHtml(p.ean) + '</code></label>';
+
+    html += '<div class="form-group"><label>' + t('gs1LotScanLabel') + '</label><input type="text" class="lot-gs1-scan-input" data-regel="' + escapeAttr(p.line) + '" placeholder="' + escapeAttr(t('gs1LotScanPlaceholder')) + '"></div>';
+
     if (p.lotenOpVoorraad && p.lotenOpVoorraad.length > 0) {
-      html += '<select class="lot-keuze-select" data-regel="' + escapeAttr(p.line) + '">';
+      html += '<div class="form-group"><label>' + t('lotKiesOptie') + '</label><select class="lot-keuze-select" data-regel="' + escapeAttr(p.line) + '">';
       html += '<option value="">' + t('lotKiesOptie') + '</option>';
       p.lotenOpVoorraad.forEach(function (l) {
         const label = (l.lot || t('lotGeen')) + (l.vervaldatum ? ' -- ' + t('lotVervaldatumLabel') + ': ' + l.vervaldatum : '') + ' (' + l.aantal + 'x)';
         html += '<option value="' + escapeAttr(l.lot || '') + '" data-vervaldatum="' + escapeAttr(l.vervaldatum_sql || '') + '">' + escapeHtml(label) + '</option>';
       });
-      html += '<option value="__onbekend__">' + t('lotOnbekendOptie') + '</option>';
-      html += '</select>';
-    } else {
-      html += '<div class="edit-grid">';
-      html += '<div class="form-group"><label>' + t('lotNummerLabel') + '</label><input type="text" class="lot-nummer-input" data-regel="' + escapeAttr(p.line) + '"></div>';
-      html += '<div class="form-group"><label>' + t('lotVervaldatumLabel') + '</label><input type="date" class="lot-vervaldatum-input" data-regel="' + escapeAttr(p.line) + '"></div>';
-      html += '</div>';
-      html += '<label class="inline-check"><input type="checkbox" class="lot-bevestig-check" data-regel="' + escapeAttr(p.line) + '"> ' + t('lotBevestigGeen') + '</label>';
+      html += '</select></div>';
     }
+
+    html += '<div class="edit-grid">';
+    html += '<div class="form-group"><label>' + t('lotNummerLabel') + '</label><input type="text" class="lot-nummer-input" data-regel="' + escapeAttr(p.line) + '"></div>';
+    html += '<div class="form-group"><label>' + t('lotVervaldatumLabel') + '</label><input type="date" class="lot-vervaldatum-input" data-regel="' + escapeAttr(p.line) + '"></div>';
+    html += '</div>';
+    html += '<label class="inline-check"><input type="checkbox" class="lot-bevestig-check" data-regel="' + escapeAttr(p.line) + '"> ' + t('lotBevestigGeen') + '</label>';
     html += '</div>';
   });
   html += '<button type="button" class="edit-save" id="lotIndienBtn">' + t('lotIndienen') + '</button>';
   html += '</div>';
   container.innerHTML = html;
 
+  // Scannen vult de handmatige lot-/vervaldatumvelden van dezelfde regel.
+  document.querySelectorAll('.lot-gs1-scan-input').forEach(function (scanEl) {
+    const sel = regelSelector(scanEl.getAttribute('data-regel'));
+    wireGs1LotScanInput(scanEl, container.querySelector('.lot-nummer-input' + sel), container.querySelector('.lot-vervaldatum-input' + sel));
+  });
+
+  // "Kies uit voorraad"-dropdown vult diezelfde twee velden -- zo is er
+  // geen apart verzamelpad meer nodig voor die keuze bij het indienen.
+  document.querySelectorAll('.lot-keuze-select').forEach(function (selectEl) {
+    selectEl.addEventListener('change', function () {
+      if (selectEl.value === '') return;
+      const sel = regelSelector(selectEl.getAttribute('data-regel'));
+      const lotEl = container.querySelector('.lot-nummer-input' + sel);
+      const datumEl = container.querySelector('.lot-vervaldatum-input' + sel);
+      const opt = selectEl.options[selectEl.selectedIndex];
+      if (lotEl) lotEl.value = selectEl.value;
+      if (datumEl) datumEl.value = opt.getAttribute('data-vervaldatum') || '';
+    });
+  });
+
   document.getElementById('lotIndienBtn').addEventListener('click', function () {
     const lotInvoer = {};
-    document.querySelectorAll('.lot-keuze-select').forEach(function (sel) {
-      const regel = sel.getAttribute('data-regel');
-      if (sel.value === '__onbekend__') {
-        lotInvoer[regel] = { bevestigd: true };
-      } else if (sel.value !== '') {
-        const opt = sel.options[sel.selectedIndex];
-        lotInvoer[regel] = { lot: sel.value, vervaldatum: opt.getAttribute('data-vervaldatum') || null };
-      }
-    });
     document.querySelectorAll('.lot-nummer-input').forEach(function (inp) {
       const regel = inp.getAttribute('data-regel');
-      const vervaldatumInp = container.querySelector('.lot-vervaldatum-input[data-regel="' + regel.replace(/"/g, '\\"') + '"]');
-      const bevestigChk = container.querySelector('.lot-bevestig-check[data-regel="' + regel.replace(/"/g, '\\"') + '"]');
+      const sel = regelSelector(regel);
+      const vervaldatumInp = container.querySelector('.lot-vervaldatum-input' + sel);
+      const bevestigChk = container.querySelector('.lot-bevestig-check' + sel);
       if (bevestigChk && bevestigChk.checked) {
         lotInvoer[regel] = { bevestigd: true };
       } else if (inp.value.trim() !== '') {
