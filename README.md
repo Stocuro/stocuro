@@ -60,6 +60,27 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.19 — bugfix: scanning a non-barcode QR code (e.g. an
+  instructions-for-use link) crashed the whole submission.** Found while
+  testing a real packaging example: some boxes carry a QR code that
+  isn't a product identifier at all (a URL to the manufacturer's IFU
+  page). `normalizeEAN()` correctly rejects such a string as "not a
+  valid EAN" by throwing — right for the manual EAN entry field, but
+  `lookupArtikelen()` and the unknown-scan handling
+  (`maakArtikelenVoorOnbekendeRegels()`, `loggeOnbekendeScans()`, and the
+  one-off-order equivalent in `includes/eenmalige_bestellingen.php`) were
+  calling it directly on arbitrary scanned text, so that exception
+  escaped uncaught and failed the entire scan batch — including any
+  other, perfectly valid barcodes scanned in the same submission. Fixed
+  by catching that case everywhere a raw scan line (not a known-good
+  GTIN) gets normalized: `lookupArtikelen()` now treats a non-EAN-shaped
+  scan as simply "not a piece/box EAN" and still checks it against
+  alternative codes and the logistics code; the unknown-scan paths use a
+  new shared `veiligeEanOfPlaatshouder()` helper that falls back to a
+  deterministic placeholder for display instead of creating a garbage
+  product. Practical effect: you can now register a stray QR code like
+  that IFU link as an alternative code (v1.0.18) on the real product,
+  and an accidental scan of it will no longer blow up the whole batch.
 - **v1.0.18 — alternative barcodes/QR codes per product.** Some products
   carry more than one official barcode/QR code for the exact same single
   item — not a box/case variant (that's the existing Box EAN field), just

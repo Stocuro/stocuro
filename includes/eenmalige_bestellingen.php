@@ -246,7 +246,12 @@ function verwerkEenmaligeBestellingGs1Regels(int $bestellingId, string $gs1RawBl
     }
     foreach ($split['onbekend'] as $item) {
         $parsed = $item['parsed'];
-        $ean = $parsed['ean'] !== '' ? normalizeEAN($parsed['ean']) : normalizeEAN($item['line']);
+        // VeiligeEanOfPlaatshouder() (includes/transacties.php) i.p.v.
+        // rechtstreeks normalizeEAN($item['line']) -- die laatste gooit
+        // een exception voor een niet-EAN-achtige scan (bijv. een per
+        // ongeluk gescande QR-code met een URL), wat anders deze hele
+        // indiening zou laten vastlopen.
+        $ean = $parsed['ean'] !== '' ? normalizeEAN($parsed['ean']) : veiligeEanOfPlaatshouder($item['line'])['ean'];
         $insert->execute([
             ':bestelling_id' => $bestellingId, ':ean' => $ean, ':naam' => null,
             ':lot' => $parsed['lot'], ':vervaldatum' => gs1ExpiryToSqlDate($parsed['expiry']),

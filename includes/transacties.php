@@ -62,24 +62,43 @@ require_once __DIR__ . '/lot_correcties.php';
  * @return array{ean:string, naam:string, prijs:float, hoeveelheid:int}|null
  */
 function lookupArtikelen(string $ean): ?array {
-    $eanNorm = normalizeEAN($ean);
-
-    $stmt = db()->prepare('SELECT ean, productnaam, prijs FROM artikelen WHERE ean = :ean');
-    $stmt->execute([':ean' => $eanNorm]);
-    $row = $stmt->fetch();
-    if ($row) {
-        return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => 1];
+    // Gemeld praktijkprobleem: een verpakking kan naast de echte
+    // productbarcode ook een QR-code hebben die niets met het product
+    // zelf te maken heeft (bijv. een link naar de gebruiksaanwijzing,
+    // "http://www.merit.com/ifu/?i=583054") -- scant iemand die per
+    // ongeluk, dan is dat GEEN geldige EAN (veel te lang, geen
+    // herkenbare GTIN) en normalizeEAN() WEIGERT zo'n waarde terecht
+    // (gooit een InvalidArgumentException -- zie includes/ean.php, waar
+    // dat voor het HANDMATIGE EAN-invoerveld precies de bedoeling is).
+    // Hier, bij het herkennen van een willekeurige scan, mag dat de hele
+    // scan-indiening niet laten vastlopen: zo'n regel moet gewoon verder
+    // behandeld worden als "geen stuk-/doos-EAN", en kan nog altijd een
+    // alternatieve code of logistiek_code zijn (zie hieronder) voordat
+    // hij als écht onbekend geldt.
+    try {
+        $eanNorm = normalizeEAN($ean);
+    } catch (InvalidArgumentException $e) {
+        $eanNorm = null;
     }
 
-    // Niet gevonden als stuk-EAN -- proberen als doos-EAN.
-    $stmt = db()->prepare('SELECT ean, productnaam, prijs, eenheden_per_doos FROM artikelen WHERE doos_ean = :ean');
-    $stmt->execute([':ean' => $eanNorm]);
-    $row = $stmt->fetch();
-    if ($row) {
-        // max(1, ...) als bescherming tegen een inconsistente/lege
-        // eenheden_per_doos -- dan toch 1 stuk boeken i.p.v. 0.
-        $hoeveelheid = max(1, (int) $row['eenheden_per_doos']);
-        return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => $hoeveelheid];
+    if ($eanNorm !== null) {
+        $stmt = db()->prepare('SELECT ean, productnaam, prijs FROM artikelen WHERE ean = :ean');
+        $stmt->execute([':ean' => $eanNorm]);
+        $row = $stmt->fetch();
+        if ($row) {
+            return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => 1];
+        }
+
+        // Niet gevonden als stuk-EAN -- proberen als doos-EAN.
+        $stmt = db()->prepare('SELECT ean, productnaam, prijs, eenheden_per_doos FROM artikelen WHERE doos_ean = :ean');
+        $stmt->execute([':ean' => $eanNorm]);
+        $row = $stmt->fetch();
+        if ($row) {
+            // max(1, ...) als bescherming tegen een inconsistente/lege
+            // eenheden_per_doos -- dan toch 1 stuk boeken i.p.v. 0.
+            $hoeveelheid = max(1, (int) $row['eenheden_per_doos']);
+            return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => $hoeveelheid];
+        }
     }
 
     $codeTrimmed = trim($ean);
@@ -97,7 +116,7 @@ function lookupArtikelen(string $ean): ?array {
              JOIN artikelen ar ON ar.ean = a.ean
              WHERE a.code = :norm OR a.code = :raw'
         );
-        $stmt->execute([':norm' => $eanNorm, ':raw' => $codeTrimmed]);
+        $stmt->execute([':norm' => $eanNorm ?? $codeTrimmed, ':raw' => $codeTrimmed]);
         $row = $stmt->fetch();
         if ($row) {
             return ['ean' => $row['ean'], 'naam' => $row['productnaam'], 'prijs' => (float) $row['prijs'], 'hoeveelheid' => 1];
@@ -189,14 +208,43 @@ function ontbrekendeOmschrijvingen(array $onbekend, array $omschrijvingen): arra
 }
 
 /**
+ * Best-effort EAN-achtige sleutel voor een ruwe scanregel waar geen GTIN
+ * uit geparst kon worden. Gemeld praktijkprobleem: een verpakking kan
+ * naast de echte productbarcode ook een QR-code hebben die niets met het
+ * product te maken heeft (bijv. een link naar de gebruiksaanwijzing) --
+ * scant iemand die per ongeluk, dan gooit normalizeEAN() terecht een
+ * InvalidArgumentException (veel te lang, geen herkenbare GTIN -- zie
+ * includes/ean.php). Hier, bij het afhandelen van een onbekende scan, mag
+ * dat de hele indiening niet laten vastlopen met een rauwe PHP-fout.
+ *
+ * Bij zo'n onnormaliseerbare regel wordt een deterministische 14-tekens
+ * plaatshouder teruggegeven (crc32-hash van de ruwe regel) i.p.v. een
+ * exception -- dezelfde foutscan levert dus altijd dezelfde plaatshouder
+ * op, zodat herhaalde scans van hetzelfde "verkeerde label" in Onbekende
+ * Producten nog steeds netjes samen gegroepeerd worden. 'geldig' => false
+ * laat de aanroeper weten dat dit GEEN echte EAN is -- zie
+ * maakArtikelenVoorOnbekendeRegels() hieronder, die hierom bewust GEEN
+ * artikel aanmaakt voor zo'n regel (dat zou een zinloos "product" met een
+ * plaatshouder-EAN opleveren).
+ *
+ * @return array{ean:string, geldig:bool}
+ */
+function veiligeEanOfPlaatshouder(string $line): array {
+    try {
+        return ['ean' => normalizeEAN($line), 'geldig' => true];
+    } catch (InvalidArgumentException $e) {
+        return ['ean' => str_pad(substr(hash('crc32b', $line), 0, 14), 14, '0'), 'geldig' => false];
+    }
+}
+
+/**
  * Schrijft elke onbekende regel weg naar onbekende_scans, met de
  * omschrijving die de gebruiker ervoor heeft ingevuld -- alleen aan te
  * roepen nadat ontbrekendeOmschrijvingen() een lege array teruggaf.
  * ean = de geparste GTIN indien beschikbaar, anders een best-effort
- * normalizeEAN() van de ruwe regel (altijd 14 tekens, consistent met de
- * rest van het schema) -- puur voor latere herkenning in het
- * Admin-scherm "Onbekende Producten", geen garantie dat dit een geldig
- * GS1-EAN is.
+ * plaatshouder (zie veiligeEanOfPlaatshouder() hierboven) -- puur voor
+ * latere herkenning in het Admin-scherm "Onbekende Producten", geen
+ * garantie dat dit een geldig GS1-EAN is.
  */
 function loggeOnbekendeScans(array $onbekend, array $omschrijvingen, ?string $locatie, string $transactieType, ?string $gebruikerNaam): void {
     if (empty($onbekend)) return;
@@ -206,7 +254,7 @@ function loggeOnbekendeScans(array $onbekend, array $omschrijvingen, ?string $lo
          VALUES (:ean, :gs1_raw, :omschrijving, :locatie, :type, :gebruiker)'
     );
     foreach ($onbekend as $item) {
-        $ean = $item['parsed']['ean'] !== '' ? $item['parsed']['ean'] : normalizeEAN($item['line']);
+        $ean = $item['parsed']['ean'] !== '' ? $item['parsed']['ean'] : veiligeEanOfPlaatshouder($item['line'])['ean'];
         $stmt->execute([
             ':ean' => $ean, ':gs1_raw' => $item['line'],
             ':omschrijving' => trim((string) ($omschrijvingen[$item['line']] ?? '')),
@@ -257,7 +305,11 @@ function loggeOnbekendeScans(array $onbekend, array $omschrijvingen, ?string $lo
  *   nieuwBekend heeft dezelfde vorm als splitsBekendOnbekend()['bekend']
  *   en is bedoeld om daar meteen aan toegevoegd te worden (array_merge).
  *   nogOnbekend is in de praktijk vrijwel altijd leeg -- alleen gevuld als
- *   addArtikel() zelf onverhoopt faalt.
+ *   addArtikel() zelf onverhoopt faalt, OF als de ruwe regel niet eens
+ *   als EAN genormaliseerd kon worden (zie veiligeEanOfPlaatshouder()
+ *   hierboven -- bijv. een per ongeluk gescande QR-code met een URL
+ *   i.p.v. een productbarcode; daar wordt dan BEWUST geen artikel voor
+ *   aangemaakt).
  */
 function maakArtikelenVoorOnbekendeRegels(array $onbekend, array $omschrijvingen, ?string $gebruikerNaam, array $lotloos = []): array {
     if (empty($onbekend)) return ['nieuwBekend' => [], 'nogOnbekend' => []];
@@ -266,7 +318,21 @@ function maakArtikelenVoorOnbekendeRegels(array $onbekend, array $omschrijvingen
     $nogOnbekend = [];
 
     foreach ($onbekend as $item) {
-        $ean = $item['parsed']['ean'] !== '' ? $item['parsed']['ean'] : normalizeEAN($item['line']);
+        if ($item['parsed']['ean'] !== '') {
+            $ean = $item['parsed']['ean'];
+        } else {
+            $sleutel = veiligeEanOfPlaatshouder($item['line']);
+            if (!$sleutel['geldig']) {
+                // Geen bruikbare EAN uit te halen -- blijft onbekend
+                // (zichtbaar in "Onbekende Producten" via
+                // loggeOnbekendeScans(), die wél een plaatshouder
+                // gebruikt voor de weergave) i.p.v. hier een zinloos
+                // "product" met een plaatshouder-EAN aan te maken.
+                $nogOnbekend[] = $item;
+                continue;
+            }
+            $ean = $sleutel['ean'];
+        }
         $omschrijving = trim((string) ($omschrijvingen[$item['line']] ?? ''));
 
         $stmt = db()->prepare('SELECT productnaam, prijs FROM artikelen WHERE ean = :ean');
