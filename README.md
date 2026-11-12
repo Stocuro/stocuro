@@ -60,6 +60,11 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.28 — Deploy-tooling note: the SFTP home directory is not the
+  live web root (no app behavior change).** Found while deploying
+  v1.0.27's own changelog update — see "SFTP deploy gotcha" in the
+  deployment section below. Version bumped per the standing rule even
+  for a documentation-only change (same as v1.0.16).
 - **v1.0.27 — Verplaatsing, Retournering and Telling now get the same
   lot-safety as Ontvangst/Verbruik, closing a scanning-flow parity gap
   found during the same full-system audit as v1.0.26.** The lot-resolution
@@ -576,6 +581,24 @@ mode (`echo "pwd" | sshpass -p ... sftp user@host`). Fix: always add
 `-o BatchMode=no` alongside `-b batchfile` when using password auth —
 `sshpass -p "$SFTP_PASS" sftp -o BatchMode=no -b batchfile.txt
 "$SFTP_USER@$SFTP_HOST"`.
+
+### SFTP deploy gotcha: the SFTP home directory is not the live web root
+
+Found while deploying v1.0.27's changelog update: `sftp`'s connection
+lands in a home directory that contains a stray, legacy `changelog.html`
+sitting right next to a `webroots` symlink — and a plain
+`put changelog.html changelog.html` from that top-level directory
+succeeds silently, with no error, because that stray file already
+exists there too. It just isn't served by the live site; the actual web
+root is one level deeper, through the symlink, at
+`webroots/<hash>/` (and the real `nl/changelog.html` lives at
+`webroots/<hash>/nl/changelog.html`). A `put` straight into the SFTP
+home directory therefore looks like a successful deploy (no error,
+command returns normally) while the live site shows nothing new. Rule
+going forward: always target the full `webroots/<hash>/...` path
+explicitly in the batch file, and always verify with a cache-busted
+`curl` against the real live URL afterward — a silent success at the
+SFTP layer is not proof of a live deploy.
 
 ## Running on your own Linux server (Docker)
 
