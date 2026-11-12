@@ -777,6 +777,22 @@ function verwerkScan(string $transactieType, string $locatie, string $gs1RawBloc
                     $lot = $lotenHier[0]['lot'];
                     $expirySql = $lotenHier[0]['vervaldatum_sql'];
                     $lotNotitie = '(lot automatisch afgeleid: enige partij van dit product op voorraad op deze locatie)';
+                } elseif (count($lotenHier) > 1 && ($fefoKeuze = fefoKiesLot($lotenHier)) !== null) {
+                    // Meerdere lotten op voorraad -- geen onontkoombare
+                    // vraag meer nodig als er een vervaldatum-gebaseerd
+                    // "meest voor de hand liggende" lot is: FEFO
+                    // (first-expiry-first-out, de gangbare, verwachte
+                    // voorraadrotatie) kiest het eerst-vervallende lot. Dit
+                    // is een bewuste snelheid-voor-precisie-afweging --
+                    // het boekt een ECHT lotnummer (geen gok naar "geen
+                    // lot"), maar wel zonder bevestiging. Alleen lotten
+                    // MET een vervaldatum komen in aanmerking: zonder een
+                    // enkele vervaldatum in de kandidatenlijst is er geen
+                    // FEFO-signaal en blijft het, terecht, een echte vraag
+                    // (zie de else hieronder).
+                    $lot = $fefoKeuze['lot'];
+                    $expirySql = $fefoKeuze['vervaldatum_sql'];
+                    $lotNotitie = '(lot automatisch gekozen via FEFO: eerst-vervallende van ' . count($lotenHier) . ' lotten op voorraad op deze locatie)';
                 } else {
                     $lotProblemen[] = [
                         'line' => $line, 'ean' => $artikel['ean'], 'naam' => $artikel['naam'],

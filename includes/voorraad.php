@@ -497,7 +497,13 @@ function isLotVerwacht(string $ean): bool {
 function lotenOpVoorraadVoorEanLocatie(string $ean, string $locatie): array {
     $resultaat = [];
     foreach (voorraadLot() as $r) {
-        if ($r['ean'] === $ean && $r['locatie'] === $locatie && $r['lot'] !== null && $r['lot'] !== '') {
+        // huidig > 0 is sinds v1.0.24 niet meer gegarandeerd door
+        // voorraadLot() zelf (die geeft nu ook een lot met status
+        // TEKORT terug, huidig < 0, zie de uitgebreide toelichting
+        // daar) -- hier expliciet uitsluiten: een lot dat al als
+        // tekort gemarkeerd staat mag nooit als (automatisch te kiezen
+        // of voor te stellen) kandidaat voor nog méér verbruik gelden.
+        if ($r['ean'] === $ean && $r['locatie'] === $locatie && $r['lot'] !== null && $r['lot'] !== '' && $r['huidig'] > 0) {
             $resultaat[] = [
                 'lot' => $r['lot'], 'vervaldatum' => $r['vervaldatum'],
                 'vervaldatum_sql' => $r['vervaldatum_sql'], 'aantal' => $r['huidig'],
@@ -505,6 +511,30 @@ function lotenOpVoorraadVoorEanLocatie(string $ean, string $locatie): array {
         }
     }
     return $resultaat;
+}
+
+/**
+ * FEFO ("first expiry, first out"): kiest uit een lijst lotten (zelfde
+ * vorm als lotenOpVoorraadVoorEanLocatie() hierboven) het lot dat het
+ * eerst vervalt -- de gangbare, verwachte voorraadrotatie, en daarmee de
+ * "meest voor de hand liggende" keuze als een Verbruik-scan geen
+ * lotnummer opleverde maar er WEL meerdere lotten op voorraad staan (zie
+ * verwerkScan() in includes/transacties.php: dit maakt een blokkerende
+ * keuzevraag overbodig in het meest voorkomende geval).
+ *
+ * Alleen lotten MET een vervaldatum komen in aanmerking -- zonder een
+ * enkele vervaldatum in $lotenHier is er geen FEFO-signaal om op te
+ * varen, en geeft deze functie null terug (de aanroeper valt dan terug
+ * op de blokkerende keuzevraag, in plaats van willekeurig te gokken).
+ *
+ * @param list<array{lot:string, vervaldatum:?string, vervaldatum_sql:?string, aantal:int}> $lotenHier
+ */
+function fefoKiesLot(array $lotenHier): ?array {
+    $metVervaldatum = array_values(array_filter($lotenHier, fn($l) => $l['vervaldatum_sql'] !== null));
+    if (empty($metVervaldatum)) return null;
+
+    usort($metVervaldatum, fn($a, $b) => strcmp($a['vervaldatum_sql'], $b['vervaldatum_sql']));
+    return $metVervaldatum[0];
 }
 
 // =====================================================================

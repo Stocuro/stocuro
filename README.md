@@ -60,6 +60,24 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.25 — Material Usage auto-picks the most sensible lot (FEFO)
+  instead of asking, when it can.** Reported as friction: with multiple
+  lots of a product in stock, a lot-less scan still had to stop and ask
+  which one. Now, if two or more lots are in stock at the location and
+  at least one has an expiry date, the system picks the lot that expires
+  soonest — standard first-expiry-first-out stock rotation, and the
+  defensible "most obvious" choice when one exists — and books it
+  straight away with a clear audit note, no confirmation needed. It
+  still asks when there's truly no signal to go on (none of the
+  candidate lots have an expiry date at all) — a guess there would be
+  fabricating data, not picking the obvious answer. Also fixed, found
+  while building this: since v1.0.24 can surface a lot with a negative
+  ("deficit") balance, the function that lists "lots in stock" for this
+  exact purpose had to be tightened to exclude those — otherwise a
+  shown-as-deficient lot could get offered right back as a pick for more
+  consumption. If lot/expiry doesn't matter at all for a given product,
+  the existing "Heeft nooit een lotnummer/vervaldatum" override (product
+  edit screen) remains the right tool to stop being asked entirely.
 - **v1.0.24 — a lot that goes negative while the product's overall
   stock stays positive was silently invisible in Lots in Stock.**
   Follow-up to v1.0.22, which fixed one source of a fake lot appearing
