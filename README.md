@@ -60,6 +60,10 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.16 — deploy-tooling note: `sftp -b batchfile` silently blocks
+  password auth.** Documentation-only, no app code changed. Recorded the
+  `-o BatchMode=no` fix (see "SFTP deploy gotcha" below) after it caused a
+  live site deploy to fail with a misleading "Permission denied" error.
 - **v1.0.15 — missing lot number is now caught instead of silently
   booked.** Some products carry a second, "poorer" barcode next to the
   real GS1 combination code (GTIN+lot+expiry) — one without lot/expiry
@@ -314,6 +318,20 @@ remote path when the target directory already exists on the server —
 never `put -r` onto an existing remote directory. `mkdir` + `put -r` is
 only safe for a directory that is genuinely new on the server.
 
+### SFTP deploy gotcha: `sftp -b batchfile` silently blocks password auth
+
+Found the hard way (2026-11-12): OpenSSH's `sftp -b batchfile` implicitly
+sets `BatchMode=yes` on the underlying SSH connection, which disables all
+interactive prompts — including the password prompt, even when driving
+the whole thing through `sshpass -p`. The connection then fails with
+`Permission denied (password,publickey)` as if the password were wrong,
+even though the exact same password works fine with a plain
+`sshpass -p ... ssh user@host exit` or with `sftp` in non-batch/piped
+mode (`echo "pwd" | sshpass -p ... sftp user@host`). Fix: always add
+`-o BatchMode=no` alongside `-b batchfile` when using password auth —
+`sshpass -p "$SFTP_PASS" sftp -o BatchMode=no -b batchfile.txt
+"$SFTP_USER@$SFTP_HOST"`.
+
 ## Running on your own Linux server (Docker)
 
 Everything below this point (and the "Installation" section further
@@ -379,7 +397,8 @@ No step contacts the internet. There is no license-activation server.
 
 The `vendor-tools/` directory (private signing key, code generator) is
 **not part of the customer package**. It
-lives and runs only on the vendor's own infrastructure, outside this repository.
+lives and runs only on the vendor's own infrastructure, outside this
+repository.
 
 ## Installation
 
