@@ -60,6 +60,23 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.30 — new "Running on Ubuntu Desktop" section in `DOCKER.md`,
+  for anyone trying Stocuro on their own desktop/laptop rather than a
+  dedicated server.** Covers the two things that are genuinely different
+  there and nowhere else in the existing Docker docs: installing Docker
+  Engine + the Compose plugin from Docker's own apt repository (not the
+  outdated `docker.io` package or the sandboxed snap, which can silently
+  hide the bind-mounted project folder from the container), adding your
+  own account to the `docker` group so `docker compose` doesn't need
+  `sudo` every time, and — the step most likely to get skipped — fixing
+  ownership of the bind-mounted project folder to uid/gid 33 (`www-data`
+  inside the container) before first run, since native Linux Docker uses
+  real host user IDs with no automatic remapping the way Docker Desktop
+  on macOS/Windows has. Also covers opening the right UFW port if a
+  colleague on the same network needs to reach it, and why autostart
+  after a reboot already works with no extra setup. The public
+  installation guide on the website now links to this section
+  alongside the existing Synology one.
 - **v1.0.29 — a negative lot could still show up as "TEKORT" even
   though the overall stock total was already correctly back at 0.**
   Found through the user's own manual testing: receive one lot, then

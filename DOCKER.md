@@ -217,6 +217,145 @@ for that hostname under *Control Panel → Security → Certificate*. This
 replaces the generic "put a reverse proxy in front of it" note in the
 main setup section above with something Synology already ships.
 
+## Running on Ubuntu Desktop
+
+Everything in the sections above still applies on Ubuntu Desktop — this
+section only covers what's actually different from a VPS/NAS: Ubuntu
+Desktop doesn't come with Docker preinstalled, running `docker` commands
+without `sudo` needs a one-time user/group change, and — the part that
+trips people up most — the bind-mounted project folder needs its
+ownership and permissions set correctly for the container to be able to
+read and write it at all. Useful if you're trying Stocuro on your own
+desktop or laptop rather than a dedicated server (e.g. a small, informal
+pilot with one or two colleagues on the same network).
+
+1. **Install Docker Engine + the Compose plugin from Docker's own apt
+   repository** — not Ubuntu's own `docker.io` package (older, and
+   sometimes missing the Compose v2 plugin) and not the Docker snap
+   (snap's sandboxing can block the container from seeing your home
+   directory at all, which shows up as a confusing "no such file" for
+   files that are clearly there):
+   ```
+   sudo apt-get update
+   sudo apt-get install -y ca-certificates curl
+   sudo install -m 0755 -d /etc/apt/keyrings
+   sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+   sudo chmod a+r /etc/apt/keyrings/docker.asc
+   echo \
+     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+     $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+   sudo apt-get update
+   sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+   ```
+   Confirm with `docker compose version` — should print a version, not
+   an error.
+
+2. **User and group rights, part 1 — run `docker` without typing `sudo`
+   every time.** Fresh after install, Docker's daemon socket is owned by
+   `root:docker`, so only root (or `sudo`) can talk to it. Add your own
+   account to that group instead of prefixing every command with `sudo`:
+   ```
+   sudo usermod -aG docker $USER
+   ```
+   This only takes effect in a **new** login session — either log all
+   the way out and back in, or for just your current terminal window,
+   run `newgrp docker`. Confirm with `docker run hello-world` (no
+   `sudo`) — it should pull a tiny image and print a success message.
+   One security note worth knowing: anyone in the `docker` group can
+   trivially get root on the host (a container can mount `/` from the
+   host and write to it), so this is fine for your own single-user
+   pilot machine but isn't something to hand out on a shared one.
+
+3. **Unzip the Stocuro release** somewhere in your home directory, e.g.
+   `~/stocuro/` — same file layout as the generic instructions above
+   (`Dockerfile`, `docker-compose.yml`, `.env.example` alongside
+   `app.php`, `install.php`, `config/`, `includes/`, ...).
+
+4. **User and group rights, part 2 — fix ownership of the project
+   folder itself, before first run.** This is the step that's easy to
+   skip and the most common cause of a blank page or permission errors
+   right after `docker compose up`. Unlike Docker Desktop on macOS/
+   Windows (which transparently remaps file ownership between the
+   container and the host), Docker Engine on native Linux runs
+   containers as **real host user IDs** against a bind-mounted folder —
+   there's no translation layer. The `php:8.2-apache` image's Apache
+   process runs as `www-data`, **uid 33, gid 33**, inside the container.
+   Against your bind-mounted `~/stocuro/`, that means literally uid 33
+   on your Ubuntu filesystem — almost certainly not a real, named
+   account on a normal Ubuntu Desktop install, but the numeric ID is
+   what Linux actually checks, not a name. It needs to read every file
+   and traverse every directory, **and** write
+   `config/database.local.php`, `config/instance.local.php`,
+   `install.lock`, and `uploads/` (the install wizard and photo
+   uploads). Fix both ownership and permissions together (same two
+   commands already used for Synology above, since it's the exact same
+   underlying uid/gid):
+   ```
+   sudo chown -R 33:33 ~/stocuro
+   sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
+   ```
+   (adjust the path if you unzipped somewhere other than `~/stocuro`).
+   `chmod`'s capital `X` adds execute/traverse only to things that are
+   already a directory or already executable — exactly what's needed
+   for a web root, without making every `.php` file spuriously
+   "executable" the way a blanket `chmod -R 755` would.
+
+   **Side effect worth knowing**: after this, your own login user can no
+   longer edit files in that folder directly (in a file manager or
+   editor) without `sudo`, since they're now owned by a uid that doesn't
+   match your account. That's expected and fine here — day-to-day use of
+   the app goes through the container (which runs as uid 33), not your
+   desktop session. The only time you'll touch the folder as yourself
+   again is unzipping a **new release** on top of it later; do that as
+   root (or `sudo`), or temporarily `sudo chown -R $USER:$USER ~/stocuro`
+   before unzipping and re-run both commands above afterward.
+
+5. **Set up `.env`** — identical to the generic instructions: `cp
+   .env.example .env`, then fill in `STOCURO_DB_PASSWORD` and
+   `STOCURO_DB_ROOT_PASSWORD`.
+
+6. **Build and start**: `docker compose up -d --build` — no `sudo`
+   needed now that your user is in the `docker` group.
+
+7. **Open the app.** On the same machine: `http://localhost:8080/`. For
+   a colleague on the same network to reach it from their own device,
+   use this machine's LAN IP instead of `localhost` (`hostname -I` shows
+   it) — and if Ubuntu's firewall is active, open the port first:
+   ```
+   sudo ufw status
+   sudo ufw allow 8080/tcp
+   ```
+   (skip the `allow` line if `ufw status` prints `inactive` — nothing is
+   blocking it). From there the install wizard works exactly as
+   described in the main setup section above (host `db`, credentials
+   from `.env`).
+
+8. **Autostart after a reboot.** The apt install already enables
+   Docker's systemd service, which starts at boot independently of
+   whether anyone logs into the desktop session — so containers with
+   `restart: unless-stopped` (already set in `docker-compose.yml`) come
+   back up on their own after a restart, with no extra setup. Suspending
+   the machine (closing a laptop lid) isn't a reboot at all, so nothing
+   special happens there either — everything just resumes.
+
+**Troubleshooting specific to this setup:**
+
+- **Blank page, 500 error, or `install.php` can't write its config
+  right after first `docker compose up`.** Almost always step 4
+  (ownership) was skipped, or was done *before* unzipping a newer
+  release's files on top (which resets ownership on the new files to
+  your own user again). Re-run both commands from step 4.
+- **Installed Docker via `sudo snap install docker` instead of step 1**:
+  snap's sandboxing restricts which host paths the snap can see, which
+  can make the bind mount fail or come up empty even though the path is
+  clearly there in a terminal. Remove it (`sudo snap remove docker`) and
+  install via step 1 instead.
+- **`docker compose` (no hyphen) says "command not found", but
+  `docker-compose` (with a hyphen) works**: that's the old, standalone
+  Compose v1 binary instead of the v2 plugin from step 1. Either keep
+  using the hyphenated form, or install `docker-compose-plugin` to get
+  the same `docker compose` command used throughout this guide.
+
 ## Why bind-mount instead of baking the code into the image
 
 The more common Docker pattern is `COPY . /var/www/html` in the
