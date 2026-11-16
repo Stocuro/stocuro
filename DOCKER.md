@@ -295,9 +295,14 @@ pilot with one or two colleagues on the same network).
    "git dumper") — not a Stocuro-specific flaw, this applies to any
    `.git` folder left inside a served directory, on any PHP app. Close
    it the same way every other sensitive folder in this app is already
-   closed, with its own `.htaccess`:
+   closed, with its own `.htaccess`. Using `sudo tee` here instead of a
+   plain `cat >` is deliberate, not just caution: it writes the file
+   regardless of exactly who owns `.git/` at this point (your own user
+   from a plain `git clone`, or `root` if `sudo` was used for the clone,
+   or already `33` if you've been here before and are redoing this step)
+   — root-owned is fine, step 4 below re-chowns the whole tree anyway:
    ```
-   cat > ~/stocuro/.git/.htaccess << 'EOF'
+   sudo tee ~/stocuro/.git/.htaccess > /dev/null << 'EOF'
    <IfModule mod_authz_core.c>
        Require all denied
    </IfModule>
@@ -417,6 +422,14 @@ pilot with one or two colleagues on the same network).
   Compose v1 binary instead of the v2 plugin from step 1. Either keep
   using the hyphenated form, or install `docker-compose-plugin` to get
   the same `docker compose` command used throughout this guide.
+- **"Permission denied" writing `.git/.htaccess` in step 3** (confirmed
+  by a real user following this guide): `.git/` isn't owned by your own
+  user — check with `ls -ld ~/stocuro/.git`. Usual cause is `sudo` having
+  been used for the `git clone` itself (so `.git/` ended up owned by
+  `root`), or this step being redone after step 4 already ran (so it's
+  owned by `33`). The step above already uses `sudo tee` instead of
+  `cat >` for exactly this reason, so just re-running that exact command
+  fixes it regardless of which of the two it was.
 
 ## Why bind-mount instead of baking the code into the image
 

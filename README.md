@@ -60,6 +60,19 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.32 — bugfix: the Ubuntu Desktop guide's `.git/.htaccess` step
+  could fail with "Permission denied", confirmed by an actual user
+  following it.** The guide's `cat > ~/stocuro/.git/.htaccess` assumed
+  `.git/` was owned by the reader's own user — true for a plain `git
+  clone`, but not if `sudo` was used for the clone itself (common habit
+  right after a run of `sudo apt-get`/`sudo usermod` commands), or if
+  this step is being redone after step 4 already chowned everything to
+  uid 33. Fixed by switching that one command to `sudo tee ... >
+  /dev/null` instead of `cat >` — writes the file regardless of current
+  ownership, which is harmless here since step 4 re-chowns the whole
+  tree to uid 33 right after anyway. Added a matching line to the
+  troubleshooting section for anyone who already hit this before
+  re-reading the updated step. Documentation only, no app code changed.
 - **v1.0.31 — the Ubuntu Desktop guide's "get the files onto the
   machine" step is now fully spelled out, including a git-clone
   option.** Follow-up to v1.0.30: step 3 now explicitly creates the
