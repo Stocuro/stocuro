@@ -60,6 +60,25 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.33 — critical bugfix: `.env.example` never actually existed,
+  so no Docker install — generic Linux, Synology, or Ubuntu Desktop —
+  could ever be completed as documented.** Found while explaining step
+  5 (the `.env` setup step) in detail: every Docker section in
+  `DOCKER.md` says `cp .env.example .env` as its very first move, but
+  that file was never created anywhere in this repository (or, as far
+  as can be told, any shipped release — there's no packaging script
+  that would have generated it separately). Running that command has
+  always failed with "No such file or directory", for every Docker path
+  documented since Docker support was first added. Added `.env.example`
+  with the exact variables `docker-compose.yml` actually reads
+  (`STOCURO_PORT`, `STOCURO_DB_NAME`, `STOCURO_DB_USER`,
+  `STOCURO_DB_PASSWORD`, `STOCURO_DB_ROOT_PASSWORD`), with comments
+  explaining each one and a suggested way to generate a strong password
+  (`openssl rand -base64 24`). Also added `app/.gitignore` (`.env`) so
+  this never propagates the other way — someone who got Stocuro via
+  `git clone` (the Ubuntu Desktop guide's Option B) and later runs a
+  careless `git add .` inside their own clone won't accidentally stage
+  their real database passwords.
 - **v1.0.32 — bugfix: the Ubuntu Desktop guide's `.git/.htaccess` step
   could fail with "Permission denied", confirmed by an actual user
   following it.** The guide's `cat > ~/stocuro/.git/.htaccess` assumed

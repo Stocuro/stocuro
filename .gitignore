@@ -1,0 +1,7 @@
+# Real Docker Compose environment file -- contains real database
+# passwords, never commit it. Copy .env.example to .env instead (see
+# DOCKER.md). This file matters most for anyone who got Stocuro via
+# `git clone` (DOCKER.md's "Running on Ubuntu Desktop" section) rather
+# than a release zip: without it, a careless `git add .` inside that
+# clone would stage real passwords straight into the local repo.
+.env
