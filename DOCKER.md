@@ -266,10 +266,63 @@ pilot with one or two colleagues on the same network).
    host and write to it), so this is fine for your own single-user
    pilot machine but isn't something to hand out on a shared one.
 
-3. **Unzip the Stocuro release** somewhere in your home directory, e.g.
-   `~/stocuro/` — same file layout as the generic instructions above
-   (`Dockerfile`, `docker-compose.yml`, `.env.example` alongside
-   `app.php`, `install.php`, `config/`, `includes/`, ...).
+3. **Get the Stocuro files onto the machine**, into a folder in your
+   home directory — this guide uses `~/stocuro/` throughout, create it
+   explicitly first:
+   ```
+   mkdir -p ~/stocuro
+   ```
+   Two ways to fill it, pick whichever applies to you:
+
+   **Option A — you were given a release zip** (the normal way a
+   customer receives Stocuro — a `stocuro-vX.Y.Z-self-hosted.zip` file).
+   Unzip it straight into the folder you just created (adjust the path
+   to wherever the zip actually is, e.g. `~/Downloads/`):
+   ```
+   unzip ~/Downloads/stocuro-v1.0.30-self-hosted.zip -d ~/stocuro
+   ```
+
+   **Option B — clone the public mirror with git** (faster if you don't
+   want to wait for a zip; `~/stocuro` must not already exist for this
+   — `git clone` creates it):
+   ```
+   git clone https://github.com/Stocuro/stocuro.git ~/stocuro
+   ```
+   A cloned copy has one extra thing a zip doesn't: a `.git/` folder
+   sitting right inside what's about to become your web root. If it's
+   ever reachable over HTTP, anyone can reconstruct your entire commit
+   history from it with a well-known, publicly documented technique (a
+   "git dumper") — not a Stocuro-specific flaw, this applies to any
+   `.git` folder left inside a served directory, on any PHP app. Close
+   it the same way every other sensitive folder in this app is already
+   closed, with its own `.htaccess`:
+   ```
+   cat > ~/stocuro/.git/.htaccess << 'EOF'
+   <IfModule mod_authz_core.c>
+       Require all denied
+   </IfModule>
+   <IfModule !mod_authz_core.c>
+       Order allow,deny
+       Deny from all
+   </IfModule>
+   EOF
+   ```
+   This also means later updates can be `cd ~/stocuro && git pull`
+   instead of re-unzipping a new release — but only before step 4 below
+   flips ownership away from your own user; see the note at the end of
+   that step for how to do both together.
+
+   Either way, confirm the folder actually looks right before
+   continuing:
+   ```
+   ls -la ~/stocuro
+   ```
+   You should see `Dockerfile`, `docker-compose.yml`, `.env.example`,
+   `app.php`, `install.php`, `config/`, `includes/`, and the rest of the
+   usual release layout sitting directly inside `~/stocuro` (not nested
+   one folder deeper — a zip that was itself packaged with an extra
+   top-level folder is the one way Option A can go wrong here; if so,
+   move the real contents up one level before continuing).
 
 4. **User and group rights, part 2 — fix ownership of the project
    folder itself, before first run.** This is the step that's easy to
@@ -306,9 +359,18 @@ pilot with one or two colleagues on the same network).
    match your account. That's expected and fine here — day-to-day use of
    the app goes through the container (which runs as uid 33), not your
    desktop session. The only time you'll touch the folder as yourself
-   again is unzipping a **new release** on top of it later; do that as
-   root (or `sudo`), or temporarily `sudo chown -R $USER:$USER ~/stocuro`
-   before unzipping and re-run both commands above afterward.
+   again is updating later — unzipping a **new release** on top (Option
+   A from step 3), or `git pull` (Option B). Either way the pattern is
+   the same: temporarily get your own ownership back, update, then
+   re-apply both commands above:
+   ```
+   sudo chown -R $USER:$USER ~/stocuro
+   ```
+   (now unzip the new release, or run `git pull`, as yourself)
+   ```
+   sudo chown -R 33:33 ~/stocuro
+   sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
+   ```
 
 5. **Set up `.env`** — identical to the generic instructions: `cp
    .env.example .env`, then fill in `STOCURO_DB_PASSWORD` and

@@ -60,6 +60,23 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.31 — the Ubuntu Desktop guide's "get the files onto the
+  machine" step is now fully spelled out, including a git-clone
+  option.** Follow-up to v1.0.30: step 3 now explicitly creates the
+  target folder (`mkdir -p`) and spells out two complete ways to fill
+  it — unzipping a release zip (the normal customer path), or `git
+  clone`ing the public mirror directly for anyone who doesn't want to
+  wait for a zip, with a verification `ls` either way. Cloning via git
+  surfaced a real, generic security consideration worth documenting
+  properly rather than glossing over: a `.git/` folder left inside a
+  web-served directory lets anyone reconstruct the entire commit
+  history over HTTP (a well-known "git dumper" technique, not specific
+  to this app) — so that option now includes closing it with its own
+  `.htaccess` (`Require all denied`), the same pattern already used for
+  `config/`, `includes/`, `sql/`, and `migratie/` elsewhere in this app.
+  The ownership-fix step also now explicitly covers `git pull` as an
+  update path alongside re-unzipping. Documentation only, no app code
+  changed.
 - **v1.0.30 — new "Running on Ubuntu Desktop" section in `DOCKER.md`,
   for anyone trying Stocuro on their own desktop/laptop rather than a
   dedicated server.** Covers the two things that are genuinely different
