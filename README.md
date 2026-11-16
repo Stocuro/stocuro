@@ -60,6 +60,23 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.34 — Ubuntu Desktop guide's step 6 fully spelled out, and
+  every code block in `DOCKER.md` now has proper syntax highlighting
+  on GitHub.** Step 6 ("build and start") previously said almost
+  nothing beyond the one command — now explains what `--build`/`up`/
+  `-d` each actually do, how to watch progress (`docker compose logs
+  -f`), and how to confirm both containers came up healthy (`docker
+  compose ps`), with a direct pointer to the existing MariaDB-slow-
+  startup troubleshooting note for anyone who hits it right at this
+  step instead of having to go find it. Separately: every one of the
+  22 code blocks across the whole file was untagged plain text, so
+  GitHub rendered them with no syntax highlighting at all — all now
+  tagged `bash` (or `text` for the one block that's actually sample log
+  output, not a command to run), so the file reads properly and every
+  command is cleanly copyable straight from the GitHub page, which is
+  the whole point of a guide meant to be followed from a browser on a
+  machine that has nothing else set up yet. Documentation only, no app
+  code changed.
 - **v1.0.33 — critical bugfix: `.env.example` never actually existed,
   so no Docker install — generic Linux, Synology, or Ubuntu Desktop —
   could ever be completed as documented.** Found while explaining step

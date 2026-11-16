@@ -23,7 +23,7 @@ Docker only changes *how PHP and MariaDB get run*, not the app itself.
    `app.php`, `install.php`, `config/`, `includes/`, etc.
 
 2. **Create your `.env` file**:
-   ```
+   ```bash
    cp .env.example .env
    ```
    Open `.env` and fill in `STOCURO_DB_PASSWORD` and
@@ -34,7 +34,7 @@ Docker only changes *how PHP and MariaDB get run*, not the app itself.
    ships this with an empty database password.
 
 3. **Build and start both containers**:
-   ```
+   ```bash
    docker compose up -d --build
    ```
    First run pulls the PHP and MariaDB base images and builds the app
@@ -96,11 +96,11 @@ Two things need backing up: the database, and the `uploads/` +
 project directory is bind-mounted).
 
 **Database:**
-```
+```bash
 docker compose exec db mariadb-dump -u root -p"$STOCURO_DB_ROOT_PASSWORD" stocuro > backup.sql
 ```
 (replace `stocuro` if you changed `STOCURO_DB_NAME`). Restore with:
-```
+```bash
 docker compose exec -T db mariadb -u root -p"$STOCURO_DB_ROOT_PASSWORD" stocuro < backup.sql
 ```
 
@@ -113,7 +113,7 @@ nothing container-specific needed there.
 
 ## Stopping / restarting
 
-```
+```bash
 docker compose stop        # stop both containers, keep everything on disk
 docker compose up -d       # start them again
 docker compose down        # stop and remove the containers (data in the
@@ -146,7 +146,7 @@ and similar Plus-series models qualify).
    map cleanly onto that uid by default, so the reliable fix is two SSH
    commands together (enable SSH under *Control Panel → Terminal &
    SNMP* first if it's off):
-   ```
+   ```bash
    sudo chown -R 33:33 /volume1/stocuro
    sudo chmod -R u+rwX,g+rX,o+rX /volume1/stocuro
    ```
@@ -157,7 +157,7 @@ and similar Plus-series models qualify).
    marked executable, `www-data` still can't traverse into them even
    though it now owns them, and Apache fails with exactly this error
    for the whole site (confirmed against a live DS1525+ install):
-   ```
+   ```text
    [core:crit] (13)Permission denied: .../.htaccess pcfg_openfile:
    unable to check htaccess file, ensure it is readable and that
    '/var/www/html/' is executable
@@ -173,7 +173,7 @@ and similar Plus-series models qualify).
    To confirm what's actually going on before/after, check what the
    *container* sees (not what DSM's File Station shows, which can differ
    if Windows ACL is layered on top -- see below):
-   ```
+   ```bash
    sudo docker exec stocuro-app-1 ls -ld /var/www/html
    sudo docker exec stocuro-app-1 ls -la /var/www/html/config/
    ```
@@ -235,7 +235,7 @@ pilot with one or two colleagues on the same network).
    (snap's sandboxing can block the container from seeing your home
    directory at all, which shows up as a confusing "no such file" for
    files that are clearly there):
-   ```
+   ```bash
    sudo apt-get update
    sudo apt-get install -y ca-certificates curl
    sudo install -m 0755 -d /etc/apt/keyrings
@@ -254,7 +254,7 @@ pilot with one or two colleagues on the same network).
    every time.** Fresh after install, Docker's daemon socket is owned by
    `root:docker`, so only root (or `sudo`) can talk to it. Add your own
    account to that group instead of prefixing every command with `sudo`:
-   ```
+   ```bash
    sudo usermod -aG docker $USER
    ```
    This only takes effect in a **new** login session — either log all
@@ -269,7 +269,7 @@ pilot with one or two colleagues on the same network).
 3. **Get the Stocuro files onto the machine**, into a folder in your
    home directory — this guide uses `~/stocuro/` throughout, create it
    explicitly first:
-   ```
+   ```bash
    mkdir -p ~/stocuro
    ```
    Two ways to fill it, pick whichever applies to you:
@@ -278,14 +278,14 @@ pilot with one or two colleagues on the same network).
    customer receives Stocuro — a `stocuro-vX.Y.Z-self-hosted.zip` file).
    Unzip it straight into the folder you just created (adjust the path
    to wherever the zip actually is, e.g. `~/Downloads/`):
-   ```
+   ```bash
    unzip ~/Downloads/stocuro-v1.0.30-self-hosted.zip -d ~/stocuro
    ```
 
    **Option B — clone the public mirror with git** (faster if you don't
    want to wait for a zip; `~/stocuro` must not already exist for this
    — `git clone` creates it):
-   ```
+   ```bash
    git clone https://github.com/Stocuro/stocuro.git ~/stocuro
    ```
    A cloned copy has one extra thing a zip doesn't: a `.git/` folder
@@ -301,7 +301,7 @@ pilot with one or two colleagues on the same network).
    from a plain `git clone`, or `root` if `sudo` was used for the clone,
    or already `33` if you've been here before and are redoing this step)
    — root-owned is fine, step 4 below re-chowns the whole tree anyway:
-   ```
+   ```bash
    sudo tee ~/stocuro/.git/.htaccess > /dev/null << 'EOF'
    <IfModule mod_authz_core.c>
        Require all denied
@@ -319,7 +319,7 @@ pilot with one or two colleagues on the same network).
 
    Either way, confirm the folder actually looks right before
    continuing:
-   ```
+   ```bash
    ls -la ~/stocuro
    ```
    You should see `Dockerfile`, `docker-compose.yml`, `.env.example`,
@@ -348,7 +348,7 @@ pilot with one or two colleagues on the same network).
    uploads). Fix both ownership and permissions together (same two
    commands already used for Synology above, since it's the exact same
    underlying uid/gid):
-   ```
+   ```bash
    sudo chown -R 33:33 ~/stocuro
    sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
    ```
@@ -368,11 +368,11 @@ pilot with one or two colleagues on the same network).
    A from step 3), or `git pull` (Option B). Either way the pattern is
    the same: temporarily get your own ownership back, update, then
    re-apply both commands above:
-   ```
+   ```bash
    sudo chown -R $USER:$USER ~/stocuro
    ```
    (now unzip the new release, or run `git pull`, as yourself)
-   ```
+   ```bash
    sudo chown -R 33:33 ~/stocuro
    sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
    ```
@@ -381,14 +381,48 @@ pilot with one or two colleagues on the same network).
    .env.example .env`, then fill in `STOCURO_DB_PASSWORD` and
    `STOCURO_DB_ROOT_PASSWORD`.
 
-6. **Build and start**: `docker compose up -d --build` — no `sudo`
-   needed now that your user is in the `docker` group.
+6. **Build and start both containers.** From inside the project folder
+   (no `sudo` needed now that your user is in the `docker` group):
+   ```bash
+   cd ~/stocuro
+   docker compose up -d --build
+   ```
+   What this actually does: `--build` builds the `app` image from
+   `Dockerfile` (PHP + the one extension Stocuro needs — a one-time
+   step, only redone if `Dockerfile` itself changes later), `up` then
+   pulls the MariaDB image and starts both containers, and `-d`
+   ("detached") runs them in the background instead of tying up this
+   terminal window. First run downloads both base images and builds the
+   app image, so give it a minute or two depending on your internet
+   connection — on a reasonable connection this is typically well under
+   two minutes, slower on a weak one since the PHP/MariaDB base images
+   are each well over 100MB.
+
+   Watch it happen instead of waiting blind:
+   ```bash
+   docker compose logs -f
+   ```
+   (`Ctrl+C` to stop watching — the containers themselves keep running,
+   this only detaches your terminal from the log stream).
+
+   Confirm both containers actually started and are healthy:
+   ```bash
+   docker compose ps
+   ```
+   You're looking for two rows, `app` and `db`, both with `STATUS`
+   showing `Up` (and for `db` specifically, `(healthy)` once its own
+   startup finishes — it takes a little longer than `app` since it has
+   to initialize a fresh database the very first time). If `db` instead
+   shows `unhealthy` and `app` never starts, that's not necessarily
+   broken — see "dependency failed to start: container ... db-1 is
+   unhealthy" under Troubleshooting further down, it's almost always
+   just slow storage needing a bit more time, not a real failure.
 
 7. **Open the app.** On the same machine: `http://localhost:8080/`. For
    a colleague on the same network to reach it from their own device,
    use this machine's LAN IP instead of `localhost` (`hostname -I` shows
    it) — and if Ubuntu's firewall is active, open the port first:
-   ```
+   ```bash
    sudo ufw status
    sudo ufw allow 8080/tcp
    ```
