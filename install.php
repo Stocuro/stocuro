@@ -241,8 +241,8 @@ if ($aantalGebruikers === 0) {
         $taal = ($_POST['taal'] ?? 'nl') === 'en' ? 'en' : 'nl';
         $akkoordVoorwaarden = ($_POST['akkoord_voorwaarden'] ?? '') === '1';
 
-        if ($naam === '' || $email === '' || strlen($wachtwoord) < 8) {
-            $formFout = 'Naam, e-mail en een wachtwoord van minstens 8 tekens zijn verplicht.';
+        if ($naam === '' || $email === '' || strlen($wachtwoord) < 7) {
+            $formFout = 'Naam, e-mail en een wachtwoord van minstens 7 tekens zijn verplicht.';
         } elseif (!$akkoordVoorwaarden) {
             $formFout = 'U dient akkoord te gaan met de Algemene Voorwaarden om de installatie te voltooien.';
         } else {
@@ -299,7 +299,7 @@ if ($aantalGebruikers === 0) {
         . '<input type="text" name="naam" value="' . h((string) ($_POST['naam'] ?? '')) . '" required></div>'
         . '<div class="form-group"><label>E-mailadres</label>'
         . '<input type="email" name="email" value="' . h((string) ($_POST['email'] ?? '')) . '" required></div>'
-        . '<div class="form-group"><label>Wachtwoord (minstens 8 tekens)</label>'
+        . '<div class="form-group"><label>Wachtwoord (minstens 7 tekens)</label>'
         . '<input type="password" name="wachtwoord" required></div>'
         . '<div class="form-group"><label>Taal</label>'
         . '<select name="taal"><option value="nl" selected>Nederlands</option><option value="en">English</option></select></div>'

@@ -1188,7 +1188,7 @@ const TRANSLATIONS = {
     // Users
     guHint: 'Language is an account setting each user can change themselves (language selector next to Sign out) — it\'s only set here at account creation.',
     guNewUser: 'New user',
-    guTempPassword: 'Temporary password (min. 8 characters)',
+    guTempPassword: 'Temporary password (min. 7 characters)',
     guRoleSpecialist: 'Specialist',
     guRoleLaborant: 'Lab technician',
     guRoleBekijker: 'Viewer',
@@ -1220,7 +1220,7 @@ const TRANSLATIONS = {
     profLicentieBlokkadeHint: 'Contact your administrator if you believe this is incorrect -- only an administrator can link a new activation code to your account (Users screen).',
     profWachtwoordTitle: 'Change password',
     profHuidigWachtwoord: 'Current password',
-    profNieuwWachtwoord: 'New password (min. 8 characters)',
+    profNieuwWachtwoord: 'New password (min. 7 characters)',
     profWachtwoordOpslaan: 'Change password',
     // Zichtbare waarschuwing als er
     // meer dan 1 geldig lokaal gratis-token bestaat -- zou nooit moeten
@@ -1232,8 +1232,8 @@ const TRANSLATIONS = {
     // password" e-mail flow exists in this app, by design -- see README
     // "Licensing & self-hosted distribution").
     guWachtwoordResetten: 'Reset password',
-    guWachtwoordResetPrompt: 'New password for {naam} (min. 8 characters):',
-    guWachtwoordTeKort: 'Password must be at least 8 characters.',
+    guWachtwoordResetPrompt: 'New password for {naam} (min. 7 characters):',
+    guWachtwoordTeKort: 'Password must be at least 7 characters.',
     guWachtwoordResetGelukt: 'Password reset. Share the new password with the user yourself -- it is not e-mailed automatically.',
     guLegacyTitle: 'Not yet migrated',
     guLegacyHint: 'Names from the old Master Data specialist list that don\'t have a login account yet. "Create account" pre-fills the name below -- fill in the rest and create the account.',
@@ -2185,7 +2185,7 @@ const TRANSLATIONS = {
 
     guHint: 'Taal is een accountinstelling die elke gebruiker zelf kan wijzigen (taalkeuze naast Uitloggen) — hier wordt het alleen ingesteld bij het aanmaken van het account.',
     guNewUser: 'Nieuwe gebruiker',
-    guTempPassword: 'Tijdelijk wachtwoord (min. 8 tekens)',
+    guTempPassword: 'Tijdelijk wachtwoord (min. 7 tekens)',
     guRoleSpecialist: 'Specialist',
     guRoleLaborant: 'Laborant',
     guRoleBekijker: 'Bekijker',
@@ -2214,7 +2214,7 @@ const TRANSLATIONS = {
     profLicentieBlokkadeHint: 'Neem contact op met je beheerder als je denkt dat dit niet klopt -- alleen een beheerder kan een nieuwe activatiecode aan je account koppelen (Gebruikers-scherm).',
     profWachtwoordTitle: 'Wachtwoord wijzigen',
     profHuidigWachtwoord: 'Huidig wachtwoord',
-    profNieuwWachtwoord: 'Nieuw wachtwoord (min. 8 tekens)',
+    profNieuwWachtwoord: 'Nieuw wachtwoord (min. 7 tekens)',
     profWachtwoordOpslaan: 'Wachtwoord wijzigen',
     guLicentieAnomalie: 'Let op: er zijn {aantal} geldige gratis-tokens gevonden op deze installatie (verwacht maximaal 1). Alleen de gebruiker met het laagste account-id telt mee als de rechtmatige gratis gebruiker; controleer license_activations als dit onverwacht is.',
     // Een beheerder moet het wachtwoord van een
@@ -2222,8 +2222,8 @@ const TRANSLATIONS = {
     // mailflow in deze app, bewust, zie README "Licensing & self-hosted
     // distribution").
     guWachtwoordResetten: 'Wachtwoord resetten',
-    guWachtwoordResetPrompt: 'Nieuw wachtwoord voor {naam} (min. 8 tekens):',
-    guWachtwoordTeKort: 'Wachtwoord moet minstens 8 tekens zijn.',
+    guWachtwoordResetPrompt: 'Nieuw wachtwoord voor {naam} (min. 7 tekens):',
+    guWachtwoordTeKort: 'Wachtwoord moet minstens 7 tekens zijn.',
     guWachtwoordResetGelukt: 'Wachtwoord gereset. Geef het nieuwe wachtwoord zelf door aan de gebruiker -- dit wordt niet automatisch gemaild.',
     guLegacyTitle: 'Nog te migreren',
     guLegacyHint: 'Namen uit de oude Stamgegevens-specialistenlijst die nog geen inlogaccount hebben. "Account aanmaken" vult de naam hieronder alvast in -- vul de rest aan en maak het account aan.',
@@ -2584,6 +2584,13 @@ function setRoute(key, param) {
   // hieronder) en dus zonder deze regel de highlight nooit bijgewerkt
   // zou worden, bv. bij de allereerste paginalaad.
   updateSidebarActive(key);
+  // Zelfde reden: .app-main is sinds de onafhankelijk-scrollende
+  // app-shell (style.css) het element dat daadwerkelijk scrollt, niet
+  // de hele pagina -- zonder dit bleef een scherm na het wisselen van
+  // menu-item staan op de scrollpositie van het vorige scherm i.p.v.
+  // vanzelf weer bovenaan te beginnen.
+  const appMain = document.querySelector('.app-main');
+  if (appMain) appMain.scrollTop = 0;
   const hash = '#' + key + (param !== undefined && param !== null && param !== '' ? '/' + encodeURIComponent(String(param)) : '');
   if (window.location.hash === hash) return;
   const state = { key: key, param: param !== undefined ? param : null };
@@ -11011,7 +11018,7 @@ function renderGebruikers(data, legacy, groepen) {
       const naam = this.getAttribute('data-naam');
       const nieuw = prompt(tf('guWachtwoordResetPrompt', { naam: naam }));
       if (nieuw === null) return;
-      if (nieuw.length < 8) {
+      if (nieuw.length < 7) {
         alert(t('guWachtwoordTeKort'));
         return;
       }

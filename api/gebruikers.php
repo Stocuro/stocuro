@@ -229,8 +229,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         apiTry(function () use ($body, $beheerder) {
             $id = (int) ($body['id'] ?? 0);
             $wachtwoord = (string) ($body['wachtwoord'] ?? '');
-            if ($id <= 0 || strlen($wachtwoord) < 8) {
-                return ['success' => false, 'error' => 'Gebruiker en een wachtwoord van minstens 8 tekens zijn verplicht'];
+            if ($id <= 0 || strlen($wachtwoord) < 7) {
+                return ['success' => false, 'error' => 'Gebruiker en een wachtwoord van minstens 7 tekens zijn verplicht'];
             }
 
             $stmt = db()->prepare('UPDATE users SET wachtwoord_hash = :hash WHERE id = :id');
@@ -277,9 +277,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $isBeheerder = !empty($body['is_beheerder']);
         $taal = in_array($body['taal'] ?? '', ['en', 'nl'], true) ? $body['taal'] : 'en';
 
-        if ($naam === '' || $email === '' || strlen($wachtwoord) < 8) {
+        if ($naam === '' || $email === '' || strlen($wachtwoord) < 7) {
             http_response_code(400);
-            jsonResponse(['success' => false, 'error' => 'Naam, e-mail en een wachtwoord van minstens 8 tekens zijn verplicht']);
+            jsonResponse(['success' => false, 'error' => 'Naam, e-mail en een wachtwoord van minstens 7 tekens zijn verplicht']);
         }
 
         // Licentiemodel: registratie blokkeren zonder geldige licentie --

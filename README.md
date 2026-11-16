@@ -60,6 +60,27 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.36 — the sidebar and content pane now scroll independently,
+  and switching screens always jumps back to the top.** Reported as
+  genuinely irritating by a user about to start using the app day to
+  day: the left menu used to scroll away with the whole page, so a long
+  dashboard pushed the nav out of reach. `.app-shell` (`style.css`) now
+  fills exactly the remaining viewport height below the header, with
+  `.app-sidebar` and `.app-main` each scrolling on their own inside
+  that fixed space — the menu stays put, the content area scrolls on
+  its own. `setRoute()` (`assets/js/app.js`), the one function every
+  screen calls first, now also resets `.app-main`'s scroll position to
+  the top on every navigation, so picking a new screen (e.g. Recent
+  Transactions) never leaves you scrolled halfway down from whatever
+  you were looking at before. Verified in a real browser against a
+  throwaway install: scrolling the content pane leaves the header and
+  menu untouched, and switching screens lands at the top every time.
+- **Also in v1.0.36 — minimum password length lowered from 8 to 7
+  characters**, across every place it's enforced: account creation
+  during install, Admin → Users (both creating a new user and
+  resetting someone's password), and a user's own password change on
+  their profile page. Server-side checks, client-side validation, and
+  every visible "(min. X characters)" label updated together (EN+NL).
 - **v1.0.35 — Ubuntu Desktop guide's step 5 (`.env` setup) was still
   the one-line version while every other step had been fully spelled
   out.** Explained in full detail in chat for a user actually following

@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         apiTry(function () use ($body, $user) {
             $huidig = (string) ($body['huidig_wachtwoord'] ?? '');
             $nieuw = (string) ($body['nieuw_wachtwoord'] ?? '');
-            if (strlen($nieuw) < 8) {
-                return ['success' => false, 'error' => 'Het nieuwe wachtwoord moet minstens 8 tekens lang zijn'];
+            if (strlen($nieuw) < 7) {
+                return ['success' => false, 'error' => 'Het nieuwe wachtwoord moet minstens 7 tekens lang zijn'];
             }
 
             $stmt = db()->prepare('SELECT wachtwoord_hash FROM users WHERE id = :id');
