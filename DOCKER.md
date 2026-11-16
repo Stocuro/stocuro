@@ -146,10 +146,11 @@ Only then remove the project folder itself:
 ```bash
 sudo rm -rf ~/stocuro
 ```
-(`sudo` because step 4 of the Ubuntu Desktop walkthrough below changed
-its ownership to uid 33, not your own user — a plain `rm -rf` without
-`sudo` fails with "Permission denied" for the same reason that step
-explains.)
+(`sudo` here is the safe default across every setup in this guide. If
+you followed the Ubuntu Desktop section's current step 4 — which only
+shares `config/`, `uploads/`, and the project root with the `www-data`
+group, and leaves you as the actual owner throughout — a plain `rm -rf
+~/stocuro` without `sudo` works fine too.)
 
 From here, start again from "Get the Stocuro files onto the machine"
 (step 3 of the Ubuntu Desktop section, or step 1 of the generic setup
@@ -332,9 +333,10 @@ pilot with one or two colleagues on the same network).
    closed, with its own `.htaccess`. Using `sudo tee` here instead of a
    plain `cat >` is deliberate, not just caution: it writes the file
    regardless of exactly who owns `.git/` at this point (your own user
-   from a plain `git clone`, or `root` if `sudo` was used for the clone,
-   or already `33` if you've been here before and are redoing this step)
-   — root-owned is fine, step 4 below re-chowns the whole tree anyway:
+   from a plain `git clone`, or `root` if `sudo` was used for the
+   clone) — either way is harmless, `.git/` itself is never touched by
+   step 4 below (which only ever shares `config/`, `uploads/`, and the
+   project root, not `.git/`):
    ```bash
    sudo tee ~/stocuro/.git/.htaccess > /dev/null << 'EOF'
    <IfModule mod_authz_core.c>
@@ -363,52 +365,63 @@ pilot with one or two colleagues on the same network).
    top-level folder is the one way Option A can go wrong here; if so,
    move the real contents up one level before continuing).
 
-4. **User and group rights, part 2 — fix ownership of the project
-   folder itself, before first run.** This is the step that's easy to
-   skip and the most common cause of a blank page or permission errors
-   right after `docker compose up`. Unlike Docker Desktop on macOS/
-   Windows (which transparently remaps file ownership between the
-   container and the host), Docker Engine on native Linux runs
-   containers as **real host user IDs** against a bind-mounted folder —
-   there's no translation layer. The `php:8.2-apache` image's Apache
-   process runs as `www-data`, **uid 33, gid 33**, inside the container.
-   Against your bind-mounted `~/stocuro/`, that means literally uid 33
-   on your Ubuntu filesystem — almost certainly not a real, named
-   account on a normal Ubuntu Desktop install, but the numeric ID is
-   what Linux actually checks, not a name. It needs to read every file
-   and traverse every directory, **and** write
-   `config/database.local.php`, `config/instance.local.php`,
-   `install.lock`, and `uploads/` (the install wizard and photo
-   uploads). Fix both ownership and permissions together (same two
-   commands already used for Synology above, since it's the exact same
-   underlying uid/gid):
-   ```bash
-   sudo chown -R 33:33 ~/stocuro
-   sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
-   ```
-   (adjust the path if you unzipped somewhere other than `~/stocuro`).
-   `chmod`'s capital `X` adds execute/traverse only to things that are
-   already a directory or already executable — exactly what's needed
-   for a web root, without making every `.php` file spuriously
-   "executable" the way a blanket `chmod -R 755` would.
+4. **User and group rights, part 2 — share just the few paths the
+   container needs to write to, instead of handing it the whole
+   folder.** This is the step that's easy to skip and the most common
+   cause of a blank page or permission errors right after `docker
+   compose up`. Unlike Docker Desktop on macOS/Windows (which
+   transparently remaps file ownership between the container and the
+   host), Docker Engine on native Linux runs containers as **real host
+   user IDs** against a bind-mounted folder — there's no translation
+   layer. The `php:8.2-apache` image's Apache process runs as
+   `www-data`, **uid 33, gid 33**, inside the container, and against
+   your bind-mounted `~/stocuro/` that means literally uid 33 on your
+   Ubuntu filesystem.
 
-   **Side effect worth knowing**: after this, your own login user can no
-   longer edit files in that folder directly (in a file manager or
-   editor) without `sudo`, since they're now owned by a uid that doesn't
-   match your account. That's expected and fine here — day-to-day use of
-   the app goes through the container (which runs as uid 33), not your
-   desktop session. The only time you'll touch the folder as yourself
-   again is updating later — unzipping a **new release** on top (Option
-   A from step 3), or `git pull` (Option B). Either way the pattern is
-   the same: temporarily get your own ownership back, update, then
-   re-apply both commands above:
+   An earlier version of this guide fixed this by `chown -R`ing the
+   **entire** project folder to uid 33 — that works, but it then fights
+   `git pull` on every single update (git runs as you, not as uid 33,
+   so it can no longer write into a folder it doesn't own) and forces
+   an awkward chown-back-and-forth around every update. It's also not
+   necessary: the container only ever needs to *write* to three things
+   — `config/` (for `database.local.php`/`instance.local.php`),
+   `uploads/` (photo uploads), and the project root itself (for
+   `install.lock`). Everything else — all the actual PHP/JS/CSS — it
+   only needs to *read*, which the default permissions from a plain
+   `git clone`/unzip already provide (standard `644`/`755` already
+   grant read+traverse to "everyone", uid 33 included).
+
+   Ubuntu reserves gid 33 for a `www-data` **group** by default (same
+   number as the container's uid/gid, a long-standing Debian
+   convention), whether or not Apache is actually installed on the
+   host — confirm it's there:
+   ```bash
+   getent group www-data
+   ```
+   Should print `www-data:x:33:`. (If it genuinely doesn't exist on
+   your system, create one with the same gid instead:
+   `sudo groupadd -g 33 www-data`.) Add yourself to it, so **you** can
+   also write to those same three shared paths without `sudo`:
+   ```bash
+   sudo usermod -aG www-data $USER
+   ```
+   Takes effect in a new login session, same as the `docker` group in
+   step 2 — log out/in, or `newgrp www-data` for just this terminal.
+   Now share only those three paths with that group:
+   ```bash
+   sudo chgrp www-data ~/stocuro ~/stocuro/config ~/stocuro/uploads
+   sudo chmod g+w ~/stocuro ~/stocuro/config ~/stocuro/uploads
+   ```
+   (adjust the path if you got the files somewhere other than
+   `~/stocuro`). That's it — nothing else in the folder needs touching,
+   `git pull` keeps working normally forever after this one-time setup,
+   and so does a plain unzip of a new release on top.
+
+   **Already followed an older version of this guide** (the whole
+   folder is `chown`'d to uid 33)? Undo that once, then apply the setup
+   above:
    ```bash
    sudo chown -R $USER:$USER ~/stocuro
-   ```
-   (now unzip the new release, or run `git pull`, as yourself)
-   ```bash
-   sudo chown -R 33:33 ~/stocuro
-   sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
    ```
 
 5. **Set up `.env`.** Copy the template to a real file:
@@ -516,10 +529,11 @@ pilot with one or two colleagues on the same network).
 **Troubleshooting specific to this setup:**
 
 - **Blank page, 500 error, or `install.php` can't write its config
-  right after first `docker compose up`.** Almost always step 4
-  (ownership) was skipped, or was done *before* unzipping a newer
-  release's files on top (which resets ownership on the new files to
-  your own user again). Re-run both commands from step 4.
+  right after first `docker compose up`.** Almost always step 4 was
+  skipped, or the `www-data` group membership from it hasn't taken
+  effect yet in this terminal (log out/in, or `newgrp www-data`).
+  Double-check with `groups` that `www-data` is actually listed, and
+  re-run the `chgrp`/`chmod` pair from step 4 if needed.
 - **Installed Docker via `sudo snap install docker` instead of step 1**:
   snap's sandboxing restricts which host paths the snap can see, which
   can make the bind mount fail or come up empty even though the path is

@@ -60,6 +60,26 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.37 — Ubuntu Desktop guide's permission fix simplified: share
+  3 paths with a group instead of chowning the whole folder to uid
+  33.** Asked directly by a user mid-setup: "a lot of hassle with
+  permissions and users, is that really necessary?" It wasn't, fully —
+  the previous version's `chown -R 33:33` on the entire project folder
+  worked, but fought `git pull` on every update (git runs as the user,
+  not uid 33, so it could no longer write into a folder it no longer
+  owned), forcing a chown-back-and-forth around every single update.
+  The container only ever needs to *write* to three things — `config/`,
+  `uploads/`, and the project root itself (for `install.lock`) —
+  everything else it only needs to read, which default `git clone`/
+  unzip permissions already provide. New approach: confirm Ubuntu's
+  long-standing `www-data` group (gid 33, reserved by default whether
+  or not Apache is installed) with `getent group www-data`, add the
+  user to it, and `chgrp`/`chmod g+w` only those three paths. `git
+  pull` now works normally forever after this one-time setup — no more
+  permission dance on updates, and "starting over" no longer needs
+  `sudo` for the `rm -rf` either. Confirmed `www-data:x:33` actually
+  exists before writing this, rather than assuming it. Documentation
+  only, no app code changed.
 - **v1.0.36 — the sidebar and content pane now scroll independently,
   and switching screens always jumps back to the top.** Reported as
   genuinely irritating by a user about to start using the app day to
