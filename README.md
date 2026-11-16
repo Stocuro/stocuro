@@ -60,6 +60,27 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.35 — Ubuntu Desktop guide's step 5 (`.env` setup) was still
+  the one-line version while every other step had been fully spelled
+  out.** Explained in full detail in chat for a user actually following
+  along, then noticed the file itself hadn't been updated to match —
+  this fixes that gap. Now shows the actual contents of `.env.example`,
+  opening it in `nano` with the exact save/exit keys, generating a
+  strong password with `openssl rand -base64 24`, and confirming the
+  result with `cat`. Documentation only, no app code changed.
+- **Also in v1.0.35 — new "Starting over with a completely clean
+  install" section.** Asked directly by a user testing the Ubuntu
+  Desktop setup: "can I just delete the stocuro folder to start fresh?"
+  Answer is no, not on its own, and this was nowhere in `DOCKER.md`
+  before — the database lives in its own named Docker volume
+  (`stocuro_db_data`), separate from the bind-mounted project folder,
+  so deleting the folder alone leaves the old database fully intact and
+  silently reused by the next install. New section spells out the
+  actual two-step procedure: `docker compose down -v` (the `-v` is what
+  actually removes the volume — plain `down`, as already documented for
+  a normal stop, deliberately leaves it alone) before removing the
+  project folder itself (`sudo rm -rf`, since its ownership was changed
+  to uid 33 in step 4). Documentation only, no app code changed.
 - **v1.0.34 — Ubuntu Desktop guide's step 6 fully spelled out, and
   every code block in `DOCKER.md` now has proper syntax highlighting
   on GitHub.** Step 6 ("build and start") previously said almost

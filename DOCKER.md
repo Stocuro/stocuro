@@ -121,6 +121,40 @@ docker compose down        # stop and remove the containers (data in the
                             # directory are both untouched)
 ```
 
+## Starting over with a completely clean install
+
+Deleting the project folder alone is **not** enough for a genuinely
+fresh install, and gets this wrong in a way that's easy to miss: the
+database lives in its own named Docker volume (`stocuro_db_data`), not
+inside the bind-mounted project folder, so it survives even after that
+folder is gone. Skip the step below and the next install will quietly
+inherit the old database — same accounts, same data, `install.php`
+behaving as if it's already installed even though the files are brand
+new.
+
+From inside the project folder, **before** deleting anything:
+```bash
+cd ~/stocuro
+docker compose down -v
+```
+The `-v` is the part that actually matters here — it removes the named
+volume along with the containers. Plain `docker compose down` (as used
+above for a normal stop) deliberately leaves the volume alone, since
+that's what you want for an ordinary restart.
+
+Only then remove the project folder itself:
+```bash
+sudo rm -rf ~/stocuro
+```
+(`sudo` because step 4 of the Ubuntu Desktop walkthrough below changed
+its ownership to uid 33, not your own user — a plain `rm -rf` without
+`sudo` fails with "Permission denied" for the same reason that step
+explains.)
+
+From here, start again from "Get the Stocuro files onto the machine"
+(step 3 of the Ubuntu Desktop section, or step 1 of the generic setup
+above).
+
 ## Running on a Synology NAS
 
 Synology's **Container Manager** (the successor to the old Docker
@@ -377,9 +411,49 @@ pilot with one or two colleagues on the same network).
    sudo chmod -R u+rwX,g+rX,o+rX ~/stocuro
    ```
 
-5. **Set up `.env`** — identical to the generic instructions: `cp
-   .env.example .env`, then fill in `STOCURO_DB_PASSWORD` and
-   `STOCURO_DB_ROOT_PASSWORD`.
+5. **Set up `.env`.** Copy the template to a real file:
+   ```bash
+   cp ~/stocuro/.env.example ~/stocuro/.env
+   ```
+   Open it in an editor — `nano` is the simplest option in a terminal
+   and comes preinstalled on Ubuntu:
+   ```bash
+   nano ~/stocuro/.env
+   ```
+   You'll see this (the real contents of `.env.example`):
+   ```ini
+   STOCURO_PORT=8080
+
+   STOCURO_DB_NAME=stocuro
+   STOCURO_DB_USER=stocuro
+
+   STOCURO_DB_PASSWORD=change-me-db-password
+   STOCURO_DB_ROOT_PASSWORD=change-me-root-password
+   ```
+   What to actually change:
+   - `STOCURO_PORT` — leave at `8080` unless that port is already used
+     by something else on this machine.
+   - `STOCURO_DB_NAME` / `STOCURO_DB_USER` — leave as-is, no reason to
+     change these.
+   - `STOCURO_DB_PASSWORD` and `STOCURO_DB_ROOT_PASSWORD` — replace both
+     placeholder values with your own strong, **different** passwords.
+     Generate one at a time with:
+     ```bash
+     openssl rand -base64 24
+     ```
+     and paste each result in after its `=` sign, e.g.
+     `STOCURO_DB_PASSWORD=K8x2mQp9vL3nR7wZ1tY4`.
+
+   Save and exit in `nano`: `Ctrl+O` then **Enter** to confirm the
+   filename, then `Ctrl+X` to close it. Confirm the result:
+   ```bash
+   cat ~/stocuro/.env
+   ```
+   You should see your own real passwords in place of the two
+   `change-me-...` placeholders. `docker compose` refuses to start
+   until both password fields are actually filled in — that's
+   intentional, so this can never accidentally run with an empty
+   database password.
 
 6. **Build and start both containers.** From inside the project folder
    (no `sudo` needed now that your user is in the `docker` group):
