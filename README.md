@@ -60,6 +60,14 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.38 — Ubuntu Desktop guide rewritten as a clean, fresh-install
+  flow.** All instructions for migrating from the old `chown -R 33:33`
+  setup are gone (that version was never in real use). Step 4 now says
+  explicitly that it has to run before `install.php`, and that the two
+  generated `config/*.local.php` files (mode `640`, uid/gid 33) must keep
+  the `www-data` group. With your own group on them the container can't
+  read its database settings, and logging in fails with every password.
+  A matching troubleshooting entry explains how to spot and fix this.
 - **v1.0.37 — Ubuntu Desktop guide's permission fix simplified: share
   3 paths with a group instead of chowning the whole folder to uid
   33.** Asked directly by a user mid-setup: "a lot of hassle with

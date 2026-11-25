@@ -349,9 +349,8 @@ pilot with one or two colleagues on the same network).
    EOF
    ```
    This also means later updates can be `cd ~/stocuro && git pull`
-   instead of re-unzipping a new release — but only before step 4 below
-   flips ownership away from your own user; see the note at the end of
-   that step for how to do both together.
+   instead of re-unzipping a new release. That keeps working after
+   step 4 below, because the folder stays owned by your own user.
 
    Either way, confirm the folder actually looks right before
    continuing:
@@ -378,12 +377,9 @@ pilot with one or two colleagues on the same network).
    your bind-mounted `~/stocuro/` that means literally uid 33 on your
    Ubuntu filesystem.
 
-   An earlier version of this guide fixed this by `chown -R`ing the
-   **entire** project folder to uid 33 — that works, but it then fights
-   `git pull` on every single update (git runs as you, not as uid 33,
-   so it can no longer write into a folder it doesn't own) and forces
-   an awkward chown-back-and-forth around every update. It's also not
-   necessary: the container only ever needs to *write* to three things
+   The whole folder does **not** need to be handed to uid 33 (that
+   would break `git pull`, which runs as you). The container only ever
+   needs to *write* to three things
    — `config/` (for `database.local.php`/`instance.local.php`),
    `uploads/` (photo uploads), and the project root itself (for
    `install.lock`). Everything else — all the actual PHP/JS/CSS — it
@@ -417,12 +413,13 @@ pilot with one or two colleagues on the same network).
    `git pull` keeps working normally forever after this one-time setup,
    and so does a plain unzip of a new release on top.
 
-   **Already followed an older version of this guide** (the whole
-   folder is `chown`'d to uid 33)? Undo that once, then apply the setup
-   above:
-   ```bash
-   sudo chown -R $USER:$USER ~/stocuro
-   ```
+   Do this step **before** running `install.php` (step 7). The installer
+   writes `config/database.local.php` and `config/instance.local.php` as
+   uid/gid 33 with mode `640` (owner + group only). That way they are
+   readable by the container and, through the `www-data` group, by you,
+   and by nobody else. Don't `chown`/`chgrp` those two files back to
+   your own user afterwards. If you do, the container can no longer read
+   its database settings and logging in fails with every password.
 
 5. **Set up `.env`.** Copy the template to a real file:
    ```bash
@@ -534,6 +531,16 @@ pilot with one or two colleagues on the same network).
   effect yet in this terminal (log out/in, or `newgrp www-data`).
   Double-check with `groups` that `www-data` is actually listed, and
   re-run the `chgrp`/`chmod` pair from step 4 if needed.
+- **Can't log in at all, even with the right password.** Check with
+  `ls -l ~/stocuro/config/*.local.php`. Both files must have group
+  `www-data` (or owner `33`). If they show your own user as group, the
+  container can't read them. Fix with
+  `sudo chgrp www-data ~/stocuro/config/*.local.php` and log in again;
+  no restart needed. `docker compose logs app` won't show the
+  error (Apache only logs a `200` for `POST /api/login.php`), but
+  `curl -s -X POST localhost:8080/api/login.php -H 'Content-Type: application/json' -d '{"email":"x@y.z","wachtwoord":"x"}'`
+  does. You get a `Permission denied` warning instead of
+  `Onjuiste inloggegevens`.
 - **Installed Docker via `sudo snap install docker` instead of step 1**:
   snap's sandboxing restricts which host paths the snap can see, which
   can make the bind mount fail or come up empty even though the path is
@@ -548,10 +555,9 @@ pilot with one or two colleagues on the same network).
   by a real user following this guide): `.git/` isn't owned by your own
   user — check with `ls -ld ~/stocuro/.git`. Usual cause is `sudo` having
   been used for the `git clone` itself (so `.git/` ended up owned by
-  `root`), or this step being redone after step 4 already ran (so it's
-  owned by `33`). The step above already uses `sudo tee` instead of
-  `cat >` for exactly this reason, so just re-running that exact command
-  fixes it regardless of which of the two it was.
+  `root`). The step above already uses `sudo tee` instead of `cat >`
+  for exactly this reason, so just re-running that exact command fixes
+  it.
 
 ## Why bind-mount instead of baking the code into the image
 
