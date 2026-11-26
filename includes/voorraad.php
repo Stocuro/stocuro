@@ -46,14 +46,14 @@ function artikelenMap(): array {
 
 /**
  * Vaste productvolgorde voor alle productlijsten: Fabrikant, dan
- * Categorie, dan Diameter, en pas daarna de productnaam. Op naam alleen
+ * Categorie, dan Diameter, dan Lengte, en pas daarna de productnaam. Op naam alleen
  * sorteren werkte niet: de diameter staat in de naam soms vóór en soms
  * na de stentnaam, waardoor gelijke maten ver uit elkaar kwamen te staan.
  *
- * Diameter komt uit de categorie-eigenschappen (specs: diameter_mm, of
- * diameter_inch bij voerdraden). Het eerste getal telt, zodat ook
+ * Diameter en lengte komen uit de categorie-eigenschappen (specs:
+ * diameter_mm/diameter_inch, lengte_mm/lengte_cm). Het eerste getal telt, zodat ook
  * "2.5 - 3.0" en ".035" gewoon numeriek sorteren. Lege fabrikant/
- * categorie en artikelen zonder diameter komen achteraan in hun groep.
+ * categorie en artikelen zonder diameter/lengte komen achteraan in hun groep.
  * De naam als laatste stap sorteert "natuurlijk" (2 vóór 10).
  *
  * $rijen zijn arrays met minimaal 'ean' (en liefst 'naam'); $artikelen is
@@ -68,17 +68,22 @@ function sorteerArtikelRijen(array $rijen, ?array $artikelen = null, ?callable $
         if (isset($sleutels[$ean])) continue;
         $artikel = $artikelen[$ean] ?? [];
         $specs = !empty($artikel['specs']) ? (json_decode((string) $artikel['specs'], true) ?: []) : [];
-        $diameter = INF;
-        foreach (['diameter_mm', 'diameter_inch'] as $key) {
-            if (isset($specs[$key]) && preg_match('/\d*[.,]?\d+/', (string) $specs[$key], $m)) {
-                $diameter = (float) str_replace(',', '.', $m[0]);
-                break;
+        $eersteGetal = function (array $keys) use ($specs): float {
+            foreach ($keys as $key) {
+                if (isset($specs[$key]) && preg_match('/\d*[.,]?\d+/', (string) $specs[$key], $m)) {
+                    return (float) str_replace(',', '.', $m[0]);
+                }
             }
-        }
+            return INF;
+        };
         $sleutels[$ean] = [
             'producent' => mb_strtolower(trim((string) ($artikel['producent'] ?? ''))),
             'categorie' => mb_strtolower(trim((string) ($artikel['categorie'] ?? ''))),
-            'diameter' => $diameter,
+            'diameter' => $eersteGetal(['diameter_mm', 'diameter_inch']),
+            // lengte_mm (stent/ballon) of lengte_cm (voerdraad/sheath/
+            // catheter/embolisatie) -- binnen één categorie is dat altijd
+            // dezelfde eenheid, en categorie gaat hier al aan vooraf.
+            'lengte' => $eersteGetal(['lengte_mm', 'lengte_cm']),
             'naam' => (string) ($rij['naam'] ?? $artikel['productnaam'] ?? ''),
         ];
     }
@@ -90,6 +95,7 @@ function sorteerArtikelRijen(array $rijen, ?array $artikelen = null, ?callable $
         return $tekst($ka['producent'], $kb['producent'])
             ?: $tekst($ka['categorie'], $kb['categorie'])
             ?: $ka['diameter'] <=> $kb['diameter']
+            ?: $ka['lengte'] <=> $kb['lengte']
             ?: strnatcasecmp($ka['naam'], $kb['naam'])
             ?: ($daarna ? $daarna($a, $b) : 0);
     });

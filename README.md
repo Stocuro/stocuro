@@ -60,6 +60,10 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.41 — Length added to the product sort order.** Products with the
+  same manufacturer, category and diameter are now sorted by length (the
+  `lengte_mm`/`lengte_cm` specification, numerically) before the name.
+  The full order is manufacturer, category, diameter, length, name.
 - **v1.0.40 — Product lists sorted by manufacturer, category and
   diameter.** Sorting by name alone didn't work: the diameter sometimes
   comes before and sometimes after the stent name, so matching sizes
