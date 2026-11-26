@@ -258,8 +258,7 @@ function getProductList(): array {
         ];
     }
 
-    usort($result, fn($a, $b) => strcmp($a['naam'], $b['naam']));
-    return $result;
+    return sorteerArtikelRijen($result, $artikelen);
 }
 
 function getArtikelEditData(string $ean): array {

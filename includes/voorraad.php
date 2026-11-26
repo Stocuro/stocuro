@@ -45,6 +45,58 @@ function artikelenMap(): array {
 }
 
 /**
+ * Vaste productvolgorde voor alle productlijsten: Fabrikant, dan
+ * Categorie, dan Diameter, en pas daarna de productnaam. Op naam alleen
+ * sorteren werkte niet: de diameter staat in de naam soms vóór en soms
+ * na de stentnaam, waardoor gelijke maten ver uit elkaar kwamen te staan.
+ *
+ * Diameter komt uit de categorie-eigenschappen (specs: diameter_mm, of
+ * diameter_inch bij voerdraden). Het eerste getal telt, zodat ook
+ * "2.5 - 3.0" en ".035" gewoon numeriek sorteren. Lege fabrikant/
+ * categorie en artikelen zonder diameter komen achteraan in hun groep.
+ * De naam als laatste stap sorteert "natuurlijk" (2 vóór 10).
+ *
+ * $rijen zijn arrays met minimaal 'ean' (en liefst 'naam'); $artikelen is
+ * de artikelenMap() die de aanroeper meestal al heeft. $daarna is een
+ * optionele extra vergelijking na de naam (bijv. op locatie).
+ */
+function sorteerArtikelRijen(array $rijen, ?array $artikelen = null, ?callable $daarna = null): array {
+    $artikelen ??= artikelenMap();
+    $sleutels = [];
+    foreach ($rijen as $rij) {
+        $ean = (string) ($rij['ean'] ?? '');
+        if (isset($sleutels[$ean])) continue;
+        $artikel = $artikelen[$ean] ?? [];
+        $specs = !empty($artikel['specs']) ? (json_decode((string) $artikel['specs'], true) ?: []) : [];
+        $diameter = INF;
+        foreach (['diameter_mm', 'diameter_inch'] as $key) {
+            if (isset($specs[$key]) && preg_match('/\d*[.,]?\d+/', (string) $specs[$key], $m)) {
+                $diameter = (float) str_replace(',', '.', $m[0]);
+                break;
+            }
+        }
+        $sleutels[$ean] = [
+            'producent' => mb_strtolower(trim((string) ($artikel['producent'] ?? ''))),
+            'categorie' => mb_strtolower(trim((string) ($artikel['categorie'] ?? ''))),
+            'diameter' => $diameter,
+            'naam' => (string) ($rij['naam'] ?? $artikel['productnaam'] ?? ''),
+        ];
+    }
+    // Lege tekst achteraan i.p.v. vooraan.
+    $tekst = fn(string $a, string $b): int => ($a === '') <=> ($b === '') ?: strcmp($a, $b);
+    usort($rijen, function ($a, $b) use ($sleutels, $tekst, $daarna) {
+        $ka = $sleutels[(string) ($a['ean'] ?? '')];
+        $kb = $sleutels[(string) ($b['ean'] ?? '')];
+        return $tekst($ka['producent'], $kb['producent'])
+            ?: $tekst($ka['categorie'], $kb['categorie'])
+            ?: $ka['diameter'] <=> $kb['diameter']
+            ?: strnatcasecmp($ka['naam'], $kb['naam'])
+            ?: ($daarna ? $daarna($a, $b) : 0);
+    });
+    return $rijen;
+}
+
+/**
  * Min/max voor een artikel op een specifieke locatie. Poort van de
  * IF(locatie=...)-ketens in de oude Voorraad-Status-formules (kolom F/G).
  *

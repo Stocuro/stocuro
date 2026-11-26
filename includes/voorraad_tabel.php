@@ -306,6 +306,5 @@ function getVoorraadTabel(): array {
         ];
     }
 
-    usort($result, fn($a, $b) => strcmp($a['naam'], $b['naam']) ?: strcmp($a['locatie'], $b['locatie']));
-    return $result;
+    return sorteerArtikelRijen($result, $artikelen, fn($a, $b) => strcmp($a['locatie'], $b['locatie']));
 }

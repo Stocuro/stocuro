@@ -60,6 +60,15 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.40 — Product lists sorted by manufacturer, category and
+  diameter.** Sorting by name alone didn't work: the diameter sometimes
+  comes before and sometimes after the stent name, so matching sizes
+  ended up far apart. Product search, the stock table, availability,
+  min/max advice and cabinet counts now all sort by manufacturer, then
+  category, then diameter (the `diameter_mm`/`diameter_inch`
+  specification, compared numerically on its first number), and only then
+  by name. Products without a manufacturer, category or diameter go to the
+  end of their group.
 - **v1.0.39 — "Duplicate" button on the product page.** Next to Edit, a
   new button opens Add product with every property of the current product
   already filled in: name, category and specifications, order type,

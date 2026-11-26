@@ -70,8 +70,7 @@ function getTellingArtikelen(string $locatie, ?string $kastlocatie = null): arra
         }
         $result[] = ['ean' => $row['ean'], 'naam' => $row['naam'], 'systeemAantal' => $row['huidig']];
     }
-    usort($result, fn($a, $b) => strcmp((string) $a['naam'], (string) $b['naam']));
-    return $result;
+    return sorteerArtikelRijen($result, $artikelen);
 }
 
 /**

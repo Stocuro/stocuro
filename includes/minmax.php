@@ -436,8 +436,7 @@ function getMinMaxAdviesOverzicht(?string $alleenEan = null, bool $inclusiefAlle
         }
     }
 
-    usort($result, fn($a, $b) => strcmp((string) $a['naam'], (string) $b['naam']) ?: strcmp((string) $a['locatie'], (string) $b['locatie']));
-    return $result;
+    return sorteerArtikelRijen($result, $artikelen, fn($a, $b) => strcmp((string) $a['locatie'], (string) $b['locatie']));
 }
 
 /**
