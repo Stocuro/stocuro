@@ -36,6 +36,12 @@ apiTry(function () use ($body, $user) {
     if ($result['success'] && !empty($body['vervangtVoorEan'])) {
         koppelAlsVervanger((string) $body['vervangtVoorEan'], $result['ean'], $user['naam']);
     }
+    // "Dupliceer product": foto en extra-locatie-instellingen van het
+    // bronartikel meenemen -- zie kopieerArtikelExtras() in
+    // includes/artikelen.php.
+    if ($result['success'] && !empty($body['dupliceerVanEan'])) {
+        kopieerArtikelExtras((string) $body['dupliceerVanEan'], $result['ean']);
+    }
     // Los van waar dit artikel vandaan
     // komt, altijd checken of er eenmalige-bestelling-items op deze EAN
     // liggen te wachten op een artikel dat er nu is -- no-op als dat niet

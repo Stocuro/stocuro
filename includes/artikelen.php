@@ -1173,3 +1173,38 @@ function addArtikel(array $data, ?string $gebruikerNaam = null): array {
         return ['success' => false, 'error' => $e->getMessage()];
     }
 }
+
+/**
+ * "Dupliceer product" op de productpagina: het Artikel Toevoegen-
+ * formulier wordt vooraf ingevuld met alle velden van het bronartikel
+ * (zie dupliceerProduct() in assets/js/app.js), behalve de identificerende
+ * codes (EAN/GS1, doos-EAN en logistiekcode -- die laatste twee zijn
+ * UNIQUE, en het is per definitie een ander fysiek product). Wat dat
+ * formulier zelf NIET kan meesturen, kopieert deze functie direct na het
+ * aanmaken alsnog server-side: de productfoto (foto_data/foto_mime/
+ * foto_link) en de max/kastlocatie per extra locatie
+ * (artikel_locatie_extra). Fouten hier laten het nieuwe artikel gewoon
+ * staan -- het is dan alleen zonder foto/extra-locatie-instellingen.
+ */
+function kopieerArtikelExtras(string $bronEan, string $nieuwEan): void {
+    $bronEan = normalizeEAN($bronEan);
+    $nieuwEan = normalizeEAN($nieuwEan);
+    if ($bronEan === '' || $bronEan === $nieuwEan) return;
+    try {
+        db()->prepare(
+            'UPDATE artikelen nieuw
+               JOIN artikelen bron ON bron.ean = :bron
+                SET nieuw.foto_data = bron.foto_data, nieuw.foto_mime = bron.foto_mime,
+                    nieuw.foto_link = COALESCE(nieuw.foto_link, bron.foto_link)
+              WHERE nieuw.ean = :nieuw'
+        )->execute([':bron' => $bronEan, ':nieuw' => $nieuwEan]);
+
+        $stmt = db()->prepare('SELECT locatie_extra_id, max_aantal, kastlocatie FROM artikel_locatie_extra WHERE ean = :ean');
+        $stmt->execute([':ean' => $bronEan]);
+        foreach ($stmt->fetchAll() as $r) {
+            setArtikelLocatieExtra($nieuwEan, (int) $r['locatie_extra_id'], (int) $r['max_aantal'], $r['kastlocatie']);
+        }
+    } catch (Throwable $e) {
+        logError('ARTIKEL_DUPLICEREN_ERROR', $nieuwEan, $e->getMessage());
+    }
+}

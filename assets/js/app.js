@@ -1100,6 +1100,8 @@ const TRANSLATIONS = {
 
     // Add product
     apHint: 'GS1 is parsed on save for the EAN -- no separate edit step needed like in the old sheet version. The article number is never derived from the scan; fill that in yourself below if you track one.',
+    pdDuplicate: '⧉ Duplicate',
+    apDupliceerHint: 'Duplicate of "{naam}": all properties have been copied (the photo too, after saving). Enter the EAN/barcode of the new product below -- box EAN and logistics code are not copied, as they belong to one specific product.',
     // Getoond als dit formulier geopend is via "Create a new
     // product as replacement..." op het bewerkscherm van een ander product.
     apVervangerHint: 'This product is being created as a replacement for another (currently not deliverable) product -- its own EAN/barcode is required below, since this is a different physical product.',
@@ -2109,6 +2111,8 @@ const TRANSLATIONS = {
     colDescription: 'Omschrijving',
 
     apHint: 'GS1 wordt bij opslaan geparsed voor de EAN -- geen los bewerkingsmoment meer nodig zoals in de oude sheet-versie. Het artikelnummer wordt nooit uit de scan afgeleid; vul dat hieronder zelf in als je dat bijhoudt.',
+    pdDuplicate: '⧉ Dupliceer',
+    apDupliceerHint: 'Kopie van "{naam}": alle eigenschappen zijn overgenomen (de foto ook, na het opslaan). Vul hieronder de EAN/barcode van het nieuwe product in -- doos-EAN en logistiekcode worden niet overgenomen, want die horen bij één specifiek product.',
     apVervangerHint: 'Dit artikel wordt aangemaakt als vervanger voor een ander (nu niet leverbaar) artikel -- een eigen EAN/barcode hieronder is verplicht, want dit is een ander fysiek product.',
     apGs1Scan: 'GS1-scan (de EAN hieronder wordt automatisch ingevuld)',
     apEanManual: 'EAN (terugval, alleen als er geen GS1 beschikbaar is)',
@@ -4364,7 +4368,9 @@ function renderProductDetail(data) {
   html += '<div class="product-header">';
   html += photoHtml;
   html += '<div class="product-header-text">';
-  html += '<h1>' + escapeHtml(data.naam) + '<button class="edit-btn" id="editProductBtn">' + t('pdEdit') + '</button></h1>';
+  html += '<h1>' + escapeHtml(data.naam) + '<button class="edit-btn" id="editProductBtn">' + t('pdEdit') + '</button>'
+    + (heeftScherm('artikel-toevoegen') ? '<button class="edit-btn" id="duplicateProductBtn">' + t('pdDuplicate') + '</button>' : '')
+    + '</h1>';
   html += '<div class="product-info">';
   html += '<div class="info-box"><div class="info-label">' + t('colEan') + '</div><div class="info-value">' + data.ean + '</div></div>';
   html += '<div class="info-box"><div class="info-label">' + t('colCategoryLabel') + '</div><div class="info-value">' + escapeHtml(data.categorie || '-') + '</div></div>';
@@ -4626,6 +4632,7 @@ function renderProductDetail(data) {
       showProductEdit(data.ean);
     });
   }
+  wire('duplicateProductBtn', function () { dupliceerProduct(data.ean); });
   document.querySelectorAll('.producent-link').forEach(function (el) {
     el.addEventListener('click', function () { showProducentDetail(this.getAttribute('data-producent-id')); });
   });
@@ -9789,12 +9796,35 @@ function extractEanFromGs1(raw) {
   return ean;
 }
 
+// "Dupliceer product" (productpagina): haalt de volledige bewerkgegevens
+// van het bronartikel op en opent Artikel Toevoegen met alles vooraf
+// ingevuld, BEHALVE de identificerende codes -- EAN/GS1 (de kopie is een
+// ander fysiek product), doos-EAN en logistiekcode (allebei UNIQUE in de
+// database, zie migraties 020/021). Foto en extra-locatie-instellingen
+// kan dit formulier niet meesturen; die kopieert api/artikel_toevoegen.php
+// na het aanmaken zelf (dupliceerVanEan, zie includes/artikelen.php::
+// kopieerArtikelExtras()).
+function dupliceerProduct(ean) {
+  StocuroRun.withSuccessHandler(function (data) {
+    if (data.error) { alert(data.error); return; }
+    const pre = { productnaam: data.naam, specs: {}, lot_tracking: data.lotTracking };
+    (data.commonFields || []).forEach(function (f) {
+      if (f.key === 'gs1_raw' || f.key === 'doos_ean' || f.key === 'logistiek_code' || f.key.indexOf('extra_') === 0) return;
+      pre[f.key] = f.value === null ? '' : f.value;
+    });
+    (data.specFields || []).forEach(function (f) { pre.specs[f.key] = f.value === null ? '' : String(f.value); });
+    showArtikelToevoegen(null, pre, null, false, data.ean);
+  }).withFailureHandler(function (err) {
+    alert((err && (err.error || err.message)) || t('somethingWrong'));
+  }).getArtikelEditData(ean);
+}
+
 // PrefillData/vervangtVoorEan zijn optioneel, alleen gezet
 // als je hier komt via "Nieuw artikel aanmaken als vervanger" op het
 // bewerkscherm (renderProductEdit()) -- de bestaande aanroepen (Forms-
 // menu, Onbekende Producten) blijven vanzelf werken met alleen prefillEan
 // of helemaal geen argumenten.
-function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOnbekendeProducten) {
+function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOnbekendeProducten, dupliceerVanEan) {
   setRoute('artikel-toevoegen');
   document.getElementById('content').innerHTML = '<p>' + t('loading') + '</p>';
   fetchLocaties(function (locRows) {
@@ -9817,15 +9847,15 @@ function showArtikelToevoegen(prefillEan, prefillData, vervangtVoorEan, vanuitOn
         // fallback-aanpak (mislukt de suggestielijst, dan gewoon met een
         // lege lijst verder -- de dropdown valt terug op alleen "nieuw").
         StocuroRun.withSuccessHandler(function (kastlocatieSuggesties) {
-          renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, kastlocatieSuggesties, vanuitOnbekendeProducten);
+          renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, kastlocatieSuggesties, vanuitOnbekendeProducten, dupliceerVanEan);
         }).withFailureHandler(function () {
-          renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, [], vanuitOnbekendeProducten);
+          renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, [], vanuitOnbekendeProducten, dupliceerVanEan);
         }).getKastlocatieSuggesties();
       }).withFailureHandler(function () {
-        renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, [], [], vanuitOnbekendeProducten);
+        renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, [], [], vanuitOnbekendeProducten, dupliceerVanEan);
       }).getCategorieenMetSpecs();
     }).withFailureHandler(function () {
-      renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, [], [], [], vanuitOnbekendeProducten);
+      renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, [], [], [], vanuitOnbekendeProducten, dupliceerVanEan);
     }).getProducenten();
   });
 }
@@ -9924,7 +9954,7 @@ function renderNaSpecsVelden(categorieNaam, categorieen, prefillSpecs) {
   return html;
 }
 
-function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, kastlocatieSuggesties, vanuitOnbekendeProducten) {
+function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVoorEan, producenten, categorieen, kastlocatieSuggesties, vanuitOnbekendeProducten, dupliceerVanEan) {
   kastlocatieSuggesties = kastlocatieSuggesties || [];
   const naamVoorSlot = {};
   locRows.forEach(function (r) { naamVoorSlot[r.slot] = r.naam; });
@@ -9935,6 +9965,9 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '<p class="form-hint">' + t('apHint') + '</p>';
   if (vervangtVoorEan) {
     html += '<p class="form-hint" style="color:#a15c00;">' + t('apVervangerHint') + '</p>';
+  }
+  if (dupliceerVanEan) {
+    html += '<p class="form-hint" style="color:#a15c00;">' + tf('apDupliceerHint', { naam: escapeHtml(pre.productnaam || dupliceerVanEan) }) + '</p>';
   }
   html += '<div id="formError" class="login-error" style="display:none;"></div>';
 
@@ -9977,10 +10010,10 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   // nu een gewoon handmatig invoerveld, net als op het bewerkscherm.
   html += '<div class="form-group"><label>' + t('colArticleNumber') + '</label><input type="text" id="naArtikelref" value="' + escapeAttr(pre.artikelref || '') + '"></div>';
   html += '<div class="edit-grid">';
-  html += '<div class="form-group"><label>' + t('apProductName') + '</label><input type="text" id="naNaam" required></div>';
+  html += '<div class="form-group"><label>' + t('apProductName') + '</label><input type="text" id="naNaam" required value="' + escapeAttr(pre.productnaam || '') + '"></div>';
   html += '<div class="form-group"><label>' + t('apCategory') + '</label><select id="naCategorie">' + catOptionsHtml + '</select></div>';
   html += '</div>';
-  html += '<div id="naSpecsContainer">' + renderNaSpecsVelden(pre.categorie || catNamen[0], categorieen, null) + '</div>';
+  html += '<div id="naSpecsContainer">' + renderNaSpecsVelden(pre.categorie || catNamen[0], categorieen, pre.specs) + '</div>';
   // Lot-tracking-override, direct bij het aanmaken instelbaar (i.p.v.
   // pas achteraf op het bewerkscherm) -- zie includes/voorraad.php::
   // isLotVerwacht() voor waarom dit bij Ontvangst/Verbruik verschil
@@ -9989,7 +10022,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   // enige zinvolle keuze op dit moment "dit is de correcte barcode, dit
   // product heeft geen lot/vervaldatum" -- 'met_lot' instellen vóór er
   // ooit een scan is geweest heeft weinig zin, dat kan altijd nog later.
-  html += '<label class="inline-check"><input type="checkbox" id="naLotloos"> ' + t('onbLotloos') + '</label>';
+  html += '<label class="inline-check"><input type="checkbox" id="naLotloos"' + (pre.lot_tracking === 'zonder_lot' ? ' checked' : '') + '> ' + t('onbLotloos') + '</label>';
   html += '</div>';
 
   // Dropdown van bestaande producenten + optie om een nieuwe naam in te
@@ -10047,7 +10080,7 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
   html += '<div class="edit-grid">';
   html += '<div class="form-group"><label>' + t('apDoosGs1Scan') + '</label><input type="text" id="naDoosGs1"></div>';
   html += '<div class="form-group"><label>' + t('apDoosEan') + '</label><input type="text" id="naDoosEan"><p class="form-hint">' + t('apEanAutoHint') + '</p></div>';
-  html += '<div class="form-group"><label>' + t('apEenhedenPerDoos') + '</label><input type="number" id="naEenhedenPerDoos" min="2"></div>';
+  html += '<div class="form-group"><label>' + t('apEenhedenPerDoos') + '</label><input type="number" id="naEenhedenPerDoos" min="2" value="' + escapeAttr(pre.eenheden_per_doos ? String(pre.eenheden_per_doos) : '') + '"></div>';
   html += '</div></div>';
 
   // Interne logistiekcode : volledig
@@ -10179,11 +10212,16 @@ function renderArtikelToevoegenForm(locRows, prefillEan, prefillData, vervangtVo
       doos_ean: document.getElementById('naDoosEan').value,
       eenheden_per_doos: document.getElementById('naEenhedenPerDoos').value,
       logistiek_code: document.getElementById('naLogistiekCode').value,
-      lot_tracking: document.getElementById('naLotloos').checked ? 'zonder_lot' : 'automatisch',
+      // 'met_lot' heeft geen eigen vinkje op dit formulier -- bij een
+      // duplicaat (of vervanger) blijft die instelling van het origineel
+      // behouden zolang het "geen lot"-vinkje uit staat.
+      lot_tracking: document.getElementById('naLotloos').checked ? 'zonder_lot' : (pre.lot_tracking === 'met_lot' ? 'met_lot' : 'automatisch'),
       // Als dit artikel wordt aangemaakt als vervanger voor
       // een ander (zie renderProductEdit()), koppelt api/artikel_toevoegen.php
       // dat na het aanmaken meteen (includes/artikelen.php::koppelAlsVervanger()).
       vervangtVoorEan: vervangtVoorEan || undefined,
+      // Zie dupliceerProduct(): foto + extra-locatie-instellingen kopieert de server.
+      dupliceerVanEan: dupliceerVanEan || undefined,
     }, specBody), function (result) {
       alert(tf('apAdded', { ean: result.ean }));
       // Als dit EAN nog open meldingen had op "Onbekende

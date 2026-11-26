@@ -60,6 +60,16 @@ file that blocks all direct web access (`Require all denied`).
 
 ## Features
 
+- **v1.0.39 — "Duplicate" button on the product page.** Next to Edit, a
+  new button opens Add product with every property of the current product
+  already filled in: name, category and specifications, order type,
+  price, manufacturer, article number, min/max and cabinet locations,
+  units per box and lot-tracking setting. After saving, the photo and the
+  per-location settings for extra locations are copied too. Only the
+  identifying codes are left empty (EAN/GS1, box EAN and logistics code),
+  since the copy is a different physical product and those codes must be
+  unique. The button only shows for users who are allowed to add
+  products.
 - **v1.0.38 — Ubuntu Desktop guide rewritten as a clean, fresh-install
   flow.** All instructions for migrating from the old `chown -R 33:33`
   setup are gone (that version was never in real use). Step 4 now says
